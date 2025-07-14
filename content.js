@@ -11,6 +11,16 @@ class VivideoController {
       gamma: 1,
       colorTemp: 0
     };
+    this.defaultSettings = {
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      gamma: 1,
+      colorTemp: 0
+    };
+    this.profiles = [];
+    this.currentTheme = 'cyberdark';
+    this.profilesVisible = false;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     
@@ -19,6 +29,8 @@ class VivideoController {
 
   init() {
     this.loadSettings();
+    this.loadProfiles();
+    this.loadTheme();
     this.createUI();
     this.bindEvents();
     this.observeVideos();
@@ -37,6 +49,28 @@ class VivideoController {
     });
   }
 
+  loadProfiles() {
+    chrome.runtime.sendMessage({
+      action: 'get-storage',
+      keys: ['vivideoProfiles']
+    }, (response) => {
+      if (response && response.vivideoProfiles) {
+        this.profiles = response.vivideoProfiles;
+      }
+    });
+  }
+
+  loadTheme() {
+    chrome.runtime.sendMessage({
+      action: 'get-storage',
+      keys: ['vivideoTheme']
+    }, (response) => {
+      if (response && response.vivideoTheme) {
+        this.currentTheme = response.vivideoTheme;
+      }
+    });
+  }
+
   saveSettings() {
     chrome.runtime.sendMessage({
       action: 'set-storage',
@@ -44,9 +78,23 @@ class VivideoController {
     });
   }
 
+  saveProfiles() {
+    chrome.runtime.sendMessage({
+      action: 'set-storage',
+      data: { vivideoProfiles: this.profiles }
+    });
+  }
+
+  saveTheme() {
+    chrome.runtime.sendMessage({
+      action: 'set-storage',
+      data: { vivideoTheme: this.currentTheme }
+    });
+  }
+
   createUI() {
     this.container = document.createElement('div');
-    this.container.className = 'vivideo-container';
+    this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
     this.container.innerHTML = `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
@@ -65,6 +113,7 @@ class VivideoController {
           <span>►</span>
           <input type="text" class="vivideo-input" id="brightness-input" 
                  placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="brightness" title="Reset brightness">↺</button>
         </div>
       </div>
 
@@ -80,6 +129,7 @@ class VivideoController {
           <span>►</span>
           <input type="text" class="vivideo-input" id="contrast-input" 
                  placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="contrast" title="Reset contrast">↺</button>
         </div>
       </div>
 
@@ -95,6 +145,7 @@ class VivideoController {
           <span>►</span>
           <input type="text" class="vivideo-input" id="saturation-input" 
                  placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="saturation" title="Reset saturation">↺</button>
         </div>
       </div>
 
@@ -110,6 +161,7 @@ class VivideoController {
           <span>►</span>
           <input type="text" class="vivideo-input" id="gamma-input" 
                  placeholder="1.00" maxlength="4">
+          <button class="vivideo-reset-single" data-control="gamma" title="Reset gamma">↺</button>
         </div>
       </div>
 
@@ -125,17 +177,44 @@ class VivideoController {
           <span>►</span>
           <input type="text" class="vivideo-input" id="colortemp-input" 
                  placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="colortemp" title="Reset color temperature">↺</button>
         </div>
       </div>
 
-      <button class="vivideo-reset" id="reset-button">Reset All</button>
+      <button class="vivideo-reset" id="reset-button">Resetuj wszystkie wartości ⟳</button>
+      
+      <div class="vivideo-bottom-controls">
+        <button class="vivideo-control-btn" id="profiles-btn" title="Profile konfiguracji">🎚️</button>
+        <button class="vivideo-control-btn" id="themes-btn" title="Motywy">🎨</button>
+      </div>
+
+      <div class="vivideo-profiles" id="profiles-panel">
+        <div class="vivideo-profile-form">
+          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profil_1">
+          <button class="vivideo-profile-save" id="save-profile">💾</button>
+        </div>
+        <div class="vivideo-profile-list" id="profile-list"></div>
+      </div>
+
+      <div class="vivideo-themes" id="themes-panel">
+        <div class="vivideo-theme-option" data-theme="cyberdark">
+          <div class="vivideo-theme-preview cyberdark-preview"></div>
+          <span>Cyberdark</span>
+        </div>
+        <div class="vivideo-theme-option" data-theme="blue">
+          <div class="vivideo-theme-preview blue-preview"></div>
+          <span>Blue</span>
+        </div>
+      </div>
       
       <div class="vivideo-shortcuts">
-        Press Alt+V to toggle • Drag header to move
+        Naciśnij <code>Alt + V</code>, aby przełączyć • Przeciągnij nagłówek, aby przesunąć
       </div>
     `;
 
     document.body.appendChild(this.container);
+    this.updateProfilesList();
+    this.updateThemeSelection();
   }
 
   bindEvents() {
@@ -144,9 +223,38 @@ class VivideoController {
       this.hide();
     });
 
-    // Reset button
+    // Reset all button
     this.container.querySelector('#reset-button').addEventListener('click', () => {
       this.resetAll();
+    });
+
+    // Single reset buttons
+    this.container.querySelectorAll('.vivideo-reset-single').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const control = e.target.getAttribute('data-control');
+        this.resetSingle(control);
+      });
+    });
+
+    // Profile controls
+    this.container.querySelector('#profiles-btn').addEventListener('click', () => {
+      this.toggleProfiles();
+    });
+
+    this.container.querySelector('#save-profile').addEventListener('click', () => {
+      this.saveCurrentProfile();
+    });
+
+    // Theme controls
+    this.container.querySelector('#themes-btn').addEventListener('click', () => {
+      this.toggleThemes();
+    });
+
+    this.container.querySelectorAll('.vivideo-theme-option').forEach(option => {
+      option.addEventListener('click', (e) => {
+        const theme = e.currentTarget.getAttribute('data-theme');
+        this.changeTheme(theme);
+      });
     });
 
     // Dragging functionality
@@ -418,6 +526,129 @@ class VivideoController {
     this.saveSettings();
   }
 
+  resetSingle(control) {
+    const defaultValue = this.defaultSettings[control === 'colortemp' ? 'colorTemp' : control];
+    this.settings[control === 'colortemp' ? 'colorTemp' : control] = defaultValue;
+    this.updateUI();
+    this.applyFilters();
+    this.saveSettings();
+  }
+
+  toggleProfiles() {
+    this.profilesVisible = !this.profilesVisible;
+    const profilesPanel = this.container.querySelector('#profiles-panel');
+    const themesPanel = this.container.querySelector('#themes-panel');
+    
+    if (this.profilesVisible) {
+      profilesPanel.style.display = 'block';
+      themesPanel.style.display = 'none';
+      this.updateProfilesList();
+    } else {
+      profilesPanel.style.display = 'none';
+    }
+  }
+
+  toggleThemes() {
+    const themesPanel = this.container.querySelector('#themes-panel');
+    const profilesPanel = this.container.querySelector('#profiles-panel');
+    
+    if (themesPanel.style.display === 'block') {
+      themesPanel.style.display = 'none';
+    } else {
+      themesPanel.style.display = 'block';
+      profilesPanel.style.display = 'none';
+      this.profilesVisible = false;
+    }
+  }
+
+  updateProfilesList() {
+    const profileList = this.container.querySelector('#profile-list');
+    if (!profileList) return;
+    
+    profileList.innerHTML = '';
+    
+    this.profiles.forEach((profile, index) => {
+      const profileItem = document.createElement('div');
+      profileItem.className = 'vivideo-profile-item';
+      profileItem.innerHTML = `
+        <span class="vivideo-profile-name">${profile.name}</span>
+        <button class="vivideo-profile-delete" data-index="${index}">❌</button>
+      `;
+      
+      profileItem.querySelector('.vivideo-profile-name').addEventListener('click', () => {
+        this.loadProfile(profile);
+      });
+      
+      profileItem.querySelector('.vivideo-profile-delete').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.deleteProfile(index);
+      });
+      
+      profileList.appendChild(profileItem);
+    });
+    
+    // Update profile name placeholder
+    const profileNameInput = this.container.querySelector('#profile-name');
+    if (profileNameInput) {
+      profileNameInput.placeholder = `Profil_${this.profiles.length + 1}`;
+    }
+  }
+
+  saveCurrentProfile() {
+    const nameInput = this.container.querySelector('#profile-name');
+    let profileName = nameInput.value.trim();
+    
+    if (!profileName) {
+      profileName = `Profil_${this.profiles.length + 1}`;
+    }
+    
+    const profile = {
+      name: profileName,
+      settings: { ...this.settings }
+    };
+    
+    this.profiles.push(profile);
+    this.saveProfiles();
+    this.updateProfilesList();
+    nameInput.value = '';
+  }
+
+  loadProfile(profile) {
+    this.settings = { ...profile.settings };
+    this.updateUI();
+    this.applyFilters();
+    this.saveSettings();
+    this.toggleProfiles(); // Hide profiles panel after loading
+  }
+
+  deleteProfile(index) {
+    this.profiles.splice(index, 1);
+    this.saveProfiles();
+    this.updateProfilesList();
+  }
+
+  changeTheme(theme) {
+    this.currentTheme = theme;
+    this.container.className = `vivideo-container vivideo-theme-${theme}`;
+    if (this.isVisible) {
+      this.container.classList.add('vivideo-visible');
+    }
+    this.updateThemeSelection();
+    this.saveTheme();
+    this.toggleThemes(); // Hide themes panel after selection
+  }
+
+  updateThemeSelection() {
+    this.container.querySelectorAll('.vivideo-theme-option').forEach(option => {
+      const theme = option.getAttribute('data-theme');
+      if (theme === this.currentTheme) {
+        option.classList.add('vivideo-theme-selected');
+      } else {
+        option.classList.remove('vivideo-theme-selected');
+      }
+    });
+  }
+
   toggle() {
     if (this.isVisible) {
       this.hide();
@@ -428,6 +659,7 @@ class VivideoController {
 
   show() {
     this.container.classList.add('vivideo-visible');
+    this.container.className = `vivideo-container vivideo-theme-${this.currentTheme} vivideo-visible`;
     this.isVisible = true;
     this.applyFilters(); // Apply filters when showing
   }
