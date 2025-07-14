@@ -1,0 +1,38 @@
+{
+  "name": "Vivideo - Real-time Video Enhancement",
+  "description": "Real-time video enhancement with brightness, contrast, saturation, gamma, and color temperature controls",
+  "version": "1.0.0",
+  "manifest_version": 3,
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["styles.css"],
+      "run_at": "document_start",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Vivideo Controls"
+  },
+  "commands": {
+    "toggle-vivideo": {
+      "suggested_key": {
+        "default": "Alt+V"
+      },
+      "description": "Toggle Vivideo controls"
+    }
+  }
+}

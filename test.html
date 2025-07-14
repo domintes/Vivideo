@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivideo Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .video-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        video {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .instructions {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .color-blocks {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .color-block {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+        }
+        .red { background: #ff0000; }
+        .green { background: #00ff00; }
+        .blue { background: #0000ff; }
+        .yellow { background: #ffff00; }
+        .magenta { background: #ff00ff; }
+        .cyan { background: #00ffff; }
+        .white { background: #ffffff; border: 1px solid #ddd; }
+        .black { background: #000000; }
+    </style>
+</head>
+<body>
+    <h1>🎥 Vivideo Test Page</h1>
+    
+    <div class="instructions">
+        <h2>Instrukcje testowania:</h2>
+        <ol>
+            <li>Naciśnij <kbd>Alt + V</kbd> aby otworzyć panel kontrolny Vivideo</li>
+            <li>Przetestuj każdy suwak:</li>
+            <ul>
+                <li><strong>Brightness:</strong> -100% (bardzo ciemno) do +100% (bardzo jasno)</li>
+                <li><strong>Contrast:</strong> -100% (płaski) do +100% (wysoki kontrast)</li>
+                <li><strong>Saturation:</strong> -90% (szary) do +100% (żywe kolory)</li>
+                <li><strong>Gamma:</strong> 0.1 (bardzo ciemny) do 3.0 (bardzo jasny)</li>
+                <li><strong>Color Temperature:</strong> -100% (zimny/niebieski) do +100% (ciepły/żółty)</li>
+            </ul>
+            <li>Sprawdź czy efekty działają w czasie rzeczywistym</li>
+            <li>Przetestuj przycisk "Reset All"</li>
+        </ol>
+    </div>
+    
+    <div class="video-container">
+        <h3>Test Video (Big Buck Bunny)</h3>
+        <video controls loop>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Twoja przeglądarka nie obsługuje elementu video.
+        </video>
+    </div>
+    
+    <div class="test-content">
+        <h3>Testowe bloki kolorów</h3>
+        <p>Użyj tych bloków do testowania zmian kolorów:</p>
+        <div class="color-blocks">
+            <div class="color-block red" title="Czerwony"></div>
+            <div class="color-block green" title="Zielony"></div>
+            <div class="color-block blue" title="Niebieski"></div>
+            <div class="color-block yellow" title="Żółty"></div>
+            <div class="color-block magenta" title="Magenta"></div>
+            <div class="color-block cyan" title="Cyan"></div>
+            <div class="color-block white" title="Biały"></div>
+            <div class="color-block black" title="Czarny"></div>
+        </div>
+    </div>
+    
+    <div class="video-container">
+        <h3>Drugi test video (Elephant Dream)</h3>
+        <video controls loop>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" type="video/mp4">
+            Twoja przeglądarka nie obsługuje elementu video.
+        </video>
+    </div>
+    
+    <div class="test-content">
+        <h3>Oczekiwane zachowanie:</h3>
+        <ul>
+            <li><strong>Brightness -50%:</strong> Video powinno być wyraźnie ciemniejsze</li>
+            <li><strong>Brightness +50%:</strong> Video powinno być wyraźnie jaśniejsze</li>
+            <li><strong>Contrast -50%:</strong> Video powinno być płaskie, zmniejszony kontrast</li>
+            <li><strong>Contrast +50%:</strong> Video powinno mieć zwiększony kontrast</li>
+            <li><strong>Saturation -90%:</strong> Video powinno być prawie czarno-białe</li>
+            <li><strong>Saturation +72%:</strong> Kolory powinny być bardzo żywe i nasycone</li>
+            <li><strong>Gamma 0.5:</strong> Średnie tony ciemniejsze</li>
+            <li><strong>Gamma 2.0:</strong> Średnie tony jaśniejsze</li>
+            <li><strong>Color Temperature -50%:</strong> Video powinno mieć chłodny/niebieski odcień</li>
+            <li><strong>Color Temperature +50%:</strong> Video powinno mieć ciepły/żółty odcień</li>
+        </ul>
+    </div>
+    
+    <div class="instructions">
+        <h3>Dodatkowe testy:</h3>
+        <ul>
+            <li>Otwórz video w pełnym ekranie - panel powinien być nadal dostępny</li>
+            <li>Spróbuj przeciągnąć panel w inne miejsce</li>
+            <li>Sprawdź czy ustawienia się zachowują po odświeżeniu strony</li>
+            <li>Przetestuj na YouTube, Vimeo i innych serwisach video</li>
+        </ul>
+    </div>
+</body>
+</html>
