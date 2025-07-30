@@ -21,18 +21,24 @@ class VivideoController {
       contrast: 0,
       saturation: 0,
       gamma: 1,
-      colorTemp: 0
+      colorTemp: 0,
+      autoActivate: true,
+      activeProfile: null
     };
     this.defaultSettings = {
       brightness: 0,
       contrast: 0,
       saturation: 0,
       gamma: 1,
-      colorTemp: 0
+      colorTemp: 0,
+      autoActivate: true,
+      activeProfile: null
     };
     this.profiles = [];
     this.currentTheme = 'cyberdark';
     this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     this.clickOutsideHandler = null;
@@ -53,45 +59,62 @@ class VivideoController {
     this.loadSettings();
     this.loadProfiles();
     this.loadTheme();
+    this.loadAppState();
     this.createUI();
     this.bindEvents();
     this.observeVideos();
     this.isInitialized = true;
+    
+    // Auto-apply filters if autoActivate is enabled
+    if (this.settings.autoActivate) {
+      this.applyFilters();
+    }
   }
 
   loadSettings() {
     chrome.runtime.sendMessage({
       action: 'get-storage',
-      keys: ['vivideoSettings']
+      keys: ['vivideoSettings', 'vivideoProfiles', 'vivideoTheme', 'vivideoAppState']
     }, (response) => {
       if (response && response.vivideoSettings) {
         this.settings = { ...this.settings, ...response.vivideoSettings };
-        this.updateUI();
+      }
+      if (response && response.vivideoProfiles) {
+        this.profiles = response.vivideoProfiles;
+      }
+      if (response && response.vivideoTheme) {
+        this.currentTheme = response.vivideoTheme;
+      }
+      if (response && response.vivideoAppState) {
+        this.loadActiveProfile(response.vivideoAppState.activeProfile);
+      }
+      this.updateUI();
+      if (this.settings.autoActivate) {
         this.applyFilters();
       }
     });
   }
 
   loadProfiles() {
-    chrome.runtime.sendMessage({
-      action: 'get-storage',
-      keys: ['vivideoProfiles']
-    }, (response) => {
-      if (response && response.vivideoProfiles) {
-        this.profiles = response.vivideoProfiles;
-      }
-    });
+    // Now handled in loadSettings for better synchronization
   }
 
   loadTheme() {
-    chrome.runtime.sendMessage({
-      action: 'get-storage',
-      keys: ['vivideoTheme']
-    }, (response) => {
-      if (response && response.vivideoTheme) {
-        this.currentTheme = response.vivideoTheme;
+    // Now handled in loadSettings for better synchronization
+  }
+
+  loadAppState() {
+    // Now handled in loadSettings for better synchronization
+  }
+
+  loadActiveProfile(profileName) {
+    if (profileName && this.profiles.length > 0) {
+      const profile = this.profiles.find(p => p.name === profileName);
+      if (profile) {
+        this.settings = { ...this.settings, ...profile.settings };
+        this.settings.activeProfile = profileName;
       }
-    });
+    }
   }
 
   saveSettings() {
@@ -115,6 +138,18 @@ class VivideoController {
     });
   }
 
+  saveAppState() {
+    chrome.runtime.sendMessage({
+      action: 'set-storage',
+      data: { 
+        vivideoAppState: { 
+          activeProfile: this.settings.activeProfile,
+          autoActivate: this.settings.autoActivate
+        }
+      }
+    });
+  }
+
   createUI() {
     this.container = document.createElement('div');
     this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
@@ -124,7 +159,35 @@ class VivideoController {
         <button class="vivideo-close" title="Close (Alt+V)">✕</button>
         <button class="vivideo-info" title="Information">ⓘ</button>
       </div>
-      
+
+      <div class="vivideo-auto-activate">
+        <label class="vivideo-checkbox-container">
+          <input type="checkbox" id="auto-activate-checkbox" ${this.settings.autoActivate ? 'checked' : ''}>
+          <span class="vivideo-checkmark"></span>
+          <span class="vivideo-checkbox-label">Automatycznie aktywuj rozszerzenie</span>
+        </label>
+      </div>
+
+      <div class="vivideo-info-panel" id="info-panel" style="display: none;">
+        <div class="vivideo-info-content">
+          <h4>Vivideo - Real-time Video Enhancement</h4>
+          <p>Rozszerzenie do regulacji parametrów video w czasie rzeczywistym.</p>
+          <h5>Funkcje:</h5>
+          <ul>
+            <li><strong>Brightness:</strong> -100% do +100% - Regulacja jasności</li>
+            <li><strong>Contrast:</strong> -100% do +100% - Regulacja kontrastu</li>
+            <li><strong>Saturation:</strong> -90% do +100% - Nasycenie kolorów</li>
+            <li><strong>Gamma:</strong> 0.1 do 3.0 - Korekcja gamma</li>
+            <li><strong>Color Temp:</strong> -100% do +100% - Temperatura kolorów</li>
+          </ul>
+          <h5>Skróty klawiszowe:</h5>
+          <ul>
+            <li><code>Alt + V</code> - Przełącz panel</li>
+            <li>Przeciągnij nagłówek - Przesuń panel</li>
+            <li>Kliknij poza panel - Ukryj panel</li>
+          </ul>
+        </div>
+      </div>
       <div class="vivideo-control">
         <div class="vivideo-label">
           <span>Brightness</span>
@@ -234,27 +297,6 @@ class VivideoController {
       <div class="vivideo-shortcuts">
         Naciśnij <code>Alt + V</code>, aby przełączyć • Przeciągnij nagłówek, aby przesunąć
       </div>
-      
-      <div class="vivideo-info-panel" id="info-panel" style="display: none;">
-        <div class="vivideo-info-content">
-          <h4>Vivideo - Real-time Video Enhancement</h4>
-          <p>Rozszerzenie do regulacji parametrów video w czasie rzeczywistym.</p>
-          <h5>Funkcje:</h5>
-          <ul>
-            <li><strong>Brightness:</strong> -100% do +100% - Regulacja jasności</li>
-            <li><strong>Contrast:</strong> -100% do +100% - Regulacja kontrastu</li>
-            <li><strong>Saturation:</strong> -90% do +100% - Nasycenie kolorów</li>
-            <li><strong>Gamma:</strong> 0.1 do 3.0 - Korekcja gamma</li>
-            <li><strong>Color Temp:</strong> -100% do +100% - Temperatura kolorów</li>
-          </ul>
-          <h5>Skróty klawiszowe:</h5>
-          <ul>
-            <li><code>Alt + V</code> - Przełącz panel</li>
-            <li>Przeciągnij nagłówek - Przesuń panel</li>
-            <li>Kliknij poza panel - Ukryj panel</li>
-          </ul>
-        </div>
-      </div>
     `;
 
     document.body.appendChild(this.container);
@@ -272,6 +314,23 @@ class VivideoController {
     this.container.querySelector('.vivideo-info').addEventListener('click', (e) => {
       e.stopPropagation();
       this.toggleInfo();
+    });
+
+    // Auto-activate checkbox
+    this.container.querySelector('#auto-activate-checkbox').addEventListener('change', (e) => {
+      this.settings.autoActivate = e.target.checked;
+      this.saveSettings();
+      this.saveAppState();
+      
+      // Apply or remove filters based on checkbox state
+      if (this.settings.autoActivate) {
+        this.applyFilters();
+      } else {
+        // Only remove filters if panel is not visible
+        if (!this.isVisible) {
+          this.removeFilters();
+        }
+      }
     });
 
     // Click outside to hide - improved implementation
@@ -506,6 +565,12 @@ class VivideoController {
     else if (this.settings.colorTemp > 5) tempText = 'Slightly Warm';
     
     colorTempValue.textContent = tempText;
+
+    // Update auto-activate checkbox
+    const autoActivateCheckbox = this.container.querySelector('#auto-activate-checkbox');
+    if (autoActivateCheckbox) {
+      autoActivateCheckbox.checked = this.settings.autoActivate;
+    }
   }
 
   applyFilters() {
@@ -617,11 +682,16 @@ class VivideoController {
           if (node.nodeType === Node.ELEMENT_NODE) {
             const videos = node.querySelectorAll ? node.querySelectorAll('video') : [];
             videos.forEach(video => {
-              this.applyFilterToVideo(video);
+              // Only apply filters if auto-activate is enabled or panel is visible
+              if (this.settings.autoActivate || this.isVisible) {
+                this.applyFilterToVideo(video);
+              }
             });
             
             if (node.tagName === 'VIDEO') {
-              this.applyFilterToVideo(node);
+              if (this.settings.autoActivate || this.isVisible) {
+                this.applyFilterToVideo(node);
+              }
             }
           }
         });
@@ -632,6 +702,18 @@ class VivideoController {
       childList: true,
       subtree: true
     });
+  }
+
+  removeFilters() {
+    this.findVideos().forEach(video => {
+      video.style.filter = '';
+    });
+    
+    // Remove SVG filters
+    const existingFilter = document.querySelector('#vivideo-advanced-filter');
+    if (existingFilter) {
+      existingFilter.remove();
+    }
   }
 
   resetAll() {
@@ -672,11 +754,17 @@ class VivideoController {
     const profilesPanel = this.container.querySelector('#profiles-panel');
     const themesPanel = this.container.querySelector('#themes-panel');
     const infoPanel = this.container.querySelector('#info-panel');
+    const profilesBtn = this.container.querySelector('#profiles-btn');
+    
+    // Update active states
+    this.updateActiveStates();
     
     if (this.profilesVisible) {
       profilesPanel.style.display = 'block';
       themesPanel.style.display = 'none';
       infoPanel.style.display = 'none';
+      this.themesVisible = false;
+      this.infoVisible = false;
       this.updateProfilesList();
     } else {
       profilesPanel.style.display = 'none';
@@ -684,32 +772,64 @@ class VivideoController {
   }
 
   toggleThemes() {
+    this.themesVisible = !this.themesVisible;
     const themesPanel = this.container.querySelector('#themes-panel');
     const profilesPanel = this.container.querySelector('#profiles-panel');
     const infoPanel = this.container.querySelector('#info-panel');
     
-    if (themesPanel.style.display === 'block') {
-      themesPanel.style.display = 'none';
-    } else {
+    // Update active states
+    this.updateActiveStates();
+    
+    if (this.themesVisible) {
       themesPanel.style.display = 'block';
       profilesPanel.style.display = 'none';
       infoPanel.style.display = 'none';
       this.profilesVisible = false;
+      this.infoVisible = false;
+    } else {
+      themesPanel.style.display = 'none';
     }
   }
 
   toggleInfo() {
+    this.infoVisible = !this.infoVisible;
     const infoPanel = this.container.querySelector('#info-panel');
     const profilesPanel = this.container.querySelector('#profiles-panel');
     const themesPanel = this.container.querySelector('#themes-panel');
     
-    if (infoPanel.style.display === 'block') {
-      infoPanel.style.display = 'none';
-    } else {
+    // Update active states
+    this.updateActiveStates();
+    
+    if (this.infoVisible) {
       infoPanel.style.display = 'block';
       profilesPanel.style.display = 'none';
       themesPanel.style.display = 'none';
       this.profilesVisible = false;
+      this.themesVisible = false;
+    } else {
+      infoPanel.style.display = 'none';
+    }
+  }
+
+  updateActiveStates() {
+    const profilesBtn = this.container.querySelector('#profiles-btn');
+    const themesBtn = this.container.querySelector('#themes-btn');
+    const infoBtn = this.container.querySelector('.vivideo-info');
+    
+    // Remove all active classes
+    profilesBtn.classList.remove('vivideo-active');
+    themesBtn.classList.remove('vivideo-active');
+    infoBtn.classList.remove('vivideo-active');
+    
+    // Add active class to currently active button
+    if (this.profilesVisible) {
+      profilesBtn.classList.add('vivideo-active');
+    }
+    if (this.themesVisible) {
+      themesBtn.classList.add('vivideo-active');
+    }
+    if (this.infoVisible) {
+      infoBtn.classList.add('vivideo-active');
     }
   }
 
@@ -722,8 +842,15 @@ class VivideoController {
     this.profiles.forEach((profile, index) => {
       const profileItem = document.createElement('div');
       profileItem.className = 'vivideo-profile-item';
+      
+      // Add active class if this is the current active profile
+      const isActive = this.settings.activeProfile === profile.name;
+      if (isActive) {
+        profileItem.classList.add('vivideo-profile-active');
+      }
+      
       profileItem.innerHTML = `
-        <span class="vivideo-profile-name">${profile.name}</span>
+        <span class="vivideo-profile-name">${profile.name}${isActive ? ' (aktywny)' : ''}</span>
         <button class="vivideo-profile-delete" data-index="${index}">❌</button>
       `;
       
@@ -754,9 +881,14 @@ class VivideoController {
       profileName = `Profil_${this.profiles.length + 1}`;
     }
     
+    // Include current theme and auto-activate state in profile
     const profile = {
       name: profileName,
-      settings: { ...this.settings }
+      settings: { 
+        ...this.settings,
+        theme: this.currentTheme,
+        autoActivate: this.settings.autoActivate
+      }
     };
     
     this.profiles.push(profile);
@@ -766,14 +898,39 @@ class VivideoController {
   }
 
   loadProfile(profile) {
-    this.settings = { ...profile.settings };
+    // Set as active profile
+    this.settings.activeProfile = profile.name;
+    
+    // Load all settings from profile
+    this.settings = { ...this.settings, ...profile.settings };
+    
+    // Load theme if saved in profile
+    if (profile.settings.theme) {
+      this.currentTheme = profile.settings.theme;
+      this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
+      if (this.isVisible) {
+        this.container.classList.add('vivideo-visible');
+      }
+      this.saveTheme();
+    }
+    
     this.updateUI();
     this.applyFilters();
     this.saveSettings();
+    this.saveAppState();
+    this.updateProfilesList();
     this.toggleProfiles(); // Hide profiles panel after loading
   }
 
   deleteProfile(index) {
+    const deletedProfile = this.profiles[index];
+    
+    // If deleting active profile, clear active profile
+    if (this.settings.activeProfile === deletedProfile.name) {
+      this.settings.activeProfile = null;
+      this.saveAppState();
+    }
+    
     this.profiles.splice(index, 1);
     this.saveProfiles();
     this.updateProfilesList();
@@ -813,12 +970,23 @@ class VivideoController {
     this.container.classList.add('vivideo-visible');
     this.container.className = `vivideo-container vivideo-theme-${this.currentTheme} vivideo-visible`;
     this.isVisible = true;
-    this.applyFilters(); // Apply filters when showing
+    this.applyFilters(); // Always apply filters when showing panel
   }
 
   hide() {
     this.container.classList.remove('vivideo-visible');
     this.isVisible = false;
+    
+    // Remove filters only if auto-activate is disabled
+    if (!this.settings.autoActivate) {
+      this.removeFilters();
+    }
+    
+    // Reset all active states when hiding
+    this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
+    this.updateActiveStates();
   }
 
   destroy() {
