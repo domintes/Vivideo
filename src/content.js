@@ -349,39 +349,32 @@ class VivideoController {
       info: this.container.querySelector('#info-panel')
     };
 
-    // Hide all panels first
+    // Simple toggle logic - if panel is visible, hide it, otherwise show it and hide others
+    const currentPanel = panels[panelType];
+    if (!currentPanel) return;
+
+    const isCurrentlyVisible = 
+      (panelType === 'profiles' && this.profilesVisible) ||
+      (panelType === 'themes' && this.themesVisible) ||
+      (panelType === 'info' && this.infoVisible);
+
+    // Hide all panels and reset flags
     Object.values(panels).forEach(panel => {
       if (panel) panel.style.display = 'none';
     });
-
-    // Reset visibility flags
     this.profilesVisible = false;
     this.themesVisible = false;
     this.infoVisible = false;
 
-    // Show requested panel
-    if (panels[panelType]) {
-      if (panelType === 'profiles' && this.profilesVisible !== false) {
-        panels[panelType].style.display = 'block';
+    // If panel was hidden, show it
+    if (!isCurrentlyVisible) {
+      currentPanel.style.display = 'block';
+      if (panelType === 'profiles') {
         this.profilesVisible = true;
-      } else if (panelType === 'themes' && this.themesVisible !== false) {
-        panels[panelType].style.display = 'block';
+      } else if (panelType === 'themes') {
         this.themesVisible = true;
-      } else if (panelType === 'info' && this.infoVisible !== false) {
-        panels[panelType].style.display = 'block';
+      } else if (panelType === 'info') {
         this.infoVisible = true;
-      } else {
-        // Toggle logic
-        if (panelType === 'profiles') {
-          this.profilesVisible = true;
-          panels[panelType].style.display = 'block';
-        } else if (panelType === 'themes') {
-          this.themesVisible = true;
-          panels[panelType].style.display = 'block';
-        } else if (panelType === 'info') {
-          this.infoVisible = true;
-          panels[panelType].style.display = 'block';
-        }
       }
     }
 

@@ -18,6 +18,7 @@
   top: 20px;
   right: 20px;
   width: 320px;
+  max-height: calc(100vh - 40px);
   padding: 20px;
   border-radius: 12px;
   font-family: 'Rajdhani', 'Orbitron', monospace;
@@ -25,7 +26,8 @@
   display: none;
   animation: vivideo-slide-in 0.3s ease-out;
   z-index: 999999;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Cybernetic grid background */
@@ -358,6 +360,11 @@
 
 .vivideo-container.vivideo-visible {
   display: block;
+}
+
+/* Smooth scrolling */
+.vivideo-container {
+  scroll-behavior: smooth;
 }
 
 .vivideo-header {
@@ -1197,4 +1204,41 @@
 
 .vivideo-themes {
   margin-bottom: 15px;
+}
+
+/* Custom scrollbar styling */
+.vivideo-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.vivideo-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.vivideo-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.vivideo-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Cybernetic theme scrollbar */
+.vivideo-container.vivideo-theme-cybernetic::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 170, 0.4);
+}
+
+.vivideo-container.vivideo-theme-cybernetic::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 170, 0.6);
+}
+
+/* Casual theme scrollbar */
+.vivideo-container.vivideo-theme-casual::-webkit-scrollbar-thumb {
+  background: rgba(69, 160, 255, 0.4);
+}
+
+.vivideo-container.vivideo-theme-casual::-webkit-scrollbar-thumb:hover {
+  background: rgba(69, 160, 255, 0.6);
 }
