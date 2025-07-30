@@ -22,6 +22,7 @@ class VivideoController {
       saturation: 0,
       gamma: 1,
       colorTemp: 0,
+      sharpness: 0,
       autoActivate: true,
       activeProfile: null
     };
@@ -31,6 +32,7 @@ class VivideoController {
       saturation: 0,
       gamma: 1,
       colorTemp: 0,
+      sharpness: 0,
       autoActivate: true,
       activeProfile: null
     };
@@ -56,19 +58,9 @@ class VivideoController {
       return;
     }
     
+    console.log('Vivideo: Starting initialization...');
+    // Load settings first, then initialize UI
     this.loadSettings();
-    this.loadProfiles();
-    this.loadTheme();
-    this.loadAppState();
-    this.createUI();
-    this.bindEvents();
-    this.observeVideos();
-    this.isInitialized = true;
-    
-    // Auto-apply filters if autoActivate is enabled
-    if (this.settings.autoActivate) {
-      this.applyFilters();
-    }
   }
 
   loadSettings() {
@@ -88,11 +80,24 @@ class VivideoController {
       if (response && response.vivideoAppState) {
         this.loadActiveProfile(response.vivideoAppState.activeProfile);
       }
-      this.updateUI();
-      if (this.settings.autoActivate) {
-        this.applyFilters();
-      }
+      
+      // Continue initialization after settings are loaded
+      this.finishInitialization();
     });
+  }
+
+  finishInitialization() {
+    this.createUI();
+    this.bindEvents();
+    this.observeVideos();
+    this.updateUI(); // Make sure UI is updated after creation
+    this.isInitialized = true;
+    console.log('Vivideo: Initialization complete');
+    
+    // Auto-apply filters if autoActivate is enabled
+    if (this.settings.autoActivate) {
+      this.applyFilters();
+    }
   }
 
   loadProfiles() {
@@ -164,27 +169,28 @@ class VivideoController {
         <label class="vivideo-checkbox-container">
           <input type="checkbox" id="auto-activate-checkbox" ${this.settings.autoActivate ? 'checked' : ''}>
           <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Automatycznie aktywuj rozszerzenie</span>
+          <span class="vivideo-checkbox-label">Auto-activate extension</span>
         </label>
       </div>
 
       <div class="vivideo-info-panel" id="info-panel" style="display: none;">
         <div class="vivideo-info-content">
           <h4>Vivideo - Real-time Video Enhancement</h4>
-          <p>Rozszerzenie do regulacji parametrów video w czasie rzeczywistym.</p>
-          <h5>Funkcje:</h5>
+          <p>Extension for real-time video parameter adjustment.</p>
+          <h5>Features:</h5>
           <ul>
-            <li><strong>Brightness:</strong> -100% do +100% - Regulacja jasności</li>
-            <li><strong>Contrast:</strong> -100% do +100% - Regulacja kontrastu</li>
-            <li><strong>Saturation:</strong> -90% do +100% - Nasycenie kolorów</li>
-            <li><strong>Gamma:</strong> 0.1 do 3.0 - Korekcja gamma</li>
-            <li><strong>Color Temp:</strong> -100% do +100% - Temperatura kolorów</li>
+            <li><strong>Brightness:</strong> -100% to +100% - Brightness adjustment</li>
+            <li><strong>Contrast:</strong> -100% to +100% - Contrast adjustment</li>
+            <li><strong>Saturation:</strong> -90% to +100% - Color saturation</li>
+            <li><strong>Gamma:</strong> 0.1 to 3.0 - Gamma correction</li>
+            <li><strong>Color Temp:</strong> -100% to +100% - Color temperature</li>
+            <li><strong>Sharpness:</strong> 0% to 100% - Image sharpness</li>
           </ul>
-          <h5>Skróty klawiszowe:</h5>
+          <h5>Keyboard shortcuts:</h5>
           <ul>
-            <li><code>Alt + V</code> - Przełącz panel</li>
-            <li>Przeciągnij nagłówek - Przesuń panel</li>
-            <li>Kliknij poza panel - Ukryj panel</li>
+            <li><code>Alt + V</code> - Toggle panel</li>
+            <li>Drag header - Move panel</li>
+            <li>Click outside panel - Hide panel</li>
           </ul>
         </div>
       </div>
@@ -268,16 +274,32 @@ class VivideoController {
         </div>
       </div>
 
-      <button class="vivideo-reset" id="reset-button">Resetuj wszystkie wartości ⟳</button>
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Sharpness</span>
+          <span class="vivideo-value" id="sharpness-value">0%</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="sharpness-slider" 
+                 min="0" max="100" value="0" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="sharpness-input" 
+                 placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="sharpness" title="Reset sharpness">↺</button>
+        </div>
+      </div>
+
+      <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
       
       <div class="vivideo-bottom-controls">
-        <button class="vivideo-control-btn" id="profiles-btn" title="Profile konfiguracji">🎚️</button>
-        <button class="vivideo-control-btn" id="themes-btn" title="Motywy">🎨</button>
+        <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">🎚️</button>
+        <button class="vivideo-control-btn" id="themes-btn" title="Themes">🎨</button>
       </div>
 
       <div class="vivideo-profiles" id="profiles-panel">
         <div class="vivideo-profile-form">
-          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profil_1">
+          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
           <button class="vivideo-profile-save" id="save-profile">💾</button>
         </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
@@ -295,7 +317,7 @@ class VivideoController {
       </div>
       
       <div class="vivideo-shortcuts">
-        Naciśnij <code>Alt + V</code>, aby przełączyć • Przeciągnij nagłówek, aby przesunąć
+        Press <code>Alt + V</code> to toggle • Drag header to move
       </div>
     `;
 
@@ -441,6 +463,7 @@ class VivideoController {
 
     // Listen for keyboard shortcut
     chrome.runtime.onMessage.addListener((message) => {
+      console.log('Vivideo: Received message:', message);
       if (message.action === 'toggle-vivideo') {
         this.toggle();
       }
@@ -460,7 +483,7 @@ class VivideoController {
   }
 
   bindControlEvents() {
-    const controls = ['brightness', 'contrast', 'saturation', 'gamma', 'colortemp'];
+    const controls = ['brightness', 'contrast', 'saturation', 'gamma', 'colortemp', 'sharpness'];
     
     controls.forEach(control => {
       const slider = this.container.querySelector(`#${control}-slider`);
@@ -500,6 +523,9 @@ class VivideoController {
         break;
       case 'colortemp':
         value = Math.max(-100, Math.min(100, value));
+        break;
+      case 'sharpness':
+        value = Math.max(0, Math.min(100, value));
         break;
     }
 
@@ -566,6 +592,15 @@ class VivideoController {
     
     colorTempValue.textContent = tempText;
 
+    // Update sharpness
+    const sharpnessSlider = this.container.querySelector('#sharpness-slider');
+    const sharpnessInput = this.container.querySelector('#sharpness-input');
+    const sharpnessValue = this.container.querySelector('#sharpness-value');
+    
+    sharpnessSlider.value = this.settings.sharpness;
+    sharpnessInput.value = this.settings.sharpness;
+    sharpnessValue.textContent = `${this.settings.sharpness}%`;
+
     // Update auto-activate checkbox
     const autoActivateCheckbox = this.container.querySelector('#auto-activate-checkbox');
     if (autoActivateCheckbox) {
@@ -584,20 +619,29 @@ class VivideoController {
     const contrast = 1 + (this.settings.contrast / 100);
     const saturation = Math.max(0, 1 + (this.settings.saturation / 100));
     
-    // Apply CSS filters without color temperature
-    video.style.filter = `
+    // Apply CSS filters first (basic adjustments)
+    let cssFilters = `
       brightness(${brightness})
       contrast(${contrast})
       saturate(${saturation})
     `;
     
-    // Apply gamma correction and color temperature using SVG filter
+    // Apply gamma correction, color temperature, and sharpness using SVG filter
     this.applyAdvancedFilters(video);
+    
+    // Combine CSS filters with SVG filter
+    const advancedFilterExists = this.settings.gamma !== 1 || this.settings.colorTemp !== 0 || this.settings.sharpness > 0;
+    if (advancedFilterExists) {
+      cssFilters += ` url(#vivideo-advanced-filter)`;
+    }
+    
+    video.style.filter = cssFilters.trim();
   }
 
   applyAdvancedFilters(video) {
     const gamma = this.settings.gamma;
     const colorTemp = this.settings.colorTemp;
+    const sharpness = this.settings.sharpness;
     
     // Remove existing filter
     const existingFilter = document.querySelector('#vivideo-advanced-filter');
@@ -605,56 +649,70 @@ class VivideoController {
       existingFilter.remove();
     }
     
-    // Create SVG filter for gamma correction and color temperature
+    // Skip if no advanced effects are needed
+    if (gamma === 1 && colorTemp === 0 && sharpness === 0) {
+      return;
+    }
+    
+    // Create SVG filter for advanced effects
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.id = 'vivideo-advanced-filter';
     svg.style.position = 'absolute';
     svg.style.width = '0';
     svg.style.height = '0';
     
-    // Calculate color temperature values based on real color temperature theory
-    // Negative values = cooler (more blue), Positive = warmer (more red/yellow)
+    // Calculate color temperature values - improved algorithm
     const tempFactor = colorTemp / 100;
-    let rMultiplier = 1;
-    let gMultiplier = 1;
-    let bMultiplier = 1;
+    let rSlope = 1, gSlope = 1, bSlope = 1;
+    let rExponent = gamma, gExponent = gamma, bExponent = gamma;
     
     if (tempFactor > 0) {
-      // Warmer - simulate incandescent/candlelight
-      // Increase red and slightly yellow, decrease blue significantly
-      rMultiplier = 1 + (tempFactor * 0.5);  // More red for warmth
-      gMultiplier = 1 + (tempFactor * 0.25); // Some yellow/green
-      bMultiplier = Math.max(0.2, 1 - (tempFactor * 0.7)); // Much less blue
+      // Warmer - increase red/yellow, decrease blue
+      rSlope = 1 + (tempFactor * 0.3);
+      gSlope = 1 + (tempFactor * 0.15);
+      bSlope = Math.max(0.4, 1 - (tempFactor * 0.4));
     } else if (tempFactor < 0) {
-      // Cooler - simulate daylight/fluorescent
-      // Increase blue significantly, decrease red and yellow
-      rMultiplier = Math.max(0.3, 1 + (tempFactor * 0.6)); // Less red
-      gMultiplier = Math.max(0.4, 1 + (tempFactor * 0.3)); // Less yellow/green
-      bMultiplier = 1 + (Math.abs(tempFactor) * 0.8); // More blue
+      // Cooler - increase blue, decrease red/yellow
+      const coolness = Math.abs(tempFactor);
+      rSlope = Math.max(0.5, 1 - (coolness * 0.3));
+      gSlope = Math.max(0.7, 1 - (coolness * 0.1));
+      bSlope = 1 + (coolness * 0.4);
     }
     
-    // Clamp values to reasonable ranges
-    rMultiplier = Math.max(0.1, Math.min(3, rMultiplier));
-    gMultiplier = Math.max(0.1, Math.min(3, gMultiplier));
-    bMultiplier = Math.max(0.1, Math.min(3, bMultiplier));
+    // Calculate sharpness matrix
+    const sharpAmount = sharpness / 100 * 0.8;
+    const sharpCenter = 1 + (4 * sharpAmount);
+    const sharpEdge = -sharpAmount;
+    
+    let filterContent = '';
+    
+    // Add sharpness filter if needed
+    if (sharpness > 0) {
+      filterContent += `
+        <feConvolveMatrix order="3,3" 
+                         kernelMatrix="${sharpEdge} ${sharpEdge} ${sharpEdge}
+                                      ${sharpEdge} ${sharpCenter} ${sharpEdge}
+                                      ${sharpEdge} ${sharpEdge} ${sharpEdge}"
+                         result="sharpened"/>
+      `;
+    }
+    
+    // Add gamma and color temperature correction
+    filterContent += `
+      <feComponentTransfer ${sharpness > 0 ? 'in="sharpened"' : ''}>
+        <feFuncR type="gamma" amplitude="${rSlope}" exponent="${rExponent}"/>
+        <feFuncG type="gamma" amplitude="${gSlope}" exponent="${gExponent}"/>
+        <feFuncB type="gamma" amplitude="${bSlope}" exponent="${bExponent}"/>
+      </feComponentTransfer>
+    `;
     
     svg.innerHTML = `
-      <filter id="advanced-correction">
-        <feComponentTransfer>
-          <feFuncR type="gamma" exponent="${gamma}" slope="${rMultiplier}"/>
-          <feFuncG type="gamma" exponent="${gamma}" slope="${gMultiplier}"/>
-          <feFuncB type="gamma" exponent="${gamma}" slope="${bMultiplier}"/>
-        </feComponentTransfer>
+      <filter id="vivideo-advanced-filter" x="0%" y="0%" width="100%" height="100%">
+        ${filterContent}
       </filter>
     `;
     
     document.body.appendChild(svg);
-    
-    // Apply advanced filter if needed
-    if (gamma !== 1 || colorTemp !== 0) {
-      const currentFilter = video.style.filter || '';
-      video.style.filter = `${currentFilter} url(#advanced-correction)`;
-    }
   }
 
   findVideos() {
@@ -722,7 +780,10 @@ class VivideoController {
       contrast: 0,
       saturation: 0,
       gamma: 1,
-      colorTemp: 0
+      colorTemp: 0,
+      sharpness: 0,
+      autoActivate: this.settings.autoActivate,
+      activeProfile: null
     };
     
     // Remove existing SVG filters
@@ -878,7 +939,7 @@ class VivideoController {
     let profileName = nameInput.value.trim();
     
     if (!profileName) {
-      profileName = `Profil_${this.profiles.length + 1}`;
+      profileName = `Profile_${this.profiles.length + 1}`;
     }
     
     // Include current theme and auto-activate state in profile
@@ -959,6 +1020,7 @@ class VivideoController {
   }
 
   toggle() {
+    console.log('Vivideo: Toggle called, isVisible:', this.isVisible);
     if (this.isVisible) {
       this.hide();
     } else {
