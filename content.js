@@ -24,6 +24,7 @@ class VivideoController {
       colorTemp: 0,
       sharpness: 0,
       autoActivate: true,
+      workOnImagesActivate: false,
       activeProfile: null
     };
     this.defaultSettings = {
@@ -34,10 +35,28 @@ class VivideoController {
       colorTemp: 0,
       sharpness: 0,
       autoActivate: true,
+      workOnImagesActivate: false,
       activeProfile: null
     };
     this.profiles = [];
-    this.currentTheme = 'cyberdark';
+    this.defaultProfile = {
+      name: 'DEFAULT',
+      settings: {
+        brightness: 0,
+        contrast: 0,
+        saturation: 0,
+        gamma: 1,
+        colorTemp: 0,
+        sharpness: 0,
+        autoActivate: true,
+        workOnImagesActivate: false
+      }
+    };
+    this.currentTheme = 'cybernetic';
+    this.themeColors = {
+      casual: { hue: 200, saturation: 100, lightness: 50 }, // Default blue
+      cybernetic: { hue: 120, saturation: 100, lightness: 40 } // Default green
+    };
     this.profilesVisible = false;
     this.themesVisible = false;
     this.infoVisible = false;
@@ -66,7 +85,7 @@ class VivideoController {
   loadSettings() {
     chrome.runtime.sendMessage({
       action: 'get-storage',
-      keys: ['vivideoSettings', 'vivideoProfiles', 'vivideoTheme', 'vivideoAppState']
+      keys: ['vivideoSettings', 'vivideoProfiles', 'vivideoTheme', 'vivideoAppState', 'vivideoThemeColors']
     }, (response) => {
       if (response && response.vivideoSettings) {
         this.settings = { ...this.settings, ...response.vivideoSettings };
@@ -76,6 +95,9 @@ class VivideoController {
       }
       if (response && response.vivideoTheme) {
         this.currentTheme = response.vivideoTheme;
+      }
+      if (response && response.vivideoThemeColors) {
+        this.themeColors = { ...this.themeColors, ...response.vivideoThemeColors };
       }
       if (response && response.vivideoAppState) {
         this.loadActiveProfile(response.vivideoAppState.activeProfile);
@@ -90,6 +112,7 @@ class VivideoController {
     this.createUI();
     this.bindEvents();
     this.observeVideos();
+    this.applyThemeColors(); // Apply theme colors after UI creation
     this.updateUI(); // Make sure UI is updated after creation
     this.isInitialized = true;
     console.log('Vivideo: Initialization complete');
@@ -167,35 +190,40 @@ class VivideoController {
       <div class="vivideo-bottom-controls">
         <div class="profiles-button-section button-section">
           <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">Profiles</button>
-          <div class="active-item-status active-profile-status">
-            [HERE SHOULD BE ACTIVE PROFILE (If default values - 'DEFAULT'. If edited - 'NOT SAVED']
+          <div class="active-item-status active-profile-status" id="active-profile-display">
+            DEFAULT
           </div>
 
-      <div class="vivideo-profiles" id="profiles-panel">
+      <div class="vivideo-profiles" id="profiles-panel" style="display: none;">
         <div class="vivideo-profile-form">
           <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
           <button class="vivideo-profile-save" id="save-profile">Save</button>
         </div>
+        </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
-      </div>
 
         </div>
         <div class="themes-button-section button-section">
           <button class="vivideo-control-btn" id="themes-btn" title="Themes">Themes</button>
-          <div class="active-item-status active-theme-status">
-            [HERE SHOULD BE ACTIVE THEME E.G CYBERDARK (IF ACTIVE)]
+          <div class="active-item-status active-theme-status" id="active-theme-display">
+            CYBERNETIC
           </div>
         </div>
       </div>
 
-      <div class="vivideo-themes" id="themes-panel">
-        <div class="vivideo-theme-option" data-theme="cyberdark">
-          <div class="vivideo-theme-preview cyberdark-preview"></div>
-          <span>Cyberdark</span>
+      <div class="vivideo-themes" id="themes-panel" style="display: none;">
+        <div class="vivideo-theme-option" data-theme="cybernetic">
+          <div class="vivideo-theme-preview cybernetic-preview"></div>
+          <span>Cybernetic</span>
         </div>
-        <div class="vivideo-theme-option" data-theme="blue">
-          <div class="vivideo-theme-preview blue-preview"></div>
-          <span>Blue</span>
+        <div class="vivideo-theme-option" data-theme="casual">
+          <div class="vivideo-theme-preview casual-preview"></div>
+          <span>Casual</span>
+        </div>
+        <div class="vivideo-theme-color-picker">
+          <label for="theme-color-slider">Theme Color:</label>
+          <input type="range" id="theme-color-slider" min="0" max="360" value="120" step="1">
+          <div class="color-preview" id="color-preview"></div>
         </div>
       </div>
       <div class="vivideo-auto-activate checkbox-section">
@@ -208,7 +236,7 @@ class VivideoController {
 
       <div class="vivideo-work-on-images-activate checkbox-section">
         <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="auto-activate-checkbox" ${this.settings.workOnImagesActivate ? 'checked' : ''}>
+          <input type="checkbox" id="work-on-images-checkbox" ${this.settings.workOnImagesActivate ? 'checked' : ''}>
           <span class="vivideo-checkmark"></span>
           <span class="vivideo-checkbox-label">Work on images</span>
         </label>
@@ -372,6 +400,19 @@ class VivideoController {
       }
     });
 
+    // Work on images checkbox
+    this.container.querySelector('#work-on-images-checkbox').addEventListener('change', (e) => {
+      this.settings.workOnImagesActivate = e.target.checked;
+      this.saveSettings();
+      
+      // Apply or remove filters based on checkbox state
+      if (this.settings.workOnImagesActivate) {
+        this.applyFiltersToImages();
+      } else {
+        this.removeFiltersFromImages();
+      }
+    });
+
     // Click outside to hide - improved implementation
     this.clickOutsideHandler = (e) => {
       if (this.isVisible && !this.container.contains(e.target) && !this.isDragging) {
@@ -417,6 +458,12 @@ class VivideoController {
         const theme = e.currentTarget.getAttribute('data-theme');
         this.changeTheme(theme);
       });
+    });
+
+    // Theme color picker
+    this.container.querySelector('#theme-color-slider').addEventListener('input', (e) => {
+      const hue = parseInt(e.target.value);
+      this.updateThemeColor(hue);
     });
 
     // Dragging functionality
@@ -623,15 +670,67 @@ class VivideoController {
     if (autoActivateCheckbox) {
       autoActivateCheckbox.checked = this.settings.autoActivate;
     }
+
+    // Update work on images checkbox
+    const workOnImagesCheckbox = this.container.querySelector('#work-on-images-checkbox');
+    if (workOnImagesCheckbox) {
+      workOnImagesCheckbox.checked = this.settings.workOnImagesActivate;
+    }
+
+    // Update active profile display
+    this.updateActiveProfileDisplay();
+
+    // Update active theme display
+    this.updateActiveThemeDisplay();
   }
 
   applyFilters() {
     this.findVideos().forEach(video => {
       this.applyFilterToVideo(video);
     });
+    
+    // Apply to images if enabled
+    if (this.settings.workOnImagesActivate) {
+      this.applyFiltersToImages();
+    }
+  }
+
+  applyFiltersToImages() {
+    if (!this.settings.workOnImagesActivate) return;
+    
+    this.findImages().forEach(image => {
+      this.applyFilterToElement(image);
+    });
+  }
+
+  removeFiltersFromImages() {
+    this.findImages().forEach(image => {
+      image.style.filter = '';
+    });
+  }
+
+  findImages() {
+    const images = [];
+    
+    // Find images in main document
+    images.push(...document.querySelectorAll('img'));
+    
+    // Find images in shadow DOM
+    const elementsWithShadow = document.querySelectorAll('*');
+    elementsWithShadow.forEach(element => {
+      if (element.shadowRoot) {
+        images.push(...element.shadowRoot.querySelectorAll('img'));
+      }
+    });
+    
+    return images;
   }
 
   applyFilterToVideo(video) {
+    this.applyFilterToElement(video);
+  }
+
+  applyFilterToElement(element) {
     const brightness = 1 + (this.settings.brightness / 100);
     const contrast = 1 + (this.settings.contrast / 100);
     const saturation = Math.max(0, 1 + (this.settings.saturation / 100));
@@ -644,7 +743,7 @@ class VivideoController {
     `;
     
     // Apply gamma correction, color temperature, and sharpness using SVG filter
-    this.applyAdvancedFilters(video);
+    this.applyAdvancedFilters(element);
     
     // Combine CSS filters with SVG filter
     const advancedFilterExists = this.settings.gamma !== 1 || this.settings.colorTemp !== 0 || this.settings.sharpness > 0;
@@ -652,10 +751,10 @@ class VivideoController {
       cssFilters += ` url(#vivideo-advanced-filter)`;
     }
     
-    video.style.filter = cssFilters.trim();
+    element.style.filter = cssFilters.trim();
   }
 
-  applyAdvancedFilters(video) {
+  applyAdvancedFilters(element) {
     const gamma = this.settings.gamma;
     const colorTemp = this.settings.colorTemp;
     const sharpness = this.settings.sharpness;
@@ -757,6 +856,7 @@ class VivideoController {
       mutations.forEach((mutation) => {
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
+            // Find videos in main document
             const videos = node.querySelectorAll ? node.querySelectorAll('video') : [];
             videos.forEach(video => {
               // Only apply filters if auto-activate is enabled or panel is visible
@@ -765,9 +865,25 @@ class VivideoController {
               }
             });
             
+            // Find images if work on images is enabled
+            if (this.settings.workOnImagesActivate) {
+              const images = node.querySelectorAll ? node.querySelectorAll('img') : [];
+              images.forEach(image => {
+                if (this.settings.autoActivate || this.isVisible) {
+                  this.applyFilterToElement(image);
+                }
+              });
+            }
+            
             if (node.tagName === 'VIDEO') {
               if (this.settings.autoActivate || this.isVisible) {
                 this.applyFilterToVideo(node);
+              }
+            }
+            
+            if (node.tagName === 'IMG' && this.settings.workOnImagesActivate) {
+              if (this.settings.autoActivate || this.isVisible) {
+                this.applyFilterToElement(node);
               }
             }
           }
@@ -786,6 +902,9 @@ class VivideoController {
       video.style.filter = '';
     });
     
+    // Remove filters from images
+    this.removeFiltersFromImages();
+    
     // Remove SVG filters
     const existingSvg = document.querySelector('#vivideo-svg-container');
     if (existingSvg) {
@@ -802,6 +921,7 @@ class VivideoController {
       colorTemp: 0,
       sharpness: 0,
       autoActivate: this.settings.autoActivate,
+      workOnImagesActivate: this.settings.workOnImagesActivate,
       activeProfile: null
     };
     
@@ -866,6 +986,7 @@ class VivideoController {
       infoPanel.style.display = 'none';
       this.profilesVisible = false;
       this.infoVisible = false;
+      this.updateThemeColorSlider(); // Update color picker when opening themes panel
     } else {
       themesPanel.style.display = 'none';
     }
@@ -919,6 +1040,27 @@ class VivideoController {
     
     profileList.innerHTML = '';
     
+    // Add DEFAULT profile first
+    const defaultProfileItem = document.createElement('div');
+    defaultProfileItem.className = 'vivideo-profile-item';
+    
+    // Check if DEFAULT is active (when no active profile and settings are default)
+    const isDefaultActive = !this.settings.activeProfile && this.isDefaultProfile();
+    if (isDefaultActive) {
+      defaultProfileItem.classList.add('vivideo-profile-active');
+    }
+    
+    defaultProfileItem.innerHTML = `
+      <span class="vivideo-profile-name">DEFAULT${isDefaultActive ? ' (active)' : ''}</span>
+    `;
+    
+    defaultProfileItem.addEventListener('click', () => {
+      this.loadProfile(this.defaultProfile);
+    });
+    
+    profileList.appendChild(defaultProfileItem);
+    
+    // Add user profiles
     this.profiles.forEach((profile, index) => {
       const profileItem = document.createElement('div');
       profileItem.className = 'vivideo-profile-item';
@@ -930,7 +1072,7 @@ class VivideoController {
       }
       
       profileItem.innerHTML = `
-        <span class="vivideo-profile-name">${profile.name}${isActive ? ' (aktywny)' : ''}</span>
+        <span class="vivideo-profile-name">${profile.name}${isActive ? ' (active)' : ''}</span>
         <button class="vivideo-profile-delete" data-index="${index}">❌</button>
       `;
       
@@ -953,6 +1095,59 @@ class VivideoController {
     }
   }
 
+  isDefaultProfile() {
+    return this.settings.brightness === 0 &&
+           this.settings.contrast === 0 &&
+           this.settings.saturation === 0 &&
+           this.settings.gamma === 1 &&
+           this.settings.colorTemp === 0 &&
+           this.settings.sharpness === 0;
+  }
+
+  isProfileModified() {
+    if (this.settings.activeProfile) {
+      const activeProfile = this.profiles.find(p => p.name === this.settings.activeProfile);
+      if (activeProfile) {
+        return !this.profilesMatch(this.settings, activeProfile.settings);
+      }
+    }
+    return !this.isDefaultProfile();
+  }
+
+  profilesMatch(settings1, settings2) {
+    const keys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp', 'sharpness'];
+    return keys.every(key => settings1[key] === settings2[key]);
+  }
+
+  updateActiveProfileDisplay() {
+    const profileDisplay = this.container.querySelector('#active-profile-display');
+    if (!profileDisplay) return;
+    
+    if (this.settings.activeProfile) {
+      if (this.isProfileModified()) {
+        profileDisplay.textContent = 'NOT SAVED';
+        profileDisplay.className = 'active-item-status active-profile-status modified';
+      } else {
+        profileDisplay.textContent = this.settings.activeProfile;
+        profileDisplay.className = 'active-item-status active-profile-status active';
+      }
+    } else if (this.isDefaultProfile()) {
+      profileDisplay.textContent = 'DEFAULT';
+      profileDisplay.className = 'active-item-status active-profile-status default';
+    } else {
+      profileDisplay.textContent = 'NOT SAVED';
+      profileDisplay.className = 'active-item-status active-profile-status modified';
+    }
+  }
+
+  updateActiveThemeDisplay() {
+    const themeDisplay = this.container.querySelector('#active-theme-display');
+    if (!themeDisplay) return;
+    
+    themeDisplay.textContent = this.currentTheme.toUpperCase();
+    themeDisplay.className = 'active-item-status active-theme-status active';
+  }
+
   saveCurrentProfile() {
     const nameInput = this.container.querySelector('#profile-name');
     let profileName = nameInput.value.trim();
@@ -961,31 +1156,56 @@ class VivideoController {
       profileName = `Profile_${this.profiles.length + 1}`;
     }
     
-    // Include current theme and auto-activate state in profile
+    // Include current settings (excluding theme and workOnImagesActivate from being saved in profile)
     const profile = {
       name: profileName,
       settings: { 
-        ...this.settings,
-        theme: this.currentTheme,
+        brightness: this.settings.brightness,
+        contrast: this.settings.contrast,
+        saturation: this.settings.saturation,
+        gamma: this.settings.gamma,
+        colorTemp: this.settings.colorTemp,
+        sharpness: this.settings.sharpness,
         autoActivate: this.settings.autoActivate
       }
     };
     
     this.profiles.push(profile);
+    this.settings.activeProfile = profileName; // Set this as active profile
     this.saveProfiles();
+    this.saveSettings();
+    this.saveAppState();
     this.updateProfilesList();
     nameInput.value = '';
   }
 
   loadProfile(profile) {
-    // Set as active profile
-    this.settings.activeProfile = profile.name;
-    
-    // Load all settings from profile
-    this.settings = { ...this.settings, ...profile.settings };
+    // Handle DEFAULT profile
+    if (profile.name === 'DEFAULT') {
+      this.settings.activeProfile = null;
+      // Reset to default settings
+      Object.keys(this.defaultSettings).forEach(key => {
+        this.settings[key] = this.defaultSettings[key];
+      });
+    } else {
+      // Set as active profile
+      this.settings.activeProfile = profile.name;
+      
+      // Load all settings from profile
+      Object.keys(profile.settings).forEach(key => {
+        if (key !== 'theme' && key !== 'autoActivate') {
+          this.settings[key] = profile.settings[key];
+        }
+      });
+      
+      // Handle autoActivate separately
+      if (profile.settings.autoActivate !== undefined) {
+        this.settings.autoActivate = profile.settings.autoActivate;
+      }
+    }
     
     // Load theme if saved in profile
-    if (profile.settings.theme) {
+    if (profile.settings && profile.settings.theme) {
       this.currentTheme = profile.settings.theme;
       this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
       if (this.isVisible) {
@@ -996,6 +1216,14 @@ class VivideoController {
     
     this.updateUI();
     this.applyFilters();
+    
+    // Apply or remove filters to images based on workOnImagesActivate setting
+    if (this.settings.workOnImagesActivate) {
+      this.applyFiltersToImages();
+    } else {
+      this.removeFiltersFromImages();
+    }
+    
     this.saveSettings();
     this.saveAppState();
     this.updateProfilesList();
@@ -1018,13 +1246,181 @@ class VivideoController {
 
   changeTheme(theme) {
     this.currentTheme = theme;
-    this.container.className = `vivideo-container vivideo-theme-${theme}`;
+    this.updateThemeColorSlider();
+    this.applyThemeColors();
+    this.updateThemeSelection();
+    this.saveTheme();
+    this.saveThemeColors();
+    this.toggleThemes(); // Hide themes panel after selection
+  }
+
+  updateThemeColor(hue) {
+    // Update current theme's color
+    this.themeColors[this.currentTheme].hue = hue;
+    this.applyThemeColors();
+    this.updateColorPreview();
+    this.saveThemeColors();
+  }
+
+  updateThemeColorSlider() {
+    const colorSlider = this.container.querySelector('#theme-color-slider');
+    const colorPreview = this.container.querySelector('#color-preview');
+    
+    if (colorSlider && this.themeColors[this.currentTheme]) {
+      colorSlider.value = this.themeColors[this.currentTheme].hue;
+      this.updateColorPreview();
+    }
+  }
+
+  updateColorPreview() {
+    const colorPreview = this.container.querySelector('#color-preview');
+    const currentColor = this.themeColors[this.currentTheme];
+    
+    if (colorPreview && currentColor) {
+      const hsl = `hsl(${currentColor.hue}, ${currentColor.saturation}%, ${currentColor.lightness}%)`;
+      colorPreview.style.backgroundColor = hsl;
+    }
+  }
+
+  applyThemeColors() {
+    const currentColor = this.themeColors[this.currentTheme];
+    if (!currentColor) return;
+
+    // Remove existing dynamic styles
+    const existingStyle = document.querySelector('#vivideo-dynamic-theme');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+
+    // Create new dynamic styles
+    const style = document.createElement('style');
+    style.id = 'vivideo-dynamic-theme';
+    
+    const hue = currentColor.hue;
+    const saturation = currentColor.saturation;
+    const lightness = currentColor.lightness;
+    
+    const mainColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+    const lightColor = `hsl(${hue}, ${saturation}%, ${Math.min(lightness + 20, 90)}%)`;
+    const darkColor = `hsl(${hue}, ${saturation}%, ${Math.max(lightness - 20, 10)}%)`;
+    
+    style.textContent = `
+      .vivideo-container.vivideo-theme-${this.currentTheme} {
+        color: ${mainColor};
+        border-color: ${mainColor}66;
+        box-shadow: 0 0 25px ${mainColor}66, 0 10px 35px rgba(0, 0, 0, 0.8), inset 0 1px 0 ${mainColor}33;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme}::before {
+        background-image: 
+          linear-gradient(${mainColor}4D 1px, transparent 1px),
+          linear-gradient(90deg, ${mainColor}4D 1px, transparent 1px);
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-title {
+        background: linear-gradient(45deg, ${mainColor}, ${lightColor}, ${darkColor});
+        -webkit-background-clip: text;
+        -moz-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 15px ${mainColor}99;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-info {
+        color: ${mainColor};
+        border-color: ${mainColor}4D;
+        background: ${mainColor}1A;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-info:hover {
+        background: ${mainColor}33;
+        border-color: ${mainColor};
+        box-shadow: 0 0 15px ${mainColor}66;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-value {
+        background: ${mainColor}26;
+        border-color: ${mainColor}66;
+        color: ${mainColor};
+        text-shadow: 0 0 8px ${mainColor}4D;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-slider {
+        background: linear-gradient(90deg, ${mainColor}33, ${mainColor}66);
+        border-color: ${mainColor}4D;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-slider::-webkit-slider-thumb {
+        background: linear-gradient(135deg, ${mainColor}, ${darkColor});
+        box-shadow: 0 0 15px ${mainColor}99, 0 0 25px ${mainColor}4D;
+        border: 2px solid ${mainColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-input,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset-single,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-control-btn,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-input,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-save {
+        background: ${mainColor}1A;
+        border-color: ${mainColor}4D;
+        color: ${mainColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset:hover,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset-single:hover,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-control-btn:hover,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-save:hover {
+        background: ${mainColor}33;
+        box-shadow: 0 0 15px ${mainColor}66;
+        border-color: ${mainColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-theme-option {
+        background: ${mainColor}1A;
+        border-color: ${mainColor}33;
+        color: ${mainColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-theme-option:hover {
+        background: ${mainColor}33;
+        border-color: ${mainColor}66;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-theme-option.vivideo-theme-selected {
+        background: ${mainColor}4D;
+        border-color: ${mainColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .active-theme-status.active {
+        background: ${mainColor}33;
+        color: ${mainColor};
+        border-color: ${mainColor}66;
+        box-shadow: 0 0 8px ${mainColor}4D;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .active-profile-status.active {
+        background: ${mainColor}33;
+        color: ${mainColor};
+        border-color: ${mainColor}66;
+        box-shadow: 0 0 8px ${mainColor}4D;
+      }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // Update container class
+    this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
     if (this.isVisible) {
       this.container.classList.add('vivideo-visible');
     }
-    this.updateThemeSelection();
-    this.saveTheme();
-    this.toggleThemes(); // Hide themes panel after selection
+  }
+
+  saveThemeColors() {
+    chrome.runtime.sendMessage({
+      action: 'set-storage',
+      data: { vivideoThemeColors: this.themeColors }
+    });
   }
 
   updateThemeSelection() {
@@ -1036,6 +1432,7 @@ class VivideoController {
         option.classList.remove('vivideo-theme-selected');
       }
     });
+    this.updateThemeColorSlider();
   }
 
   toggle() {
@@ -1051,6 +1448,21 @@ class VivideoController {
     this.container.classList.add('vivideo-visible');
     this.container.className = `vivideo-container vivideo-theme-${this.currentTheme} vivideo-visible`;
     this.isVisible = true;
+    
+    // Ensure all panels are collapsed when showing
+    this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
+    
+    const profilesPanel = this.container.querySelector('#profiles-panel');
+    const themesPanel = this.container.querySelector('#themes-panel');
+    const infoPanel = this.container.querySelector('#info-panel');
+    
+    if (profilesPanel) profilesPanel.style.display = 'none';
+    if (themesPanel) themesPanel.style.display = 'none';
+    if (infoPanel) infoPanel.style.display = 'none';
+    
+    this.updateActiveStates();
     this.applyFilters(); // Always apply filters when showing panel
   }
 
@@ -1092,6 +1504,12 @@ class VivideoController {
     const existingSvg = document.querySelector('#vivideo-svg-container');
     if (existingSvg) {
       existingSvg.remove();
+    }
+    
+    // Remove dynamic theme styles
+    const existingStyle = document.querySelector('#vivideo-dynamic-theme');
+    if (existingStyle) {
+      existingStyle.remove();
     }
     
     // Reset all video filters

@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Vivideo HSL Color Picker Demo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(0, 255, 65, 0.1);
+            border: 1px solid rgba(0, 255, 65, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .demo-header h1 {
+            font-size: 2.5em;
+            margin: 0 0 10px 0;
+            background: linear-gradient(45deg, #00ff41, #39ff14, #00cc33);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin: 30px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            border-color: rgba(0, 255, 65, 0.5);
+            box-shadow: 0 0 25px rgba(0, 255, 65, 0.2);
+            transform: translateY(-5px);
+        }
+        
+        .feature-card h3 {
+            color: #00ff41;
+            margin-top: 0;
+            font-size: 1.4em;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(0, 191, 255, 0.1);
+            border: 1px solid rgba(0, 191, 255, 0.3);
+            border-radius: 12px;
+        }
+        
+        .test-section h2 {
+            color: #00bfff;
+            text-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+            margin-top: 0;
+        }
+        
+        .media-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+        
+        .media-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+        
+        .media-item:hover {
+            transform: scale(1.02);
+        }
+        
+        video, img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .instructions {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .instructions h3 {
+            color: #ffd700;
+            margin-top: 0;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        
+        .step-number {
+            background: #00ff41;
+            color: #000;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        
+        .color-examples {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .color-sample {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .color-sample.red { background: linear-gradient(135deg, hsl(0, 100%, 50%), hsl(0, 80%, 40%)); }
+        .color-sample.orange { background: linear-gradient(135deg, hsl(30, 100%, 50%), hsl(30, 80%, 40%)); }
+        .color-sample.yellow { background: linear-gradient(135deg, hsl(60, 100%, 50%), hsl(60, 80%, 40%)); }
+        .color-sample.green { background: linear-gradient(135deg, hsl(120, 100%, 50%), hsl(120, 80%, 40%)); }
+        .color-sample.cyan { background: linear-gradient(135deg, hsl(180, 100%, 50%), hsl(180, 80%, 40%)); }
+        .color-sample.blue { background: linear-gradient(135deg, hsl(240, 100%, 50%), hsl(240, 80%, 40%)); }
+        .color-sample.purple { background: linear-gradient(135deg, hsl(300, 100%, 50%), hsl(300, 80%, 40%)); }
+        
+        .shortcut-key {
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-family: monospace;
+            color: #fff;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background: rgba(255, 255, 0, 0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-header">
+        <h1>🎨 Vivideo HSL Color Picker</h1>
+        <p><strong>Nowe funkcje kolorystyczne v2.0</strong></p>
+        <p>Naciśnij <span class="shortcut-key">Alt + V</span> aby otworzyć panel Vivideo</p>
+    </div>
+
+    <div class="instructions">
+        <h3>🚀 Instrukcja testowania HSL Color Picker</h3>
+        
+        <div class="step">
+            <div class="step-number">1</div>
+            <div>Naciśnij <span class="shortcut-key">Alt + V</span> aby otworzyć panel Vivideo</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">2</div>
+            <div>Kliknij przycisk <span class="highlight">"Themes"</span> w panelu</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">3</div>
+            <div>Wybierz motyw: <span class="highlight">Casual</span> (niebieski) lub <span class="highlight">Cybernetic</span> (zielony)</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">4</div>
+            <div>Użyj suwaka <span class="highlight">"Theme Color"</span> aby zmienić odcień (0-360°)</div>
+        </div>
+        
+        <div class="step">
+            <div class="step-number">5</div>
+            <div>Obserwuj jak zmienia się kolorystyka całego GUI w czasie rzeczywistym!</div>
+        </div>
+    </div>
+
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>🌈 Nowe nazwy motywów</h3>
+            <ul>
+                <li><strong>Casual</strong> - minimalistyczny, niebieski (domyślnie)</li>
+                <li><strong>Cybernetic</strong> - cyberpunkowy, zielony (domyślnie)</li>
+            </ul>
+            <p>Każdy motyw można personalizować kolorystycznie!</p>
+        </div>
+
+        <div class="feature-card">
+            <h3>🎨 HSL Color Picker</h3>
+            <ul>
+                <li>Suwak 0-360° dla pełnego spektrum kolorów</li>
+                <li>Podgląd koloru w czasie rzeczywistym</li>
+                <li>Automatyczne zapisywanie wybranego koloru</li>
+                <li>Zachowanie czytelności tekstu</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h3>⚡ Dynamiczne style</h3>
+            <ul>
+                <li>Kolory generowane dynamicznie w CSS</li>
+                <li>Efekt grid dopasowuje się do koloru</li>
+                <li>Wszystkie elementy GUI zmieniają kolor</li>
+                <li>Płynne przejścia kolorystyczne</li>
+            </ul>
+        </div>
+
+        <div class="feature-card">
+            <h3>💾 Automatyczne zapisywanie</h3>
+            <ul>
+                <li>Kolor zapisuje się natychmiast</li>
+                <li>Bez potrzeby tworzenia profili</li>
+                <li>Zachowanie między sesjami</li>
+                <li>Prosty, intuicyjny interface</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎬 Próbki multimediów do testowania</h2>
+        <p>Użyj poniższych multimediów do testowania filtrów Vivideo:</p>
+        
+        <div class="media-showcase">
+            <div class="media-item">
+                <video controls autoplay muted loop>
+                    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                    <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+                    Test Video 1
+                </video>
+            </div>
+            
+            <div class="media-item">
+                <img src="https://picsum.photos/400/300?random=1" alt="Test Image 1">
+            </div>
+            
+            <div class="media-item">
+                <img src="https://picsum.photos/400/300?random=2" alt="Test Image 2">
+            </div>
+            
+            <div class="media-item">
+                <video controls autoplay muted loop>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    Test Video 2
+                </video>
+            </div>
+        </div>
+    </div>
+
+    <div class="feature-card">
+        <h3>🎯 Przykładowe kolory do testowania</h3>
+        <p>Wypróbuj te kolory w HSL color picker:</p>
+        
+        <div class="color-examples">
+            <div class="color-sample red">
+                <strong>Czerwony</strong><br>
+                HSL: 0°
+            </div>
+            <div class="color-sample orange">
+                <strong>Pomarańczowy</strong><br>
+                HSL: 30°
+            </div>
+            <div class="color-sample yellow">
+                <strong>Żółty</strong><br>
+                HSL: 60°
+            </div>
+            <div class="color-sample green">
+                <strong>Zielony</strong><br>
+                HSL: 120°
+            </div>
+            <div class="color-sample cyan">
+                <strong>Cyjan</strong><br>
+                HSL: 180°
+            </div>
+            <div class="color-sample blue">
+                <strong>Niebieski</strong><br>
+                HSL: 240°
+            </div>
+            <div class="color-sample purple">
+                <strong>Fioletowy</strong><br>
+                HSL: 300°
+            </div>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h3>🧪 Lista kontrolna testów</h3>
+        <ul>
+            <li>✅ <strong>Zmiana nazw motywów:</strong> Sprawdź czy widać "Casual" i "Cybernetic"</li>
+            <li>✅ <strong>HSL suwak:</strong> Użyj suwaka i sprawdź czy kolory się zmieniają</li>
+            <li>✅ <strong>Podgląd koloru:</strong> Sprawdź prostokąt podglądu koloru</li>
+            <li>✅ <strong>Automatyczne zapisywanie:</strong> Zmień kolor, zamknij panel, otwórz ponownie</li>
+            <li>✅ <strong>Efekt grid:</strong> Sprawdź czy tło siatki zmienia kolor</li>
+            <li>✅ <strong>Czytelność:</strong> Sprawdź czy tekst jest czytelny przy każdym kolorze</li>
+            <li>✅ <strong>Filtry wideo:</strong> Sprawdź czy filtry działają na powyższe multimedia</li>
+        </ul>
+    </div>
+
+    <script>
+        console.log('🎨 Vivideo HSL Color Picker Demo loaded');
+        console.log('📖 Press Alt+V to open Vivideo panel and test new color picker!');
+        
+        // Add some dynamic content for testing
+        setInterval(() => {
+            if (Math.random() > 0.8) {
+                const mediaShowcase = document.querySelector('.media-showcase');
+                const newImg = document.createElement('div');
+                newImg.className = 'media-item';
+                newImg.innerHTML = `<img src="https://picsum.photos/400/300?random=${Date.now()}" alt="Dynamic Test Image">`;
+                mediaShowcase.appendChild(newImg);
+                
+                // Remove old items if too many
+                if (mediaShowcase.children.length > 8) {
+                    mediaShowcase.removeChild(mediaShowcase.firstChild);
+                }
+            }
+        }, 15000);
+    </script>
+</body>
+</html>
