@@ -181,7 +181,7 @@ class VivideoController {
   createUI() {
     this.container = document.createElement('div');
     this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
-    this.container.innerHTML = `
+    this.container.innerHTML = /*html*/ `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
         <button class="vivideo-info" title="Information">ⓘ</button>
@@ -1304,7 +1304,7 @@ class VivideoController {
     const lightColor = `hsl(${hue}, ${saturation}%, ${Math.min(lightness + 20, 90)}%)`;
     const darkColor = `hsl(${hue}, ${saturation}%, ${Math.max(lightness - 20, 10)}%)`;
     
-    style.textContent = `
+    style.textContent = /*css*/`
       .vivideo-container.vivideo-theme-${this.currentTheme} {
         color: ${mainColor};
         border-color: ${mainColor}66;
