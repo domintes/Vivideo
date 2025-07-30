@@ -1,0 +1,674 @@
+// Vivideo Content Script - Main Controller (Refactored)
+// Main controller that orchestrates all components
+
+// Prevent multiple instances - improved
+if (window.vivideoController) {
+  window.vivideoController.destroy();
+  window.vivideoController = null;
+}
+
+class VivideoController {
+  constructor() {
+    // Prevent multiple instances - strict check
+    if (window.vivideoController) {
+      console.warn('Vivideo: Instance already exists, destroying previous one');
+      window.vivideoController.destroy();
+    }
+    
+    this.isVisible = false;
+    this.container = null;
+    this.settings = {
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      gamma: 1,
+      colorTemp: 0,
+      sharpness: 0,
+      autoActivate: true,
+      workOnImagesActivate: false,
+      activeProfile: null
+    };
+    this.defaultSettings = { ...this.settings };
+    this.profiles = [];
+    this.defaultProfile = {
+      name: 'DEFAULT',
+      settings: { ...this.defaultSettings }
+    };
+    this.currentTheme = 'cybernetic';
+    this.themeColors = {
+      casual: { 
+        fontHue: 200, 
+        backgroundHue: 220,
+        saturation: 100, 
+        lightness: 50 
+      },
+      cybernetic: { 
+        fontHue: 120, 
+        backgroundHue: 140,
+        saturation: 100, 
+        lightness: 40 
+      }
+    };
+    this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
+    this.isDragging = false;
+    this.dragOffset = { x: 0, y: 0 };
+    this.clickOutsideHandler = null;
+    this.isInitialized = false;
+    this.dragHandlers = null;
+    
+    // Initialize components (will be created later)
+    this.videoControls = null;
+    this.profileManager = null;
+    this.themeManager = null;
+    this.filterEngine = null;
+    
+    // Set global reference
+    window.vivideoController = this;
+    
+    this.init();
+  }
+
+  async init() {
+    if (this.isInitialized) {
+      console.warn('Vivideo: Already initialized');
+      return;
+    }
+    
+    console.log('Vivideo: Starting initialization...');
+    await this.loadSettings();
+    this.finishInitialization();
+  }
+
+  async loadSettings() {
+    try {
+      const response = await StorageUtils.loadSettings();
+      
+      if (response && response.vivideoSettings) {
+        this.settings = { ...this.settings, ...response.vivideoSettings };
+      }
+      if (response && response.vivideoProfiles) {
+        this.profiles = response.vivideoProfiles;
+      }
+      if (response && response.vivideoTheme) {
+        this.currentTheme = response.vivideoTheme;
+      }
+      if (response && response.vivideoThemeColors) {
+        this.themeColors = { ...this.themeColors, ...response.vivideoThemeColors };
+      }
+      if (response && response.vivideoAppState) {
+        this.loadActiveProfile(response.vivideoAppState.activeProfile);
+      }
+    } catch (error) {
+      console.error('Vivideo: Error loading settings:', error);
+    }
+  }
+
+  finishInitialization() {
+    // Initialize components here when all classes are available
+    if (!this.initializeComponents()) {
+      console.error('Vivideo: Failed to initialize components');
+      return;
+    }
+    
+    this.createUI();
+    this.bindEvents();
+    this.observeVideos();
+    
+    if (this.themeManager) {
+      this.themeManager.applyThemeColors(this.currentTheme, this.themeColors, this.container);
+    }
+    
+    this.updateUI();
+    this.isInitialized = true;
+    console.log('Vivideo: Initialization complete');
+    
+    // Auto-apply filters if autoActivate is enabled
+    if (this.settings.autoActivate) {
+      this.applyFilters();
+    }
+  }
+
+  initializeComponents() {
+    // Check if classes are available before creating instances
+    if (typeof VideoControls === 'undefined') {
+      console.error('VideoControls class not available');
+      return false;
+    }
+    if (typeof ProfileManager === 'undefined') {
+      console.error('ProfileManager class not available');
+      return false;
+    }
+    if (typeof ThemeManager === 'undefined') {
+      console.error('ThemeManager class not available');
+      return false;
+    }
+    if (typeof VideoFilterEngine === 'undefined') {
+      console.error('VideoFilterEngine class not available');
+      return false;
+    }
+
+    // Create component instances
+    this.videoControls = new VideoControls(this);
+    this.profileManager = new ProfileManager(this);
+    this.themeManager = new ThemeManager(this);
+    this.filterEngine = new VideoFilterEngine(this);
+    
+    console.log('Vivideo: All components initialized successfully');
+    return true;
+  }
+
+  loadActiveProfile(profileName) {
+    if (profileName && this.profiles.length > 0) {
+      const profile = this.profiles.find(p => p.name === profileName);
+      if (profile) {
+        this.settings = { ...this.settings, ...profile.settings };
+        this.settings.activeProfile = profileName;
+      }
+    }
+  }
+
+  createUI() {
+    if (!this.videoControls || !this.profileManager || !this.themeManager) {
+      console.error('Vivideo: Cannot create UI - components not initialized');
+      return;
+    }
+    
+    this.container = document.createElement('div');
+    this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
+    
+    this.container.innerHTML = 
+      UIHelper.createHeaderHTML() +
+      this.themeManager.createThemesHTML() +
+      this.profileManager.createProfilesHTML() +
+      UIHelper.createCheckboxesHTML(this.settings) +
+      UIHelper.createInfoHTML() +
+      this.videoControls.createControlsHTML() +
+      UIHelper.createShortcutsHTML();
+
+    document.body.appendChild(this.container);
+    this.updateProfilesList();
+    this.updateThemeSelection();
+  }
+
+  bindEvents() {
+    if (!this.videoControls || !this.profileManager || !this.themeManager) {
+      console.error('Vivideo: Cannot bind events - components not initialized');
+      return;
+    }
+    
+    // Header events
+    UIHelper.bindHeaderEvents(this.container, this);
+    
+    // Checkbox events
+    UIHelper.bindCheckboxEvents(this.container, this);
+    
+    // Component events
+    this.videoControls.bindEvents(this.container);
+    this.profileManager.bindEvents(this.container);
+    this.themeManager.bindEvents(this.container);
+
+    // Click outside to hide
+    this.clickOutsideHandler = (e) => {
+      if (this.isVisible && !this.container.contains(e.target) && !this.isDragging) {
+        this.hide();
+      }
+    };
+    document.addEventListener('click', this.clickOutsideHandler, true);
+
+    // Prevent panel clicks from hiding
+    this.container.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+
+    // Dragging functionality
+    this.dragHandlers = UIHelper.setupDragging(this.container, this);
+
+    // Listen for keyboard shortcut and background messages
+    chrome.runtime.onMessage.addListener((message) => {
+      console.log('Vivideo: Received message:', message);
+      if (message.action === 'toggle-vivideo') {
+        this.toggle();
+      }
+      if (message.action === 'reset-vivideo') {
+        this.resetAll();
+      }
+    });
+
+    // Handle fullscreen changes
+    document.addEventListener('fullscreenchange', () => {
+      if (document.fullscreenElement) {
+        this.container.classList.add('vivideo-fullscreen');
+      } else {
+        this.container.classList.remove('vivideo-fullscreen');
+      }
+    });
+  }
+
+  updateControl(control, value) {
+    value = UIHelper.clampValue(control, value);
+    this.settings[control === 'colortemp' ? 'colorTemp' : control] = value;
+    this.updateUI();
+    this.applyFilters();
+    this.saveSettings();
+  }
+
+  updateUI() {
+    if (!this.videoControls || !this.profileManager || !this.themeManager) {
+      console.warn('Vivideo: Components not initialized yet for updateUI');
+      return;
+    }
+    this.videoControls.updateUI(this.settings, this.container);
+    UIHelper.updateCheckboxes(this.container, this.settings);
+    this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
+    this.themeManager.updateActiveThemeDisplay(this.container, this.currentTheme);
+  }
+
+  applyFilters() {
+    if (!this.filterEngine) {
+      console.warn('Vivideo: FilterEngine not initialized yet');
+      return;
+    }
+    this.filterEngine.applyFilters(this.settings);
+  }
+
+  removeFilters() {
+    if (!this.filterEngine) {
+      console.warn('Vivideo: FilterEngine not initialized yet');
+      return;
+    }
+    this.filterEngine.removeFilters();
+  }
+
+  observeVideos() {
+    if (!this.filterEngine) {
+      console.warn('Vivideo: FilterEngine not initialized yet');
+      return;
+    }
+    this.filterEngine.observeVideos(() => {
+      if (this.settings.autoActivate || this.isVisible) {
+        this.applyFilters();
+      }
+    });
+  }
+
+  resetAll() {
+    this.settings = {
+      brightness: 0,
+      contrast: 0,
+      saturation: 0,
+      gamma: 1,
+      colorTemp: 0,
+      sharpness: 0,
+      autoActivate: this.settings.autoActivate,
+      workOnImagesActivate: this.settings.workOnImagesActivate,
+      activeProfile: null
+    };
+    
+    this.filterEngine.removeFilters();
+    this.updateUI();
+    this.applyFilters();
+    this.saveSettings();
+  }
+
+  resetSingle(control) {
+    const defaultValue = this.defaultSettings[control === 'colortemp' ? 'colorTemp' : control];
+    this.settings[control === 'colortemp' ? 'colorTemp' : control] = defaultValue;
+    this.updateUI();
+    this.applyFilters();
+    this.saveSettings();
+  }
+
+  // Panel visibility methods
+  toggleProfiles() {
+    this.profilesVisible = !this.profilesVisible;
+    this.showPanel('profiles');
+    if (this.profilesVisible) {
+      this.updateProfilesList();
+    }
+  }
+
+  toggleThemes() {
+    this.themesVisible = !this.themesVisible;
+    this.showPanel('themes');
+    if (this.themesVisible && this.themeManager) {
+      this.themeManager.updateThemeColorSliders(this.container, this.currentTheme);
+    }
+  }
+
+  toggleInfo() {
+    this.infoVisible = !this.infoVisible;
+    this.showPanel('info');
+  }
+
+  showPanel(panelType) {
+    const panels = {
+      profiles: this.container.querySelector('#profiles-panel'),
+      themes: this.container.querySelector('#themes-panel'),
+      info: this.container.querySelector('#info-panel')
+    };
+
+    // Hide all panels first
+    Object.values(panels).forEach(panel => {
+      if (panel) panel.style.display = 'none';
+    });
+
+    // Reset visibility flags
+    this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
+
+    // Show requested panel
+    if (panels[panelType]) {
+      if (panelType === 'profiles' && this.profilesVisible !== false) {
+        panels[panelType].style.display = 'block';
+        this.profilesVisible = true;
+      } else if (panelType === 'themes' && this.themesVisible !== false) {
+        panels[panelType].style.display = 'block';
+        this.themesVisible = true;
+      } else if (panelType === 'info' && this.infoVisible !== false) {
+        panels[panelType].style.display = 'block';
+        this.infoVisible = true;
+      } else {
+        // Toggle logic
+        if (panelType === 'profiles') {
+          this.profilesVisible = true;
+          panels[panelType].style.display = 'block';
+        } else if (panelType === 'themes') {
+          this.themesVisible = true;
+          panels[panelType].style.display = 'block';
+        } else if (panelType === 'info') {
+          this.infoVisible = true;
+          panels[panelType].style.display = 'block';
+        }
+      }
+    }
+
+    this.updateActiveStates();
+  }
+
+  updateActiveStates() {
+    const profilesBtn = this.container.querySelector('#profiles-btn');
+    const themesBtn = this.container.querySelector('#themes-btn');
+    const infoBtn = this.container.querySelector('.vivideo-info');
+
+    [profilesBtn, themesBtn, infoBtn].forEach(btn => {
+      if (btn) btn.classList.remove('vivideo-active');
+    });
+
+    if (this.profilesVisible && profilesBtn) profilesBtn.classList.add('vivideo-active');
+    if (this.themesVisible && themesBtn) themesBtn.classList.add('vivideo-active');
+    if (this.infoVisible && infoBtn) infoBtn.classList.add('vivideo-active');
+  }
+
+  // Profile methods
+  updateProfilesList() {
+    if (!this.profileManager) {
+      console.warn('Vivideo: ProfileManager not initialized yet');
+      return;
+    }
+    this.profileManager.updateProfilesList(
+      this.container, 
+      this.profiles, 
+      this.settings, 
+      this.defaultProfile
+    );
+  }
+
+  loadProfile(profile) {
+    if (profile.name === 'DEFAULT') {
+      this.settings.activeProfile = null;
+      Object.keys(this.defaultSettings).forEach(key => {
+        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+          this.settings[key] = this.defaultSettings[key];
+        }
+      });
+    } else {
+      this.settings.activeProfile = profile.name;
+      Object.keys(profile.settings).forEach(key => {
+        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+          this.settings[key] = profile.settings[key];
+        }
+      });
+      if (profile.settings.autoActivate !== undefined) {
+        this.settings.autoActivate = profile.settings.autoActivate;
+      }
+    }
+
+    this.updateUI();
+    this.applyFilters();
+    this.saveSettings();
+    this.saveAppState();
+    this.updateProfilesList();
+    this.toggleProfiles();
+  }
+
+  deleteProfile(index) {
+    const deletedProfile = this.profiles[index];
+    if (this.settings.activeProfile === deletedProfile.name) {
+      this.settings.activeProfile = null;
+      this.saveAppState();
+    }
+    
+    this.profiles.splice(index, 1);
+    this.saveProfiles();
+    this.updateProfilesList();
+  }
+
+  // Theme methods
+  updateThemeSelection() {
+    if (!this.themeManager) {
+      console.warn('Vivideo: ThemeManager not initialized yet');
+      return;
+    }
+    this.themeManager.updateThemeSelection(this.container, this.currentTheme);
+  }
+
+  changeTheme(theme) {
+    if (!this.themeManager) {
+      console.warn('Vivideo: ThemeManager not initialized yet');
+      return;
+    }
+    this.currentTheme = theme;
+    this.themeManager.updateThemeColorSliders(this.container, this.currentTheme);
+    this.themeManager.applyThemeColors(this.currentTheme, this.themeColors, this.container);
+    this.updateThemeSelection();
+    this.saveTheme();
+    this.saveThemeColors();
+    this.toggleThemes();
+  }
+
+  updateFontThemeColor(hue) {
+    if (!this.themeManager) {
+      console.warn('Vivideo: ThemeManager not initialized yet');
+      return;
+    }
+    this.themeColors[this.currentTheme].fontHue = hue;
+    this.themeManager.applyThemeColors(this.currentTheme, this.themeColors, this.container);
+    this.themeManager.updateColorPreviews(this.container, this.currentTheme);
+    this.saveThemeColors();
+  }
+
+  updateBackgroundThemeColor(hue) {
+    if (!this.themeManager) {
+      console.warn('Vivideo: ThemeManager not initialized yet');
+      return;
+    }
+    this.themeColors[this.currentTheme].backgroundHue = hue;
+    this.themeManager.applyThemeColors(this.currentTheme, this.themeColors, this.container);
+    this.themeManager.updateColorPreviews(this.container, this.currentTheme);
+    this.saveThemeColors();
+  }
+
+  // Main visibility controls
+  toggle() {
+    console.log('Vivideo: Toggle called, isVisible:', this.isVisible);
+    if (this.isVisible) {
+      this.hide();
+    } else {
+      this.show();
+    }
+  }
+
+  show() {
+    this.container.classList.add('vivideo-visible');
+    this.container.className = `vivideo-container vivideo-theme-${this.currentTheme} vivideo-visible`;
+    this.isVisible = true;
+    this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
+    
+    // Hide all panels
+    ['profiles-panel', 'themes-panel', 'info-panel'].forEach(panelId => {
+      const panel = this.container.querySelector(`#${panelId}`);
+      if (panel) panel.style.display = 'none';
+    });
+    
+    this.updateActiveStates();
+    this.applyFilters();
+  }
+
+  hide() {
+    this.container.classList.remove('vivideo-visible');
+    this.isVisible = false;
+    if (!this.settings.autoActivate) {
+      this.removeFilters();
+    }
+    
+    // Reset all active states when hiding
+    this.profilesVisible = false;
+    this.themesVisible = false;
+    this.infoVisible = false;
+    this.updateActiveStates();
+  }
+
+  // Storage methods
+  async saveSettings() {
+    await StorageUtils.saveSettings(this.settings);
+  }
+
+  async saveProfiles() {
+    await StorageUtils.saveProfiles(this.profiles);
+  }
+
+  async saveTheme() {
+    await StorageUtils.saveTheme(this.currentTheme);
+  }
+
+  async saveThemeColors() {
+    await StorageUtils.saveThemeColors(this.themeColors);
+  }
+
+  async saveAppState() {
+    await StorageUtils.saveAppState({
+      activeProfile: this.settings.activeProfile,
+      autoActivate: this.settings.autoActivate
+    });
+  }
+
+  destroy() {
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler, true);
+    }
+    
+    // Cleanup drag handlers
+    if (this.dragHandlers) {
+      if (this.dragHandlers.header) {
+        this.dragHandlers.header.removeEventListener('mousedown', this.dragHandlers.mouseDown);
+      }
+      document.removeEventListener('mousemove', this.dragHandlers.mouseMove);
+      document.removeEventListener('mouseup', this.dragHandlers.mouseUp);
+    }
+
+    // Clean up filters and SVG
+    if (this.filterEngine) {
+      this.filterEngine.removeFilters();
+    }
+    
+    // Remove dynamic theme styles
+    const existingStyle = document.querySelector('#vivideo-dynamic-theme');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    this.isInitialized = false;
+    this.container = null;
+    
+    if (window.vivideoController === this) {
+      window.vivideoController = null;
+    }
+  }
+}
+
+// Initialization functions
+function initializeVivideo() {
+  if (window.vivideoController) {
+    return;
+  }
+  
+  // Check if all required classes are available
+  const requiredClasses = ['VideoControls', 'ProfileManager', 'ThemeManager', 'VideoFilterEngine', 'StorageUtils', 'UIHelper'];
+  const missingClasses = requiredClasses.filter(className => typeof window[className] === 'undefined');
+  
+  if (missingClasses.length > 0) {
+    console.warn('Vivideo: Missing classes:', missingClasses, '- retrying in 100ms');
+    setTimeout(initializeVivideo, 100);
+    return;
+  }
+  
+  console.log('Vivideo: All classes available, creating controller');
+  new VivideoController();
+}
+
+// Message handling
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'toggle-vivideo') {
+    if (window.vivideoController) {
+      window.vivideoController.toggle();
+    } else {
+      initializeVivideo();
+      setTimeout(() => {
+        if (window.vivideoController) {
+          window.vivideoController.show();
+        }
+      }, 100);
+    }
+    sendResponse({ success: true });
+  }
+  return true;
+});
+
+// Initialization
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeVivideo);
+} else {
+  initializeVivideo();
+}
+
+window.addEventListener('load', () => {
+  if (!window.vivideoController) {
+    initializeVivideo();
+  }
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && e.key === 'v') {
+    e.preventDefault();
+    if (window.vivideoController) {
+      window.vivideoController.toggle();
+    } else {
+      initializeVivideo();
+      setTimeout(() => {
+        if (window.vivideoController) {
+          window.vivideoController.show();
+        }
+      }, 100);
+    }
+  }
+});

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Vivideo v4.0 - Deep Debug Test</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            margin: 20px;
+            background: #0a0a0a;
+            color: #00ff00;
+            line-height: 1.6;
+        }
+        .debug-section {
+            background: #111;
+            border: 1px solid #333;
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+        .warning { color: #ffaa44; }
+        .info { color: #4488ff; }
+        .log-entry {
+            margin: 5px 0;
+            padding: 3px 8px;
+            border-left: 3px solid #333;
+        }
+        .log-entry.error { border-left-color: #ff4444; }
+        .log-entry.success { border-left-color: #44ff44; }
+        .log-entry.warning { border-left-color: #ffaa44; }
+        .log-entry.info { border-left-color: #4488ff; }
+        #real-time-log {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #000;
+            padding: 10px;
+            font-size: 12px;
+        }
+        .test-button {
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .test-button:hover {
+            background: #444;
+        }
+        video {
+            width: 300px;
+            height: 200px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 8px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Vivideo v4.0 - Dogłębny Debug Test</h1>
+    
+    <div class="debug-section">
+        <h2>📊 Status ładowania komponentów:</h2>
+        <div id="loading-status">
+            <div id="storage-check" class="log-entry info">⏳ Sprawdzanie StorageUtils...</div>
+            <div id="uihelper-check" class="log-entry info">⏳ Sprawdzanie UIHelper...</div>
+            <div id="videocontrols-check" class="log-entry info">⏳ Sprawdzanie VideoControls...</div>
+            <div id="profilemanager-check" class="log-entry info">⏳ Sprawdzanie ProfileManager...</div>
+            <div id="thememanager-check" class="log-entry info">⏳ Sprawdzanie ThemeManager...</div>
+            <div id="filterengine-check" class="log-entry info">⏳ Sprawdzanie VideoFilterEngine...</div>
+            <div id="controller-check" class="log-entry info">⏳ Sprawdzanie VivideoController...</div>
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>🎮 Testy manualne:</h2>
+        <button class="test-button" onclick="testKeyboard()">Test Alt+V (Keyboard)</button>
+        <button class="test-button" onclick="testManualToggle()">Test Manual Toggle</button>
+        <button class="test-button" onclick="testInitialization()">Test Force Init</button>
+        <button class="test-button" onclick="clearLogs()">Clear Logs</button>
+    </div>
+
+    <div class="debug-section">
+        <h2>📺 Test Video:</h2>
+        <video controls loop>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <div class="debug-section">
+        <h2>📝 Real-time Console Log:</h2>
+        <div id="real-time-log"></div>
+    </div>
+
+    <script>
+        // Real-time console logging
+        const originalLog = console.log;
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const logContainer = document.getElementById('real-time-log');
+
+        function addLogEntry(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(entry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addLogEntry(args.join(' '), 'info');
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addLogEntry('ERROR: ' + args.join(' '), 'error');
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addLogEntry('WARNING: ' + args.join(' '), 'warning');
+        };
+
+        // Component checker
+        function checkComponent(name, className, elementId) {
+            const element = document.getElementById(elementId);
+            if (window[className]) {
+                element.textContent = `✅ ${name} - Załadowany pomyślnie`;
+                element.className = 'log-entry success';
+                return true;
+            } else {
+                element.textContent = `❌ ${name} - BŁĄD: Klasa nie znaleziona`;
+                element.className = 'log-entry error';
+                return false;
+            }
+        }
+
+        // Test functions
+        function testKeyboard() {
+            console.log('🎹 Testowanie skrótu klawiszowego Alt+V...');
+            const event = new KeyboardEvent('keydown', {
+                key: 'v',
+                altKey: true,
+                bubbles: true
+            });
+            document.dispatchEvent(event);
+            console.log('🎹 Wydarzenie Alt+V wysłane');
+        }
+
+        function testManualToggle() {
+            console.log('🔧 Testowanie manualnego toggle...');
+            if (window.vivideoController) {
+                console.log('🎯 VivideoController znaleziony, wywołanie toggle()');
+                window.vivideoController.toggle();
+            } else {
+                console.error('❌ VivideoController nie znaleziony');
+            }
+        }
+
+        function testInitialization() {
+            console.log('🚀 Testowanie wymuszonej inicjalizacji...');
+            if (typeof initializeVivideo === 'function') {
+                initializeVivideo();
+            } else {
+                console.error('❌ Funkcja initializeVivideo nie znaleziona');
+            }
+        }
+
+        function clearLogs() {
+            logContainer.innerHTML = '';
+        }
+
+        // Initial check after page load
+        let checkAttempts = 0;
+        const maxAttempts = 50; // 5 seconds
+
+        function performCheck() {
+            checkAttempts++;
+            console.log(`🔍 Próba sprawdzenia komponentów #${checkAttempts}`);
+
+            const results = {
+                StorageUtils: checkComponent('StorageUtils', 'StorageUtils', 'storage-check'),
+                UIHelper: checkComponent('UIHelper', 'UIHelper', 'uihelper-check'),
+                VideoControls: checkComponent('VideoControls', 'VideoControls', 'videocontrols-check'),
+                ProfileManager: checkComponent('ProfileManager', 'ProfileManager', 'profilemanager-check'),
+                ThemeManager: checkComponent('ThemeManager', 'ThemeManager', 'thememanager-check'),
+                VideoFilterEngine: checkComponent('VideoFilterEngine', 'VideoFilterEngine', 'filterengine-check'),
+                VivideoController: checkComponent('VivideoController Instance', 'vivideoController', 'controller-check')
+            };
+
+            const allLoaded = Object.values(results).every(result => result);
+            
+            if (allLoaded) {
+                console.log('🎉 Wszystkie komponenty załadowane pomyślnie!');
+                return;
+            }
+
+            if (checkAttempts < maxAttempts) {
+                setTimeout(performCheck, 100);
+            } else {
+                console.error('⏰ Timeout: Nie udało się załadować wszystkich komponentów w ciągu 5 sekund');
+                
+                // Show which classes are missing
+                const missingClasses = Object.entries(results)
+                    .filter(([name, loaded]) => !loaded)
+                    .map(([name]) => name);
+                    
+                console.error('❌ Brakujące komponenty:', missingClasses);
+            }
+        }
+
+        // Start checking after DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(performCheck, 500); // Give extension time to load
+            });
+        } else {
+            setTimeout(performCheck, 500);
+        }
+
+        // Extension event listeners
+        document.addEventListener('keydown', (e) => {
+            if (e.altKey && e.key === 'v') {
+                console.log('🎯 Alt+V wykryty na stronie!');
+            }
+        });
+
+        console.log('🎬 Vivideo Deep Debug Test Page załadowana');
+        console.log('📋 Rozpoczynanie diagnostyki rozszerzenia...');
+    </script>
+</body>
+</html>

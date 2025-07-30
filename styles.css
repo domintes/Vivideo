@@ -1,5 +1,17 @@
 /* Vivideo Styles */
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+@font-face {
+  font-family: 'Orbitron';
+  src: url('src/assets/fonts/Orbitron-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Rajdhani';
+  src: url('https://fonts.gstatic.com/s/rajdhani/v15/LDI2apCSOBg7S-QT7q4AOeekWPrP.woff2') format('woff2');
+  font-weight: 300 700;
+  font-display: swap;
+}
 
 .vivideo-container {
   position: fixed;
@@ -1076,4 +1088,113 @@
   .vivideo-input {
     width: 50px;
   }
+}
+
+/* Profile Save Section */
+.vivideo-profile-save-section {
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.vivideo-profile-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.vivideo-profile-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-family: 'Rajdhani', monospace;
+  font-size: 14px;
+}
+
+.vivideo-profile-save {
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: inherit;
+  font-family: 'Rajdhani', monospace;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+/* Enhanced Profile Item Styles */
+.vivideo-profile-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  margin: 8px 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Rajdhani', monospace;
+}
+
+.vivideo-profile-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateX(2px);
+}
+
+.vivideo-profile-item.vivideo-profile-active {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: currentColor;
+  font-weight: 600;
+}
+
+.vivideo-profile-name {
+  flex: 1;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  margin-right: 10px;
+}
+
+.vivideo-profile-delete {
+  background: rgba(255, 71, 87, 0.2);
+  border: 1px solid rgba(255, 71, 87, 0.4);
+  color: #ff4757;
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.vivideo-profile-delete:hover {
+  background: rgba(255, 71, 87, 0.4);
+  border-color: #ff4757;
+  box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
+}
+
+/* Layout improvements */
+.vivideo-profiles {
+  margin-bottom: 15px;
+}
+
+.vivideo-themes {
+  margin-bottom: 15px;
 }

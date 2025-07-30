@@ -54,8 +54,18 @@ class VivideoController {
     };
     this.currentTheme = 'cybernetic';
     this.themeColors = {
-      casual: { hue: 200, saturation: 100, lightness: 50 }, // Default blue
-      cybernetic: { hue: 120, saturation: 100, lightness: 40 } // Default green
+      casual: { 
+        fontHue: 200, 
+        backgroundHue: 220,
+        saturation: 100, 
+        lightness: 50 
+      },
+      cybernetic: { 
+        fontHue: 120, 
+        backgroundHue: 140,
+        saturation: 100, 
+        lightness: 40 
+      }
     };
     this.profilesVisible = false;
     this.themesVisible = false;
@@ -187,22 +197,9 @@ class VivideoController {
         <button class="vivideo-info" title="Information">ⓘ</button>
         <button class="vivideo-close" title="Close (Alt+V)">✕</button>
       </div>
+      
+      <!-- Themes Section -->
       <div class="vivideo-bottom-controls">
-        <div class="profiles-button-section button-section">
-          <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">Profiles</button>
-          <div class="active-item-status active-profile-status" id="active-profile-display">
-            DEFAULT
-          </div>
-
-      <div class="vivideo-profiles" id="profiles-panel" style="display: none;">
-        <div class="vivideo-profile-form">
-          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
-          <button class="vivideo-profile-save" id="save-profile">Save</button>
-        </div>
-        </div>
-        <div class="vivideo-profile-list" id="profile-list"></div>
-
-        </div>
         <div class="themes-button-section button-section">
           <button class="vivideo-control-btn" id="themes-btn" title="Themes">Themes</button>
           <div class="active-item-status active-theme-status" id="active-theme-display">
@@ -213,19 +210,45 @@ class VivideoController {
 
       <div class="vivideo-themes" id="themes-panel" style="display: none;">
         <div class="vivideo-theme-option" data-theme="cybernetic">
-          <div class="vivideo-theme-preview cybernetic-preview"></div>
           <span>Cybernetic</span>
         </div>
         <div class="vivideo-theme-option" data-theme="casual">
-          <div class="vivideo-theme-preview casual-preview"></div>
           <span>Casual</span>
         </div>
         <div class="vivideo-theme-color-picker">
-          <label for="theme-color-slider">Theme Color:</label>
-          <input type="range" id="theme-color-slider" min="0" max="360" value="120" step="1">
-          <div class="color-preview" id="color-preview"></div>
+          <label for="font-theme-color-slider">Font Theme Color:</label>
+          <input type="range" id="font-theme-color-slider" min="0" max="360" value="120" step="1">
+          <div class="color-preview" id="font-color-preview"></div>
+        </div>
+        <div class="vivideo-theme-color-picker">
+          <label for="background-theme-color-slider">Background Theme Color:</label>
+          <input type="range" id="background-theme-color-slider" min="0" max="360" value="140" step="1">
+          <div class="color-preview" id="background-color-preview"></div>
         </div>
       </div>
+
+      <!-- Profiles Section -->
+      <div class="vivideo-bottom-controls">
+        <div class="profiles-button-section button-section">
+          <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">Profiles</button>
+          <div class="active-item-status active-profile-status" id="active-profile-display">
+            DEFAULT
+          </div>
+        </div>
+      </div>
+
+      <div class="vivideo-profiles" id="profiles-panel" style="display: none;">
+        <div class="vivideo-profile-list" id="profile-list"></div>
+      </div>
+
+      <!-- Profile Save Form -->
+      <div class="vivideo-profile-save-section">
+        <div class="vivideo-profile-form">
+          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_5">
+          <button class="vivideo-profile-save" id="save-profile">Save</button>
+        </div>
+      </div>
+
       <div class="vivideo-auto-activate checkbox-section">
         <label class="vivideo-checkbox-container">
           <input type="checkbox" id="auto-activate-checkbox" ${this.settings.autoActivate ? 'checked' : ''}>
@@ -263,6 +286,7 @@ class VivideoController {
           </ul>
         </div>
       </div>
+      
       <div class="vivideo-control">
         <div class="vivideo-label">
           <span>Brightness</span>
@@ -282,6 +306,91 @@ class VivideoController {
       <div class="vivideo-control">
         <div class="vivideo-label">
           <span>Contrast</span>
+          <span class="vivideo-value" id="contrast-value">0%</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="contrast-slider" 
+                 min="-100" max="100" value="0" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="contrast-input" 
+                 placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="contrast" title="Reset contrast">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Saturation</span>
+          <span class="vivideo-value" id="saturation-value">0%</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="saturation-slider" 
+                 min="-90" max="100" value="0" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="saturation-input" 
+                 placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="saturation" title="Reset saturation">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Gamma</span>
+          <span class="vivideo-value" id="gamma-value">1.00</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="gamma-slider" 
+                 min="0.1" max="3" value="1" step="0.01">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="gamma-input" 
+                 placeholder="1.00" maxlength="4">
+          <button class="vivideo-reset-single" data-control="gamma" title="Reset gamma">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Color Temp.</span>
+          <span class="vivideo-value" id="colortemp-value">Neutral</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="colortemp-slider" 
+                 min="-100" max="100" value="0" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="colortemp-input" 
+                 placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="colortemp" title="Reset color temperature">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Sharpness</span>
+          <span class="vivideo-value" id="sharpness-value">0%</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="sharpness-slider" 
+                 min="0" max="100" value="0" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="sharpness-input" 
+                 placeholder="0" maxlength="4">
+          <button class="vivideo-reset-single" data-control="sharpness" title="Reset sharpness">↺</button>
+        </div>
+      </div>
+
+      <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
+ 
+      <div class="vivideo-shortcuts">
+        Press <code>Alt + V</code> to toggle • Drag header to move
+      </div>
+    `;
+
+    document.body.appendChild(this.container);
           <span class="vivideo-value" id="contrast-value">0%</span>
         </div>
         <div class="vivideo-slider-container">
@@ -460,10 +569,15 @@ class VivideoController {
       });
     });
 
-    // Theme color picker
-    this.container.querySelector('#theme-color-slider').addEventListener('input', (e) => {
+    // Theme color pickers
+    this.container.querySelector('#font-theme-color-slider').addEventListener('input', (e) => {
       const hue = parseInt(e.target.value);
-      this.updateThemeColor(hue);
+      this.updateFontThemeColor(hue);
+    });
+
+    this.container.querySelector('#background-theme-color-slider').addEventListener('input', (e) => {
+      const hue = parseInt(e.target.value);
+      this.updateBackgroundThemeColor(hue);
     });
 
     // Dragging functionality
@@ -986,7 +1100,7 @@ class VivideoController {
       infoPanel.style.display = 'none';
       this.profilesVisible = false;
       this.infoVisible = false;
-      this.updateThemeColorSlider(); // Update color picker when opening themes panel
+      this.updateThemeColorSliders(); // Update color picker when opening themes panel
     } else {
       themesPanel.style.display = 'none';
     }
@@ -1040,7 +1154,7 @@ class VivideoController {
     
     profileList.innerHTML = '';
     
-    // Add DEFAULT profile first
+    // Add DEFAULT profile first (without delete button)
     const defaultProfileItem = document.createElement('div');
     defaultProfileItem.className = 'vivideo-profile-item';
     
@@ -1051,7 +1165,7 @@ class VivideoController {
     }
     
     defaultProfileItem.innerHTML = `
-      <span class="vivideo-profile-name">DEFAULT${isDefaultActive ? ' (active)' : ''}</span>
+      <span class="vivideo-profile-name">DEFAULT</span>
     `;
     
     defaultProfileItem.addEventListener('click', () => {
@@ -1060,7 +1174,7 @@ class VivideoController {
     
     profileList.appendChild(defaultProfileItem);
     
-    // Add user profiles
+    // Add user profiles with delete buttons
     this.profiles.forEach((profile, index) => {
       const profileItem = document.createElement('div');
       profileItem.className = 'vivideo-profile-item';
@@ -1071,9 +1185,12 @@ class VivideoController {
         profileItem.classList.add('vivideo-profile-active');
       }
       
+      // Truncate long profile names with ellipsis
+      const displayName = profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
+      
       profileItem.innerHTML = `
-        <span class="vivideo-profile-name">${profile.name}${isActive ? ' (active)' : ''}</span>
-        <button class="vivideo-profile-delete" data-index="${index}">❌</button>
+        <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
+        <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
       `;
       
       profileItem.querySelector('.vivideo-profile-name').addEventListener('click', () => {
@@ -1091,7 +1208,7 @@ class VivideoController {
     // Update profile name placeholder
     const profileNameInput = this.container.querySelector('#profile-name');
     if (profileNameInput) {
-      profileNameInput.placeholder = `Profil_${this.profiles.length + 1}`;
+      profileNameInput.placeholder = `Profile_${this.profiles.length + 1}`;
     }
   }
 
@@ -1144,7 +1261,8 @@ class VivideoController {
     const themeDisplay = this.container.querySelector('#active-theme-display');
     if (!themeDisplay) return;
     
-    themeDisplay.textContent = this.currentTheme.toUpperCase();
+    const themeDisplayName = this.currentTheme === 'cybernetic' ? 'CYBERNETIC' : 'CASUAL';
+    themeDisplay.textContent = themeDisplayName;
     themeDisplay.className = 'active-item-status active-theme-status active';
   }
 
@@ -1176,6 +1294,7 @@ class VivideoController {
     this.saveSettings();
     this.saveAppState();
     this.updateProfilesList();
+    this.updateActiveProfileDisplay(); // Update display after saving
     nameInput.value = '';
   }
 
@@ -1246,7 +1365,7 @@ class VivideoController {
 
   changeTheme(theme) {
     this.currentTheme = theme;
-    this.updateThemeColorSlider();
+    this.updateThemeColorSliders();
     this.applyThemeColors();
     this.updateThemeSelection();
     this.saveTheme();
@@ -1254,31 +1373,50 @@ class VivideoController {
     this.toggleThemes(); // Hide themes panel after selection
   }
 
-  updateThemeColor(hue) {
-    // Update current theme's color
-    this.themeColors[this.currentTheme].hue = hue;
+  updateFontThemeColor(hue) {
+    // Update current theme's font color
+    this.themeColors[this.currentTheme].fontHue = hue;
     this.applyThemeColors();
-    this.updateColorPreview();
+    this.updateColorPreviews();
     this.saveThemeColors();
   }
 
-  updateThemeColorSlider() {
-    const colorSlider = this.container.querySelector('#theme-color-slider');
-    const colorPreview = this.container.querySelector('#color-preview');
-    
-    if (colorSlider && this.themeColors[this.currentTheme]) {
-      colorSlider.value = this.themeColors[this.currentTheme].hue;
-      this.updateColorPreview();
-    }
+  updateBackgroundThemeColor(hue) {
+    // Update current theme's background color
+    this.themeColors[this.currentTheme].backgroundHue = hue;
+    this.applyThemeColors();
+    this.updateColorPreviews();
+    this.saveThemeColors();
   }
 
-  updateColorPreview() {
-    const colorPreview = this.container.querySelector('#color-preview');
+  updateThemeColorSliders() {
+    const fontColorSlider = this.container.querySelector('#font-theme-color-slider');
+    const backgroundColorSlider = this.container.querySelector('#background-theme-color-slider');
+    
+    if (fontColorSlider && this.themeColors[this.currentTheme]) {
+      fontColorSlider.value = this.themeColors[this.currentTheme].fontHue;
+    }
+    
+    if (backgroundColorSlider && this.themeColors[this.currentTheme]) {
+      backgroundColorSlider.value = this.themeColors[this.currentTheme].backgroundHue;
+    }
+    
+    this.updateColorPreviews();
+  }
+
+  updateColorPreviews() {
+    const fontColorPreview = this.container.querySelector('#font-color-preview');
+    const backgroundColorPreview = this.container.querySelector('#background-color-preview');
     const currentColor = this.themeColors[this.currentTheme];
     
-    if (colorPreview && currentColor) {
-      const hsl = `hsl(${currentColor.hue}, ${currentColor.saturation}%, ${currentColor.lightness}%)`;
-      colorPreview.style.backgroundColor = hsl;
+    if (fontColorPreview && currentColor) {
+      const fontHsl = `hsl(${currentColor.fontHue}, ${currentColor.saturation}%, ${currentColor.lightness}%)`;
+      fontColorPreview.style.backgroundColor = fontHsl;
+    }
+    
+    if (backgroundColorPreview && currentColor) {
+      const backgroundHsl = `hsl(${currentColor.backgroundHue}, ${currentColor.saturation}%, ${Math.max(currentColor.lightness - 30, 10)}%)`;
+      backgroundColorPreview.style.backgroundColor = backgroundHsl;
     }
   }
 
@@ -1296,87 +1434,142 @@ class VivideoController {
     const style = document.createElement('style');
     style.id = 'vivideo-dynamic-theme';
     
-    const hue = currentColor.hue;
+    const fontHue = currentColor.fontHue;
+    const backgroundHue = currentColor.backgroundHue;
     const saturation = currentColor.saturation;
     const lightness = currentColor.lightness;
     
-    const mainColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    const lightColor = `hsl(${hue}, ${saturation}%, ${Math.min(lightness + 20, 90)}%)`;
-    const darkColor = `hsl(${hue}, ${saturation}%, ${Math.max(lightness - 20, 10)}%)`;
+    const fontColor = `hsl(${fontHue}, ${saturation}%, ${lightness}%)`;
+    const fontLightColor = `hsl(${fontHue}, ${saturation}%, ${Math.min(lightness + 20, 90)}%)`;
+    const fontDarkColor = `hsl(${fontHue}, ${saturation}%, ${Math.max(lightness - 20, 10)}%)`;
+    
+    const bgColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.max(lightness - 30, 10)}%)`;
+    const bgLightColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.min(lightness - 15, 25)}%)`;
+    const bgDarkColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.max(lightness - 45, 5)}%)`;
     
     style.textContent = /*css*/`
       .vivideo-container.vivideo-theme-${this.currentTheme} {
-        color: ${mainColor};
-        border-color: ${mainColor}66;
-        box-shadow: 0 0 25px ${mainColor}66, 0 10px 35px rgba(0, 0, 0, 0.8), inset 0 1px 0 ${mainColor}33;
+        color: ${fontColor};
+        background: linear-gradient(135deg, ${bgDarkColor} 0%, ${bgColor} 50%, ${bgDarkColor} 100%);
+        border-color: ${fontColor}66;
+        box-shadow: 0 0 25px ${fontColor}66, 0 10px 35px rgba(0, 0, 0, 0.8), inset 0 1px 0 ${fontColor}33;
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme}::before {
         background-image: 
-          linear-gradient(${mainColor}4D 1px, transparent 1px),
-          linear-gradient(90deg, ${mainColor}4D 1px, transparent 1px);
+          linear-gradient(${bgColor}4D 1px, transparent 1px),
+          linear-gradient(90deg, ${bgColor}4D 1px, transparent 1px);
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-title {
-        background: linear-gradient(45deg, ${mainColor}, ${lightColor}, ${darkColor});
+        background: linear-gradient(45deg, ${fontColor}, ${fontLightColor}, ${fontDarkColor});
         -webkit-background-clip: text;
         -moz-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        text-shadow: 0 0 15px ${mainColor}99;
+        text-shadow: 0 0 15px ${fontColor}99;
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-info {
-        color: ${mainColor};
-        border-color: ${mainColor}4D;
-        background: ${mainColor}1A;
+        color: ${fontColor};
+        border-color: ${fontColor}4D;
+        background: ${fontColor}1A;
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-info:hover {
-        background: ${mainColor}33;
-        border-color: ${mainColor};
-        box-shadow: 0 0 15px ${mainColor}66;
+        background: ${fontColor}33;
+        border-color: ${fontColor};
+        box-shadow: 0 0 15px ${fontColor}66;
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-value {
-        background: ${mainColor}26;
-        border-color: ${mainColor}66;
-        color: ${mainColor};
-        text-shadow: 0 0 8px ${mainColor}4D;
+        background: ${fontColor}26;
+        border-color: ${fontColor}66;
+        color: ${fontColor};
+        text-shadow: 0 0 8px ${fontColor}4D;
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-slider {
-        background: linear-gradient(90deg, ${mainColor}33, ${mainColor}66);
-        border-color: ${mainColor}4D;
+        background: linear-gradient(90deg, ${fontColor}33, ${fontColor}66);
+        border-color: ${fontColor}4D;
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-slider::-webkit-slider-thumb {
-        background: linear-gradient(135deg, ${mainColor}, ${darkColor});
-        box-shadow: 0 0 15px ${mainColor}99, 0 0 25px ${mainColor}4D;
-        border: 2px solid ${mainColor};
+        background: linear-gradient(135deg, ${fontColor}, ${fontLightColor});
+        box-shadow: 0 0 25px ${fontColor}4D;
+        border-color: ${fontColor};
       }
       
-      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-input,
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-input {
+        background: ${fontColor}1A;
+        border-color: ${fontColor}4D;
+        color: ${fontColor};
+      }
+      
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset,
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset-single,
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-control-btn,
-      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-input,
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-save {
-        background: ${mainColor}1A;
-        border-color: ${mainColor}4D;
-        color: ${mainColor};
+        background: ${fontColor}1A;
+        border-color: ${fontColor}4D;
+        color: ${fontColor};
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset:hover,
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-reset-single:hover,
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-control-btn:hover,
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-save:hover {
-        background: ${mainColor}33;
-        box-shadow: 0 0 15px ${mainColor}66;
-        border-color: ${mainColor};
+        background: ${fontColor}33;
+        box-shadow: 0 0 15px ${fontColor}66;
+        border-color: ${fontColor};
       }
       
       .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-theme-option {
+        background: ${fontColor}1A;
+        border-color: ${fontColor}33;
+        color: ${fontColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-theme-option:hover {
+        background: ${fontColor}33;
+        border-color: ${fontColor}66;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-theme-option.vivideo-theme-selected {
+        background: ${fontColor}4D;
+        border-color: ${fontColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-item {
+        background: ${fontColor}1A;
+        border-color: ${fontColor}33;
+        color: ${fontColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-item:hover {
+        background: ${fontColor}33;
+        border-color: ${fontColor}66;
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-profile-item.vivideo-profile-active {
+        background: ${fontColor}4D;
+        border-color: ${fontColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-shortcuts {
+        background: ${fontColor}1A;
+        border-top-color: ${fontColor}33;
+        color: ${fontColor};
+      }
+      
+      .vivideo-container.vivideo-theme-${this.currentTheme} .vivideo-shortcuts code {
+        background: ${fontColor}33;
+        color: ${fontColor};
+      }
+    `;
+    
+    document.head.appendChild(style);
+  }
         background: ${mainColor}1A;
         border-color: ${mainColor}33;
         color: ${mainColor};
@@ -1432,7 +1625,7 @@ class VivideoController {
         option.classList.remove('vivideo-theme-selected');
       }
     });
-    this.updateThemeColorSlider();
+    this.updateThemeColorSliders();
   }
 
   toggle() {
@@ -1536,6 +1729,24 @@ function initializeVivideo() {
   new VivideoController();
 }
 
+// Handle messages from background script
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'toggle-vivideo') {
+    if (window.vivideoController) {
+      window.vivideoController.toggle();
+    } else {
+      initializeVivideo();
+      setTimeout(() => {
+        if (window.vivideoController) {
+          window.vivideoController.show();
+        }
+      }, 100);
+    }
+    sendResponse({ success: true });
+  }
+  return true;
+});
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeVivideo);
 } else {
@@ -1546,5 +1757,22 @@ if (document.readyState === 'loading') {
 window.addEventListener('load', () => {
   if (!window.vivideoController) {
     initializeVivideo();
+  }
+});
+
+// Keyboard shortcut handler
+document.addEventListener('keydown', (e) => {
+  if (e.altKey && e.key.toLowerCase() === 'v') {
+    e.preventDefault();
+    if (window.vivideoController) {
+      window.vivideoController.toggle();
+    } else {
+      initializeVivideo();
+      setTimeout(() => {
+        if (window.vivideoController) {
+          window.vivideoController.show();
+        }
+      }, 100);
+    }
   }
 });
