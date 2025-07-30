@@ -161,8 +161,8 @@ class VivideoController {
     this.container.innerHTML = `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
-        <button class="vivideo-close" title="Close (Alt+V)">✕</button>
         <button class="vivideo-info" title="Information">ⓘ</button>
+        <button class="vivideo-close" title="Close (Alt+V)">✕</button>
       </div>
       <div class="vivideo-bottom-controls">
         <div class="profiles-button-section button-section">
@@ -170,14 +170,6 @@ class VivideoController {
           <div class="active-item-status active-profile-status">
             [HERE SHOULD BE ACTIVE PROFILE (If default values - 'DEFAULT'. If edited - 'NOT SAVED']
           </div>
-        </div>
-        <div class="themes-button-section button-section">
-          <button class="vivideo-control-btn" id="themes-btn" title="Themes">Themes</button>
-          <div class="active-item-status active-theme-status">
-            [HERE SHOULD BE ACTIVE THEME E.G CYBERDARK (IF ACTIVE)]
-          </div>
-        </div>
-      </div>
 
       <div class="vivideo-profiles" id="profiles-panel">
         <div class="vivideo-profile-form">
@@ -185,6 +177,15 @@ class VivideoController {
           <button class="vivideo-profile-save" id="save-profile">Save</button>
         </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
+      </div>
+
+        </div>
+        <div class="themes-button-section button-section">
+          <button class="vivideo-control-btn" id="themes-btn" title="Themes">Themes</button>
+          <div class="active-item-status active-theme-status">
+            [HERE SHOULD BE ACTIVE THEME E.G CYBERDARK (IF ACTIVE)]
+          </div>
+        </div>
       </div>
 
       <div class="vivideo-themes" id="themes-panel">
