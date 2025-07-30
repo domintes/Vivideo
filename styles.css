@@ -154,10 +154,10 @@
 .vivideo-close {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: #3dff00;
   font-size: 24px;
   cursor: pointer;
-  padding: 0;
+  padding: 0;ci
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -485,8 +485,8 @@
 .vivideo-theme-preview {
   width: 30px;
   height: 20px;
-  border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
 }
 
 .cyberdark-preview {

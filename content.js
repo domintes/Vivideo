@@ -98,7 +98,7 @@ class VivideoController {
     this.container.innerHTML = `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
-        <button class="vivideo-close" title="Close (Alt+V)">×</button>
+        <button class="vivideo-close" title="Close (Alt+V)">ⓘ</button>
       </div>
       
       <div class="vivideo-control">
