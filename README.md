@@ -21,14 +21,18 @@ Rozszerzenie do przeglądarek opartych na Chromium, które umożliwia regulację
 ## 📋 Użytkowanie
 
 ### Podstawowe sterowanie:
+- **Kliknij ikonę rozszerzenia** - Otwiera stronę informacyjną i przycisk do uruchomienia panelu
 - **Alt + V** - Przełącza widoczność panelu kontrolnego
 - **Przeciągnij nagłówek** - Przesuwa panel w inne miejsce
 - **Kliknij X** - Zamyka panel
+- **Kliknij poza panel** - Automatycznie ukrywa panel
+- **Przycisk ⓘ** - Pokazuje/ukrywa informacje w panelu
 
 ### Regulacja parametrów:
 - **Suwaki** - Przeciągnij aby zmienić wartość
 - **Pola tekstowe** - Wpisz dokładną wartość
 - **Reset All** - Przywraca wszystkie ustawienia do domyślnych
+- **Pojedyncze reset** - Przywraca wartość pojedynczego parametru
 
 ## 🎯 Domyślne wartości
 

@@ -3,6 +3,11 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('Vivideo extension installed');
 });
 
+// Handle action button click (when icon is clicked)
+chrome.action.onClicked.addListener((tab) => {
+  chrome.tabs.sendMessage(tab.id, { action: 'toggle-vivideo' });
+});
+
 // Handle keyboard shortcut
 chrome.commands.onCommand.addListener((command) => {
   if (command === 'toggle-vivideo') {

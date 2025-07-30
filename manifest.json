@@ -3,6 +3,11 @@
   "description": "Real-time video enhancement with brightness, contrast, saturation, gamma, and color temperature controls",
   "version": "1.0.0",
   "manifest_version": 3,
+  "icons": {
+    "16": "icons/icon.svg",
+    "48": "icons/icon.svg",
+    "128": "icons/icon.svg"
+  },
   "permissions": [
     "storage",
     "activeTab",

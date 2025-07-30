@@ -1,7 +1,6 @@
 // Popup script for Vivideo
 document.addEventListener('DOMContentLoaded', function() {
-  const toggleBtn = document.getElementById('toggle-btn');
-  const resetBtn = document.getElementById('reset-btn');
+  const openPanelBtn = document.getElementById('open-panel-btn');
   const statusDiv = document.getElementById('status');
   const videoCountDiv = document.getElementById('video-count');
   const enhancementStatusDiv = document.getElementById('enhancement-status');
@@ -11,12 +10,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const currentTab = tabs[0];
     
     // Check if we can access the tab
-    if (currentTab.url.startsWith('chrome://') || currentTab.url.startsWith('chrome-extension://')) {
-      videoCountDiv.textContent = 'Cannot access this page';
-      enhancementStatusDiv.textContent = 'Enhancement: Unavailable';
+    if (currentTab.url.startsWith('chrome://') || 
+        currentTab.url.startsWith('chrome-extension://') ||
+        currentTab.url.startsWith('moz-extension://') ||
+        currentTab.url.startsWith('edge://')) {
+      videoCountDiv.textContent = 'Nie można uzyskać dostępu do tej strony';
+      enhancementStatusDiv.textContent = 'Enhancement: Niedostępny';
       statusDiv.className = 'status status-inactive';
-      toggleBtn.disabled = true;
-      resetBtn.disabled = true;
+      openPanelBtn.disabled = true;
+      openPanelBtn.textContent = '❌ Panel niedostępny';
       return;
     }
     
@@ -27,39 +29,24 @@ document.addEventListener('DOMContentLoaded', function() {
     }, (results) => {
       if (results && results[0]) {
         const videoCount = results[0].result;
-        videoCountDiv.textContent = `${videoCount} video${videoCount !== 1 ? 's' : ''} found`;
+        videoCountDiv.textContent = `${videoCount} ${videoCount === 1 ? 'film znaleziony' : 'filmów znalezionych'}`;
         
         if (videoCount > 0) {
           statusDiv.className = 'status status-active';
-          enhancementStatusDiv.textContent = 'Enhancement: Active';
+          enhancementStatusDiv.textContent = 'Enhancement: Aktywny';
         } else {
           statusDiv.className = 'status status-inactive';
-          enhancementStatusDiv.textContent = 'Enhancement: No videos';
+          enhancementStatusDiv.textContent = 'Enhancement: Brak filmów';
         }
       }
     });
   });
 
-  // Toggle button click
-  toggleBtn.addEventListener('click', function() {
+  // Open panel button click
+  openPanelBtn.addEventListener('click', function() {
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle-vivideo' });
       window.close();
-    });
-  });
-
-  // Reset button click
-  resetBtn.addEventListener('click', function() {
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'reset-vivideo' });
-      
-      // Also reset stored settings
-      chrome.storage.sync.remove('vivideoSettings', function() {
-        enhancementStatusDiv.textContent = 'Enhancement: Reset';
-        setTimeout(() => {
-          enhancementStatusDiv.textContent = 'Enhancement: Active';
-        }, 1000);
-      });
     });
   });
 
@@ -74,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         settings.colorTemp !== 0;
       
       if (hasChanges) {
-        enhancementStatusDiv.textContent = 'Enhancement: Modified';
+        enhancementStatusDiv.textContent = 'Enhancement: Zmodyfikowany';
       }
     }
   });

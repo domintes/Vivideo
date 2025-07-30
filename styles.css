@@ -5,8 +5,6 @@
   right: 20px;
   width: 320px;
   padding: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
   border-radius: 12px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   backdrop-filter: blur(10px);
@@ -15,17 +13,112 @@
   z-index: 999999;
 }
 
-/* Cyberdark Theme (Default) */
+/* Blue Theme (Default) */
+.vivideo-container.vivideo-theme-blue {
+  background: linear-gradient(135deg, #0a0a23 0%, #1a1a3e 50%, #0d1b3d 100%);
+  color: #00bfff;
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  box-shadow: 0 0 20px rgba(0, 191, 255, 0.3), 0 10px 30px rgba(0, 0, 0, 0.8);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-title {
+  background: linear-gradient(45deg, #00bfff, #0080ff);
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-value {
+  background: rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-slider {
+  background: rgba(0, 191, 255, 0.2);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-slider::-webkit-slider-thumb {
+  background: #00bfff;
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.5);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-input {
+  background: rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-reset,
+.vivideo-container.vivideo-theme-blue .vivideo-reset-single,
+.vivideo-container.vivideo-theme-blue .vivideo-control-btn {
+  background: rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-reset:hover,
+.vivideo-container.vivideo-theme-blue .vivideo-reset-single:hover,
+.vivideo-container.vivideo-theme-blue .vivideo-control-btn:hover {
+  background: rgba(0, 191, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-expandable {
+  background: rgba(0, 191, 255, 0.05);
+  border: 1px solid rgba(0, 191, 255, 0.2);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-expandable-header {
+  background: rgba(0, 191, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 191, 255, 0.2);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-profile-input,
+.vivideo-container.vivideo-theme-blue .vivideo-profile-save {
+  background: rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-theme-option {
+  background: rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 191, 255, 0.2);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-theme-option:hover {
+  background: rgba(0, 191, 255, 0.2);
+  border-color: rgba(0, 191, 255, 0.4);
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-theme-option.vivideo-theme-selected {
+  background: rgba(0, 191, 255, 0.3);
+  border-color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-shortcuts {
+  background: rgba(0, 191, 255, 0.1);
+  border-top: 1px solid rgba(0, 191, 255, 0.2);
+  color: #00bfff;
+}
+
+.vivideo-container.vivideo-theme-blue .vivideo-shortcuts code {
+  background: rgba(0, 191, 255, 0.2);
+  color: #00bfff;
+}
+
+/* Cyberdark Theme */
 .vivideo-container.vivideo-theme-cyberdark {
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d1421 100%);
   color: #00ff41;
-  border: 1px solid #00ff41;
+  border: 1px solid rgba(0, 255, 65, 0.3);
   box-shadow: 0 0 20px rgba(0, 255, 65, 0.3), 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
 .vivideo-container.vivideo-theme-cyberdark .vivideo-title {
   background: linear-gradient(45deg, #00ff41, #00cc33);
-  -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   text-shadow: 0 0 10px rgba(0, 255, 65, 0.5);
@@ -67,61 +160,58 @@
   box-shadow: 0 0 10px rgba(0, 255, 65, 0.3);
 }
 
-/* Blue Theme */
-.vivideo-container.vivideo-theme-blue {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+.vivideo-container.vivideo-theme-cyberdark .vivideo-expandable {
+  background: rgba(0, 255, 65, 0.05);
+  border: 1px solid rgba(0, 255, 65, 0.2);
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-title {
-  background: linear-gradient(45deg, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.vivideo-container.vivideo-theme-cyberdark .vivideo-expandable-header {
+  background: rgba(0, 255, 65, 0.1);
+  border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+  color: #00ff41;
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-value {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-input,
+.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-save {
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+  color: #00ff41;
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-slider {
-  background: rgba(255, 255, 255, 0.2);
+.vivideo-container.vivideo-theme-cyberdark .vivideo-theme-option {
+  background: rgba(0, 255, 65, 0.1);
+  border: 1px solid rgba(0, 255, 65, 0.2);
+  color: #00ff41;
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-slider::-webkit-slider-thumb {
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+.vivideo-container.vivideo-theme-cyberdark .vivideo-theme-option:hover {
+  background: rgba(0, 255, 65, 0.2);
+  border-color: rgba(0, 255, 65, 0.4);
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+.vivideo-container.vivideo-theme-cyberdark .vivideo-theme-option.vivideo-theme-selected {
+  background: rgba(0, 255, 65, 0.3);
+  border-color: #00ff41;
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-reset,
-.vivideo-container.vivideo-theme-blue .vivideo-reset-single,
-.vivideo-container.vivideo-theme-blue .vivideo-control-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+.vivideo-container.vivideo-theme-cyberdark .vivideo-shortcuts {
+  background: rgba(0, 255, 65, 0.1);
+  border-top: 1px solid rgba(0, 255, 65, 0.2);
+  color: #00ff41;
 }
 
-.vivideo-container.vivideo-theme-blue .vivideo-reset:hover,
-.vivideo-container.vivideo-theme-blue .vivideo-reset-single:hover,
-.vivideo-container.vivideo-theme-blue .vivideo-control-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+.vivideo-container.vivideo-theme-cyberdark .vivideo-shortcuts code {
+  background: rgba(0, 255, 65, 0.2);
+  color: #00ff41;
 }
 
+/* Common Styles */
 @keyframes vivideo-slide-in {
   from {
     transform: translateX(100%);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -139,25 +229,22 @@
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  cursor: move;
 }
 
 .vivideo-title {
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-  background: linear-gradient(45deg, #fff, #f0f0f0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  flex: 1;
 }
 
-.vivideo-close {
+.vivideo-close, .vivideo-info {
   background: none;
   border: none;
-  color: #3dff00;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
-  padding: 0;ci
+  padding: 0;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -165,11 +252,56 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  margin-left: 5px;
 }
 
-.vivideo-close:hover {
+.vivideo-close:hover, .vivideo-info:hover {
   background: rgba(255, 255, 255, 0.1);
-  color: white;
+}
+
+/* Info Panel */
+.vivideo-info-panel {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vivideo-info-content h4 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.vivideo-info-content h5 {
+  margin: 15px 0 5px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vivideo-info-content p {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.vivideo-info-content ul {
+  margin: 0 0 10px 0;
+  padding-left: 20px;
+  font-size: 12px;
+}
+
+.vivideo-info-content li {
+  margin-bottom: 3px;
+}
+
+.vivideo-info-content code {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 11px;
 }
 
 .vivideo-control {
@@ -190,7 +322,6 @@
 }
 
 .vivideo-value {
-  background: rgba(255, 255, 255, 0.1);
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 12px;
@@ -200,68 +331,55 @@
 }
 
 .vivideo-slider-container {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
 }
 
 .vivideo-slider {
   flex: 1;
   height: 6px;
-  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
   outline: none;
-  -webkit-appearance: none;
-  appearance: none;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .vivideo-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: white;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border: none;
+  -webkit-appearance: none;
   transition: all 0.2s ease;
 }
 
 .vivideo-slider::-webkit-slider-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
 }
 
 .vivideo-slider::-moz-range-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: white;
   cursor: pointer;
   border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transition: all 0.2s ease;
 }
 
 .vivideo-slider::-moz-range-thumb:hover {
   transform: scale(1.1);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
 }
 
 .vivideo-slider:focus {
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+  outline: none;
 }
 
 .vivideo-input {
   width: 60px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
   padding: 4px 8px;
-  color: white;
+  border-radius: 4px;
   font-size: 12px;
   text-align: center;
   outline: none;
@@ -269,110 +387,99 @@
 }
 
 .vivideo-input:focus {
-  border-color: rgba(255, 255, 255, 0.5);
+  outline: none;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 .vivideo-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  opacity: 0.6;
 }
 
 .vivideo-reset {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  width: 100%;
   padding: 8px 16px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  width: 100%;
-  margin-top: 10px;
+  margin-bottom: 15px;
 }
 
 .vivideo-reset:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-/* Single reset buttons */
 .vivideo-reset-single {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  margin-left: 8px;
-  min-width: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 
 .vivideo-reset-single:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
 }
 
-/* Bottom controls */
 .vivideo-bottom-controls {
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 15px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 15px;
 }
 
 .vivideo-control-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 10px 15px;
-  border-radius: 8px;
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
   font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .vivideo-control-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
-/* Profile panel */
-.vivideo-profiles {
-  position: fixed;
-  left: 0;
-  display: block;
-  bottom: -22%;
-  background: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 15px;
+/* Expandable Panels */
+.vivideo-expandable {
   margin-bottom: 10px;
-  backdrop-filter: blur(10px);
-  z-index: 1000
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s ease;
+}
+
+.vivideo-expandable.vivideo-expanded {
+  max-height: 500px;
+}
+
+.vivideo-expandable-header {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.vivideo-expandable-content {
+  padding: 16px;
 }
 
 .vivideo-profile-form {
   display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .vivideo-profile-input {
   flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
   padding: 8px 12px;
   border-radius: 4px;
   font-size: 12px;
@@ -381,43 +488,38 @@
 }
 
 .vivideo-profile-input:focus {
-  border-color: rgba(255, 255, 255, 0.5);
+  outline: none;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 .vivideo-profile-input::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  opacity: 0.6;
 }
 
 .vivideo-profile-save {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
   padding: 8px 12px;
   border-radius: 4px;
+  font-size: 16px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 14px;
 }
 
 .vivideo-profile-save:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
 }
 
 .vivideo-profile-list {
-  max-height: 200px;
+  max-height: 150px;
   overflow-y: auto;
 }
 
 .vivideo-profile-item {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   padding: 8px 12px;
-  margin-bottom: 5px;
-  background: rgba(255, 255, 255, 0.05);
   border-radius: 4px;
+  margin-bottom: 4px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -427,194 +529,105 @@
 }
 
 .vivideo-profile-name {
-  flex: 1;
   font-size: 12px;
-  color: inherit;
+  font-weight: 500;
 }
 
 .vivideo-profile-delete {
   background: none;
   border: none;
-  color: #ff4444;
-  cursor: pointer;
   font-size: 12px;
-  padding: 2px 4px;
-  border-radius: 2px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .vivideo-profile-delete:hover {
-  background: rgba(255, 68, 68, 0.2);
+  background: rgba(255, 0, 0, 0.2);
 }
 
-/* Themes panel */
-.vivideo-themes {
-  position: fixed;
-  bottom: 140px;
-  right: 0;
-  background: inherit;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 15px;
-  margin-bottom: 10px;
-  backdrop-filter: blur(10px);
-  z-index: 1000;
+/* Theme Options */
+.vivideo-theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .vivideo-theme-option {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px;
-  margin-bottom: 8px;
-  background: rgba(255, 255, 255, 0.05);
+  padding: 12px;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.vivideo-theme-option:hover {
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.vivideo-theme-option.vivideo-theme-selected {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-}
-
 .vivideo-theme-preview {
-  width: 30px;
+  width: 20px;
   height: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-}
-
-.cyberdark-preview {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d1421 100%);
-  border-color: #00ff41;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .blue-preview {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: linear-gradient(45deg, #00bfff, #0080ff);
+}
+
+.cyberdark-preview {
+  background: linear-gradient(45deg, #00ff41, #00cc33);
 }
 
 .vivideo-theme-option span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Info Content */
+.vivideo-info-content h5 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.vivideo-info-content ul {
+  margin: 0 0 16px 0;
+  padding-left: 16px;
   font-size: 12px;
-  color: inherit;
 }
 
-/* Cyberdark theme specific styles for panels */
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profiles,
-.vivideo-container.vivideo-theme-cyberdark .vivideo-themes {
-  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d1421 100%);
-  border-color: #00ff41;
-  box-shadow: 0 0 20px rgba(0, 255, 65, 0.3);
+.vivideo-info-content li {
+  margin-bottom: 4px;
 }
 
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-input,
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-save {
-  background: rgba(0, 255, 65, 0.1);
-  border-color: rgba(0, 255, 65, 0.3);
-  color: #00ff41;
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-item {
-  background: rgba(0, 255, 65, 0.05);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-item:hover {
-  background: rgba(0, 255, 65, 0.1);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-theme-option {
-  background: rgba(0, 255, 65, 0.05);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-theme-option:hover {
-  background: rgba(0, 255, 65, 0.1);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-theme-option.vivideo-theme-selected {
-  background: rgba(0, 255, 65, 0.2);
-  border-color: rgba(0, 255, 65, 0.5);
-}
-
-/* Blue theme specific styles for panels */
-.vivideo-container.vivideo-theme-blue .vivideo-profiles,
-.vivideo-container.vivideo-theme-blue .vivideo-themes {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-/* Scrollbar styles for profiles */
-.vivideo-profile-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.vivideo-profile-list::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 3px;
-}
-
-.vivideo-profile-list::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-}
-
-.vivideo-profile-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-list::-webkit-scrollbar-track {
-  background: rgba(0, 255, 65, 0.1);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-list::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 65, 0.3);
-}
-
-.vivideo-container.vivideo-theme-cyberdark .vivideo-profile-list::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 65, 0.5);
-}
-
-.vivideo-shortcuts {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: center;
-  position: relative;
-  bottom: 0;
-  z-index: 1001;
-}
-
-.vivideo-shortcuts code {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 6px;
+.vivideo-info-content code {
+  padding: 2px 4px;
   border-radius: 3px;
   font-family: monospace;
   font-size: 11px;
 }
 
-.vivideo-container.vivideo-theme-cyberdark .vivideo-shortcuts {
-  border-top-color: rgba(0, 255, 65, 0.2);
-  color: rgba(0, 255, 65, 0.7);
+/* Shortcuts */
+.vivideo-shortcuts {
+  text-align: center;
+  font-size: 11px;
+  padding: 10px;
+  margin-top: 15px;
+  border-radius: 6px;
+  opacity: 0.8;
 }
 
-.vivideo-container.vivideo-theme-cyberdark .vivideo-shortcuts code {
-  background: rgba(0, 255, 65, 0.2);
-  color: #00ff41;
+.vivideo-shortcuts code {
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 10px;
 }
 
 /* Fullscreen support */
 .vivideo-container.vivideo-fullscreen {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 999999999;
+  z-index: 2147483647;
 }
 
 /* Draggable cursor */
@@ -630,20 +643,18 @@
   cursor: grabbing;
 }
 
-/* Video filter styles */
-.vivideo-video-filter {
-  filter: brightness(var(--vivideo-brightness, 1))
-          contrast(var(--vivideo-contrast, 1))
-          saturate(var(--vivideo-saturation, 1))
-          sepia(var(--vivideo-sepia, 0))
-          hue-rotate(var(--vivideo-hue, 0deg));
-}
-
 /* Responsive design */
 @media (max-width: 480px) {
   .vivideo-container {
-    width: calc(100vw - 40px);
-    right: 20px;
-    left: 20px;
+    width: 280px;
+    padding: 15px;
+  }
+
+  .vivideo-slider-container {
+    gap: 6px;
+  }
+
+  .vivideo-input {
+    width: 50px;
   }
 }

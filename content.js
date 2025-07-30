@@ -1,6 +1,18 @@
 // Vivideo Content Script
+// Prevent multiple instances - improved
+if (window.vivideoController) {
+  window.vivideoController.destroy();
+  window.vivideoController = null;
+}
+
 class VivideoController {
   constructor() {
+    // Prevent multiple instances - strict check
+    if (window.vivideoController) {
+      console.warn('Vivideo: Instance already exists, destroying previous one');
+      window.vivideoController.destroy();
+    }
+    
     this.isVisible = false;
     this.container = null;
     this.videos = [];
@@ -23,17 +35,28 @@ class VivideoController {
     this.profilesVisible = false;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
+    this.clickOutsideHandler = null;
+    this.isInitialized = false;
+    
+    // Set global reference
+    window.vivideoController = this;
     
     this.init();
   }
 
   init() {
+    if (this.isInitialized) {
+      console.warn('Vivideo: Already initialized');
+      return;
+    }
+    
     this.loadSettings();
     this.loadProfiles();
     this.loadTheme();
     this.createUI();
     this.bindEvents();
     this.observeVideos();
+    this.isInitialized = true;
   }
 
   loadSettings() {
@@ -98,7 +121,8 @@ class VivideoController {
     this.container.innerHTML = `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
-        <button class="vivideo-close" title="Close (Alt+V)">ⓘ</button>
+        <button class="vivideo-close" title="Close (Alt+V)">✕</button>
+        <button class="vivideo-info" title="Information">ⓘ</button>
       </div>
       
       <div class="vivideo-control">
@@ -210,6 +234,27 @@ class VivideoController {
       <div class="vivideo-shortcuts">
         Naciśnij <code>Alt + V</code>, aby przełączyć • Przeciągnij nagłówek, aby przesunąć
       </div>
+      
+      <div class="vivideo-info-panel" id="info-panel" style="display: none;">
+        <div class="vivideo-info-content">
+          <h4>Vivideo - Real-time Video Enhancement</h4>
+          <p>Rozszerzenie do regulacji parametrów video w czasie rzeczywistym.</p>
+          <h5>Funkcje:</h5>
+          <ul>
+            <li><strong>Brightness:</strong> -100% do +100% - Regulacja jasności</li>
+            <li><strong>Contrast:</strong> -100% do +100% - Regulacja kontrastu</li>
+            <li><strong>Saturation:</strong> -90% do +100% - Nasycenie kolorów</li>
+            <li><strong>Gamma:</strong> 0.1 do 3.0 - Korekcja gamma</li>
+            <li><strong>Color Temp:</strong> -100% do +100% - Temperatura kolorów</li>
+          </ul>
+          <h5>Skróty klawiszowe:</h5>
+          <ul>
+            <li><code>Alt + V</code> - Przełącz panel</li>
+            <li>Przeciągnij nagłówek - Przesuń panel</li>
+            <li>Kliknij poza panel - Ukryj panel</li>
+          </ul>
+        </div>
+      </div>
     `;
 
     document.body.appendChild(this.container);
@@ -221,6 +266,25 @@ class VivideoController {
     // Close button
     this.container.querySelector('.vivideo-close').addEventListener('click', () => {
       this.hide();
+    });
+
+    // Info button
+    this.container.querySelector('.vivideo-info').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.toggleInfo();
+    });
+
+    // Click outside to hide - improved implementation
+    this.clickOutsideHandler = (e) => {
+      if (this.isVisible && !this.container.contains(e.target) && !this.isDragging) {
+        this.hide();
+      }
+    };
+    document.addEventListener('click', this.clickOutsideHandler, true);
+
+    // Prevent panel clicks from hiding
+    this.container.addEventListener('click', (e) => {
+      e.stopPropagation();
     });
 
     // Reset all button
@@ -259,15 +323,25 @@ class VivideoController {
 
     // Dragging functionality
     const header = this.container.querySelector('.vivideo-header');
-    header.addEventListener('mousedown', (e) => {
+    let mouseDownHandler = null;
+    let mouseMoveHandler = null;
+    let mouseUpHandler = null;
+    
+    mouseDownHandler = (e) => {
+      // Only start dragging if clicking on the header area, not buttons
+      if (e.target.classList.contains('vivideo-close') || e.target.classList.contains('vivideo-info')) {
+        return;
+      }
+      
       this.isDragging = true;
       this.container.classList.add('vivideo-dragging');
       const rect = this.container.getBoundingClientRect();
       this.dragOffset.x = e.clientX - rect.left;
       this.dragOffset.y = e.clientY - rect.top;
-    });
+      e.preventDefault();
+    };
 
-    document.addEventListener('mousemove', (e) => {
+    mouseMoveHandler = (e) => {
       if (!this.isDragging) return;
       
       const x = e.clientX - this.dragOffset.x;
@@ -276,14 +350,32 @@ class VivideoController {
       this.container.style.left = Math.max(0, Math.min(x, window.innerWidth - this.container.offsetWidth)) + 'px';
       this.container.style.top = Math.max(0, Math.min(y, window.innerHeight - this.container.offsetHeight)) + 'px';
       this.container.style.right = 'auto';
-    });
+      e.preventDefault();
+    };
 
-    document.addEventListener('mouseup', () => {
+    mouseUpHandler = () => {
       if (this.isDragging) {
         this.isDragging = false;
         this.container.classList.remove('vivideo-dragging');
+        
+        // Small delay to prevent immediate hiding when drag ends
+        setTimeout(() => {
+          this.isDragging = false;
+        }, 10);
       }
-    });
+    };
+    
+    header.addEventListener('mousedown', mouseDownHandler);
+    document.addEventListener('mousemove', mouseMoveHandler);
+    document.addEventListener('mouseup', mouseUpHandler);
+
+    // Store handlers for cleanup
+    this.dragHandlers = {
+      mouseDown: mouseDownHandler,
+      mouseMove: mouseMoveHandler,
+      mouseUp: mouseUpHandler,
+      header: header
+    };
 
     // Bind all control events
     this.bindControlEvents();
@@ -404,10 +496,14 @@ class VivideoController {
     colorTempInput.value = this.settings.colorTemp;
     
     let tempText = 'Neutral';
-    if (this.settings.colorTemp < -30) tempText = 'Very Cold';
-    else if (this.settings.colorTemp < -10) tempText = 'Cold';
-    else if (this.settings.colorTemp > 30) tempText = 'Very Hot';
-    else if (this.settings.colorTemp > 10) tempText = 'Hot';
+    if (this.settings.colorTemp < -75) tempText = 'Very Cold';
+    else if (this.settings.colorTemp < -40) tempText = 'Cold';
+    else if (this.settings.colorTemp < -15) tempText = 'Cool';
+    else if (this.settings.colorTemp < -5) tempText = 'Slightly Cool';
+    else if (this.settings.colorTemp > 75) tempText = 'Very Warm';
+    else if (this.settings.colorTemp > 40) tempText = 'Warm';
+    else if (this.settings.colorTemp > 15) tempText = 'Cozy';
+    else if (this.settings.colorTemp > 5) tempText = 'Slightly Warm';
     
     colorTempValue.textContent = tempText;
   }
@@ -422,51 +518,77 @@ class VivideoController {
     const brightness = 1 + (this.settings.brightness / 100);
     const contrast = 1 + (this.settings.contrast / 100);
     const saturation = Math.max(0, 1 + (this.settings.saturation / 100));
-    const hue = this.settings.colorTemp * 1.8; // Convert to hue rotation
     
-    // Apply CSS filters
+    // Apply CSS filters without color temperature
     video.style.filter = `
       brightness(${brightness})
       contrast(${contrast})
       saturate(${saturation})
-      hue-rotate(${hue}deg)
     `;
     
-    // Apply gamma correction using SVG filter
-    this.applyGammaCorrection(video);
+    // Apply gamma correction and color temperature using SVG filter
+    this.applyAdvancedFilters(video);
   }
 
-  applyGammaCorrection(video) {
+  applyAdvancedFilters(video) {
     const gamma = this.settings.gamma;
+    const colorTemp = this.settings.colorTemp;
     
-    // Remove existing gamma filter
-    const existingFilter = document.querySelector('#vivideo-gamma-filter');
+    // Remove existing filter
+    const existingFilter = document.querySelector('#vivideo-advanced-filter');
     if (existingFilter) {
       existingFilter.remove();
     }
     
-    // Create SVG filter for gamma correction
+    // Create SVG filter for gamma correction and color temperature
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.id = 'vivideo-gamma-filter';
+    svg.id = 'vivideo-advanced-filter';
     svg.style.position = 'absolute';
     svg.style.width = '0';
     svg.style.height = '0';
+    
+    // Calculate color temperature values based on real color temperature theory
+    // Negative values = cooler (more blue), Positive = warmer (more red/yellow)
+    const tempFactor = colorTemp / 100;
+    let rMultiplier = 1;
+    let gMultiplier = 1;
+    let bMultiplier = 1;
+    
+    if (tempFactor > 0) {
+      // Warmer - simulate incandescent/candlelight
+      // Increase red and slightly yellow, decrease blue significantly
+      rMultiplier = 1 + (tempFactor * 0.5);  // More red for warmth
+      gMultiplier = 1 + (tempFactor * 0.25); // Some yellow/green
+      bMultiplier = Math.max(0.2, 1 - (tempFactor * 0.7)); // Much less blue
+    } else if (tempFactor < 0) {
+      // Cooler - simulate daylight/fluorescent
+      // Increase blue significantly, decrease red and yellow
+      rMultiplier = Math.max(0.3, 1 + (tempFactor * 0.6)); // Less red
+      gMultiplier = Math.max(0.4, 1 + (tempFactor * 0.3)); // Less yellow/green
+      bMultiplier = 1 + (Math.abs(tempFactor) * 0.8); // More blue
+    }
+    
+    // Clamp values to reasonable ranges
+    rMultiplier = Math.max(0.1, Math.min(3, rMultiplier));
+    gMultiplier = Math.max(0.1, Math.min(3, gMultiplier));
+    bMultiplier = Math.max(0.1, Math.min(3, bMultiplier));
+    
     svg.innerHTML = `
-      <filter id="gamma-correction">
+      <filter id="advanced-correction">
         <feComponentTransfer>
-          <feFuncR type="gamma" exponent="${gamma}"/>
-          <feFuncG type="gamma" exponent="${gamma}"/>
-          <feFuncB type="gamma" exponent="${gamma}"/>
+          <feFuncR type="gamma" exponent="${gamma}" slope="${rMultiplier}"/>
+          <feFuncG type="gamma" exponent="${gamma}" slope="${gMultiplier}"/>
+          <feFuncB type="gamma" exponent="${gamma}" slope="${bMultiplier}"/>
         </feComponentTransfer>
       </filter>
     `;
     
     document.body.appendChild(svg);
     
-    // Apply gamma filter if not default
-    if (gamma !== 1) {
+    // Apply advanced filter if needed
+    if (gamma !== 1 || colorTemp !== 0) {
       const currentFilter = video.style.filter || '';
-      video.style.filter = `${currentFilter} url(#gamma-correction)`;
+      video.style.filter = `${currentFilter} url(#advanced-correction)`;
     }
   }
 
@@ -521,6 +643,17 @@ class VivideoController {
       colorTemp: 0
     };
     
+    // Remove existing SVG filters
+    const existingFilter = document.querySelector('#vivideo-advanced-filter');
+    if (existingFilter) {
+      existingFilter.remove();
+    }
+    
+    // Reset all video filters
+    this.findVideos().forEach(video => {
+      video.style.filter = '';
+    });
+    
     this.updateUI();
     this.applyFilters();
     this.saveSettings();
@@ -538,10 +671,12 @@ class VivideoController {
     this.profilesVisible = !this.profilesVisible;
     const profilesPanel = this.container.querySelector('#profiles-panel');
     const themesPanel = this.container.querySelector('#themes-panel');
+    const infoPanel = this.container.querySelector('#info-panel');
     
     if (this.profilesVisible) {
       profilesPanel.style.display = 'block';
       themesPanel.style.display = 'none';
+      infoPanel.style.display = 'none';
       this.updateProfilesList();
     } else {
       profilesPanel.style.display = 'none';
@@ -551,12 +686,29 @@ class VivideoController {
   toggleThemes() {
     const themesPanel = this.container.querySelector('#themes-panel');
     const profilesPanel = this.container.querySelector('#profiles-panel');
+    const infoPanel = this.container.querySelector('#info-panel');
     
     if (themesPanel.style.display === 'block') {
       themesPanel.style.display = 'none';
     } else {
       themesPanel.style.display = 'block';
       profilesPanel.style.display = 'none';
+      infoPanel.style.display = 'none';
+      this.profilesVisible = false;
+    }
+  }
+
+  toggleInfo() {
+    const infoPanel = this.container.querySelector('#info-panel');
+    const profilesPanel = this.container.querySelector('#profiles-panel');
+    const themesPanel = this.container.querySelector('#themes-panel');
+    
+    if (infoPanel.style.display === 'block') {
+      infoPanel.style.display = 'none';
+    } else {
+      infoPanel.style.display = 'block';
+      profilesPanel.style.display = 'none';
+      themesPanel.style.display = 'none';
       this.profilesVisible = false;
     }
   }
@@ -668,20 +820,64 @@ class VivideoController {
     this.container.classList.remove('vivideo-visible');
     this.isVisible = false;
   }
+
+  destroy() {
+    if (this.container && this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    
+    if (this.clickOutsideHandler) {
+      document.removeEventListener('click', this.clickOutsideHandler, true);
+    }
+    
+    // Cleanup drag handlers
+    if (this.dragHandlers) {
+      if (this.dragHandlers.header) {
+        this.dragHandlers.header.removeEventListener('mousedown', this.dragHandlers.mouseDown);
+      }
+      document.removeEventListener('mousemove', this.dragHandlers.mouseMove);
+      document.removeEventListener('mouseup', this.dragHandlers.mouseUp);
+    }
+    
+    // Remove SVG filters
+    const existingFilter = document.querySelector('#vivideo-advanced-filter');
+    if (existingFilter) {
+      existingFilter.remove();
+    }
+    
+    // Reset all video filters
+    this.findVideos().forEach(video => {
+      video.style.filter = '';
+    });
+    
+    this.isInitialized = false;
+    this.container = null;
+    
+    if (window.vivideoController === this) {
+      window.vivideoController = null;
+    }
+  }
 }
 
 // Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    new VivideoController();
-  });
-} else {
+function initializeVivideo() {
+  // Prevent multiple instances
+  if (window.vivideoController) {
+    return;
+  }
+  
   new VivideoController();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeVivideo);
+} else {
+  initializeVivideo();
 }
 
 // Also initialize on window load to catch any late-loading content
 window.addEventListener('load', () => {
   if (!window.vivideoController) {
-    window.vivideoController = new VivideoController();
+    initializeVivideo();
   }
 });
