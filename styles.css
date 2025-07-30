@@ -511,7 +511,7 @@
 }
 
 .vivideo-bottom-controls {
-  display: flex;
+  display: block;
   gap: 8px;
   margin-bottom: 15px;
 }
@@ -735,6 +735,21 @@
 
 .vivideo-header.vivideo-draggable:active {
   cursor: grabbing;
+}
+
+.button-section {
+  display: grid;
+  grid-template-columns: 86px auto;
+  column-gap: 12px;
+  margin-bottom: 12px;
+}
+
+.active-item-status {
+    display: inline-block;
+      max-width: 150px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 }
 
 /* Responsive design */

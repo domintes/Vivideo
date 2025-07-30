@@ -164,7 +164,39 @@ class VivideoController {
         <button class="vivideo-close" title="Close (Alt+V)">✕</button>
         <button class="vivideo-info" title="Information">ⓘ</button>
       </div>
+      <div class="vivideo-bottom-controls">
+        <div class="profiles-button-section button-section">
+          <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">Profiles</button>
+          <div class="active-item-status active-profile-status">
+            [HERE SHOULD BE ACTIVE PROFILE (If default values - 'DEFAULT'. If edited - 'NOT SAVED']
+          </div>
+        </div>
+        <div class="themes-button-section button-section">
+          <button class="vivideo-control-btn" id="themes-btn" title="Themes">Themes</button>
+          <div class="active-item-status active-theme-status">
+            [HERE SHOULD BE ACTIVE THEME E.G CYBERDARK (IF ACTIVE)]
+          </div>
+        </div>
+      </div>
 
+      <div class="vivideo-profiles" id="profiles-panel">
+        <div class="vivideo-profile-form">
+          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
+          <button class="vivideo-profile-save" id="save-profile">Save</button>
+        </div>
+        <div class="vivideo-profile-list" id="profile-list"></div>
+      </div>
+
+      <div class="vivideo-themes" id="themes-panel">
+        <div class="vivideo-theme-option" data-theme="cyberdark">
+          <div class="vivideo-theme-preview cyberdark-preview"></div>
+          <span>Cyberdark</span>
+        </div>
+        <div class="vivideo-theme-option" data-theme="blue">
+          <div class="vivideo-theme-preview blue-preview"></div>
+          <span>Blue</span>
+        </div>
+      </div>
       <div class="vivideo-auto-activate">
         <label class="vivideo-checkbox-container">
           <input type="checkbox" id="auto-activate-checkbox" ${this.settings.autoActivate ? 'checked' : ''}>
@@ -291,31 +323,7 @@ class VivideoController {
       </div>
 
       <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
-      
-      <div class="vivideo-bottom-controls">
-        <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">🎚️</button>
-        <button class="vivideo-control-btn" id="themes-btn" title="Themes">🎨</button>
-      </div>
-
-      <div class="vivideo-profiles" id="profiles-panel">
-        <div class="vivideo-profile-form">
-          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
-          <button class="vivideo-profile-save" id="save-profile">💾</button>
-        </div>
-        <div class="vivideo-profile-list" id="profile-list"></div>
-      </div>
-
-      <div class="vivideo-themes" id="themes-panel">
-        <div class="vivideo-theme-option" data-theme="cyberdark">
-          <div class="vivideo-theme-preview cyberdark-preview"></div>
-          <span>Cyberdark</span>
-        </div>
-        <div class="vivideo-theme-option" data-theme="blue">
-          <div class="vivideo-theme-preview blue-preview"></div>
-          <span>Blue</span>
-        </div>
-      </div>
-      
+ 
       <div class="vivideo-shortcuts">
         Press <code>Alt + V</code> to toggle • Drag header to move
       </div>
@@ -642,30 +650,30 @@ class VivideoController {
     const gamma = this.settings.gamma;
     const colorTemp = this.settings.colorTemp;
     const sharpness = this.settings.sharpness;
-    
-    // Remove existing filter
-    const existingFilter = document.querySelector('#vivideo-advanced-filter');
-    if (existingFilter) {
-      existingFilter.remove();
+
+    // Remove existing SVG container
+    const existingSvg = document.querySelector('#vivideo-svg-container');
+    if (existingSvg) {
+      existingSvg.remove();
     }
-    
+
     // Skip if no advanced effects are needed
     if (gamma === 1 && colorTemp === 0 && sharpness === 0) {
       return;
     }
-    
-    // Create SVG filter for advanced effects
+
+    // Create SVG container for advanced effects
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    svg.id = 'vivideo-advanced-filter';
+    svg.id = 'vivideo-svg-container';
     svg.style.position = 'absolute';
     svg.style.width = '0';
     svg.style.height = '0';
-    
+
     // Calculate color temperature values - improved algorithm
     const tempFactor = colorTemp / 100;
     let rSlope = 1, gSlope = 1, bSlope = 1;
     let rExponent = gamma, gExponent = gamma, bExponent = gamma;
-    
+
     if (tempFactor > 0) {
       // Warmer - increase red/yellow, decrease blue
       rSlope = 1 + (tempFactor * 0.3);
@@ -678,40 +686,42 @@ class VivideoController {
       gSlope = Math.max(0.7, 1 - (coolness * 0.1));
       bSlope = 1 + (coolness * 0.4);
     }
-    
+
     // Calculate sharpness matrix
     const sharpAmount = sharpness / 100 * 0.8;
     const sharpCenter = 1 + (4 * sharpAmount);
     const sharpEdge = -sharpAmount;
-    
+
     let filterContent = '';
-    
+    let lastResult = '';
+
     // Add sharpness filter if needed
     if (sharpness > 0) {
       filterContent += `
-        <feConvolveMatrix order="3,3" 
+        <feConvolveMatrix order="3,3"
                          kernelMatrix="${sharpEdge} ${sharpEdge} ${sharpEdge}
                                       ${sharpEdge} ${sharpCenter} ${sharpEdge}
                                       ${sharpEdge} ${sharpEdge} ${sharpEdge}"
                          result="sharpened"/>
       `;
+      lastResult = 'sharpened';
     }
-    
+
     // Add gamma and color temperature correction
     filterContent += `
-      <feComponentTransfer ${sharpness > 0 ? 'in="sharpened"' : ''}>
+      <feComponentTransfer ${lastResult ? `in="${lastResult}"` : ''}>
         <feFuncR type="gamma" amplitude="${rSlope}" exponent="${rExponent}"/>
         <feFuncG type="gamma" amplitude="${gSlope}" exponent="${gExponent}"/>
         <feFuncB type="gamma" amplitude="${bSlope}" exponent="${bExponent}"/>
       </feComponentTransfer>
     `;
-    
+
     svg.innerHTML = `
       <filter id="vivideo-advanced-filter" x="0%" y="0%" width="100%" height="100%">
         ${filterContent}
       </filter>
     `;
-    
+
     document.body.appendChild(svg);
   }
 
@@ -768,9 +778,9 @@ class VivideoController {
     });
     
     // Remove SVG filters
-    const existingFilter = document.querySelector('#vivideo-advanced-filter');
-    if (existingFilter) {
-      existingFilter.remove();
+    const existingSvg = document.querySelector('#vivideo-svg-container');
+    if (existingSvg) {
+      existingSvg.remove();
     }
   }
 
@@ -787,9 +797,9 @@ class VivideoController {
     };
     
     // Remove existing SVG filters
-    const existingFilter = document.querySelector('#vivideo-advanced-filter');
-    if (existingFilter) {
-      existingFilter.remove();
+    const existingSvg = document.querySelector('#vivideo-svg-container');
+    if (existingSvg) {
+      existingSvg.remove();
     }
     
     // Reset all video filters
@@ -1070,9 +1080,9 @@ class VivideoController {
     }
     
     // Remove SVG filters
-    const existingFilter = document.querySelector('#vivideo-advanced-filter');
-    if (existingFilter) {
-      existingFilter.remove();
+    const existingSvg = document.querySelector('#vivideo-svg-container');
+    if (existingSvg) {
+      existingSvg.remove();
     }
     
     // Reset all video filters
