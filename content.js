@@ -198,11 +198,19 @@ class VivideoController {
           <span>Blue</span>
         </div>
       </div>
-      <div class="vivideo-auto-activate">
+      <div class="vivideo-auto-activate checkbox-section">
         <label class="vivideo-checkbox-container">
           <input type="checkbox" id="auto-activate-checkbox" ${this.settings.autoActivate ? 'checked' : ''}>
           <span class="vivideo-checkmark"></span>
           <span class="vivideo-checkbox-label">Auto-activate extension</span>
+        </label>
+      </div>
+
+      <div class="vivideo-work-on-images-activate checkbox-section">
+        <label class="vivideo-checkbox-container">
+          <input type="checkbox" id="auto-activate-checkbox" ${this.settings.workOnImagesActivate ? 'checked' : ''}>
+          <span class="vivideo-checkmark"></span>
+          <span class="vivideo-checkbox-label">Work on images</span>
         </label>
       </div>
 
