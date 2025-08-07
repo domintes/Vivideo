@@ -46,6 +46,18 @@
         "default": "Alt+V"
       },
       "description": "Toggle Vivideo controls"
+    },
+    "next-profile": {
+      "suggested_key": {
+        "default": "Alt+N"
+      },
+      "description": "Next profile"
+    },
+    "previous-profile": {
+      "suggested_key": {
+        "default": "Alt+B"
+      },
+      "description": "Previous profile"
     }
   }
 }

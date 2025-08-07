@@ -10,11 +10,13 @@ chrome.action.onClicked.addListener((tab) => {
 
 // Handle keyboard shortcut
 chrome.commands.onCommand.addListener((command) => {
-  if (command === 'toggle-vivideo') {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      chrome.tabs.sendMessage(tabs[0].id, { action: 'toggle-vivideo' });
-    });
-  }
+  console.log('Vivideo Background: Command received:', command);
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    if (tabs[0]) {
+      console.log('Vivideo Background: Sending command to tab:', tabs[0].id, command);
+      chrome.tabs.sendMessage(tabs[0].id, { action: command });
+    }
+  });
 });
 
 // Handle messages from content script

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Vivideo Quick Shortcut Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .big-test {
+            background: linear-gradient(45deg, #00ff41, #00cc33);
+            color: black;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px auto;
+            max-width: 600px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .status {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        
+        video {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Vivideo Quick Shortcut Test</h1>
+    
+    <div class="big-test">
+        Naciśnij Alt+V aby przetestować skrót!
+    </div>
+    
+    <div class="status" id="status">
+        Status: Czekam na test...
+    </div>
+    
+    <video controls loop>
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        Test Video
+    </video>
+    
+    <h3>Instrukcje:</h3>
+    <ol style="text-align: left; max-width: 600px; margin: 0 auto;">
+        <li><strong>Naciśnij Alt+V</strong> - Panel Vivideo powinien się pojawić</li>
+        <li><strong>Naciśnij Alt+V ponownie</strong> - Panel powinien zniknąć</li>
+        <li><strong>Jeśli nie działa:</strong> Sprawdź konsolę (F12) pod kątem błędów</li>
+        <li><strong>Test ustawień Chrome:</strong> Wejdź w chrome://extensions/shortcuts</li>
+        <li><strong>Sprawdź "Toggle Vivideo controls"</strong> - powinno być "Not set"</li>
+    </ol>
+
+    <script>
+        document.addEventListener('keydown', (e) => {
+            const status = document.getElementById('status');
+            if (e.altKey && e.key === 'v') {
+                status.innerHTML = `
+                    Status: Alt+V DETECTED!<br>
+                    Timestamp: ${new Date().toLocaleTimeString()}<br>
+                    Vivideo should toggle now...
+                `;
+                status.style.background = '#006600';
+            }
+        });
+        
+        // Log to console
+        console.log('🔧 Quick test page loaded');
+        console.log('🎹 Press Alt+V to test shortcut');
+    </script>
+</body>
+</html>

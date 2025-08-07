@@ -20,6 +20,8 @@ class UIHelper {
           <h5>Keyboard shortcuts:</h5>
           <ul>
             <li><code>Alt + V</code> - Toggle panel</li>
+            <li><code>Alt + N</code> - Next profile</li>
+            <li><code>Alt + B</code> - Previous profile</li>
             <li>Drag header - Move panel</li>
             <li>Click outside panel - Hide panel</li>
           </ul>
@@ -51,7 +53,7 @@ class UIHelper {
   static createShortcutsHTML() {
     return /*html*/ `
       <div class="vivideo-shortcuts">
-        Press <code>Alt + V</code> to toggle • Drag header to move
+        Press <code>Alt + V</code> to toggle • <code>Alt + N/B</code> to switch profiles • Drag header to move
       </div>
     `;
   }

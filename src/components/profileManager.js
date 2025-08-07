@@ -178,6 +178,37 @@ class ProfileManager {
       profileDisplay.className = 'active-item-status active-profile-status modified';
     }
   }
+
+  // Profile switching methods for keyboard shortcuts
+  nextProfile() {
+    const allProfiles = [this.controller.defaultProfile, ...this.controller.profiles];
+    let currentIndex = -1;
+    
+    if (!this.controller.settings.activeProfile) {
+      // Currently on DEFAULT
+      currentIndex = 0;
+    } else {
+      currentIndex = allProfiles.findIndex(p => p.name === this.controller.settings.activeProfile);
+    }
+    
+    const nextIndex = (currentIndex + 1) % allProfiles.length;
+    this.controller.loadProfile(allProfiles[nextIndex]);
+  }
+
+  previousProfile() {
+    const allProfiles = [this.controller.defaultProfile, ...this.controller.profiles];
+    let currentIndex = -1;
+    
+    if (!this.controller.settings.activeProfile) {
+      // Currently on DEFAULT
+      currentIndex = 0;
+    } else {
+      currentIndex = allProfiles.findIndex(p => p.name === this.controller.settings.activeProfile);
+    }
+    
+    const prevIndex = currentIndex === 0 ? allProfiles.length - 1 : currentIndex - 1;
+    this.controller.loadProfile(allProfiles[prevIndex]);
+  }
 }
 
 // Export for use in other files

@@ -225,17 +225,6 @@ class VivideoController {
     // Dragging functionality
     this.dragHandlers = UIHelper.setupDragging(this.container, this);
 
-    // Listen for keyboard shortcut and background messages
-    chrome.runtime.onMessage.addListener((message) => {
-      console.log('Vivideo: Received message:', message);
-      if (message.action === 'toggle-vivideo') {
-        this.toggle();
-      }
-      if (message.action === 'reset-vivideo') {
-        this.resetAll();
-      }
-    });
-
     // Handle fullscreen changes
     document.addEventListener('fullscreenchange', () => {
       if (document.fullscreenElement) {
@@ -322,7 +311,6 @@ class VivideoController {
 
   // Panel visibility methods
   toggleProfiles() {
-    this.profilesVisible = !this.profilesVisible;
     this.showPanel('profiles');
     if (this.profilesVisible) {
       this.updateProfilesList();
@@ -330,7 +318,6 @@ class VivideoController {
   }
 
   toggleThemes() {
-    this.themesVisible = !this.themesVisible;
     this.showPanel('themes');
     if (this.themesVisible && this.themeManager) {
       this.themeManager.updateThemeColorSliders(this.container, this.currentTheme);
@@ -338,7 +325,6 @@ class VivideoController {
   }
 
   toggleInfo() {
-    this.infoVisible = !this.infoVisible;
     this.showPanel('info');
   }
 
@@ -496,7 +482,7 @@ class VivideoController {
 
   // Main visibility controls
   toggle() {
-    console.log('Vivideo: Toggle called, isVisible:', this.isVisible);
+    console.log('Vivideo: Toggle called, isVisible:', this.isVisible, 'timestamp:', Date.now());
     if (this.isVisible) {
       this.hide();
     } else {
@@ -618,21 +604,64 @@ function initializeVivideo() {
   new VivideoController();
 }
 
+// Variable to track if we should handle keyboard shortcuts directly
+let shouldHandleKeyboardShortcuts = true;
+
+// Check if user has set custom shortcuts
+if (chrome && chrome.commands) {
+  chrome.commands.getAll((commands) => {
+    const toggleCommand = commands.find(cmd => cmd.name === 'toggle-vivideo');
+    if (toggleCommand && toggleCommand.shortcut && toggleCommand.shortcut !== '') {
+      console.log('Vivideo: User has custom shortcut:', toggleCommand.shortcut);
+      shouldHandleKeyboardShortcuts = false; // Let Chrome handle it
+    } else {
+      console.log('Vivideo: Using default Alt+V shortcut handling');
+      shouldHandleKeyboardShortcuts = true; // Handle it ourselves
+    }
+  });
+} else {
+  console.log('Vivideo: Chrome commands API not available, using direct handling');
+}
+
 // Message handling
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Vivideo Content: Message received:', request);
+  
   if (request.action === 'toggle-vivideo') {
-    if (window.vivideoController) {
-      window.vivideoController.toggle();
+    // Add small delay to prevent conflict with direct keyboard listener
+    setTimeout(() => {
+      if (window.vivideoController) {
+        window.vivideoController.toggle();
+      } else {
+        initializeVivideo();
+        setTimeout(() => {
+          if (window.vivideoController) {
+            window.vivideoController.show();
+          }
+        }, 100);
+      }
+    }, 10);
+    sendResponse({ success: true });
+  }
+  
+  if (request.action === 'next-profile') {
+    if (window.vivideoController && window.vivideoController.profileManager) {
+      window.vivideoController.profileManager.nextProfile();
     } else {
-      initializeVivideo();
-      setTimeout(() => {
-        if (window.vivideoController) {
-          window.vivideoController.show();
-        }
-      }, 100);
+      console.warn('Vivideo: Controller or ProfileManager not available for next-profile');
     }
     sendResponse({ success: true });
   }
+  
+  if (request.action === 'previous-profile') {
+    if (window.vivideoController && window.vivideoController.profileManager) {
+      window.vivideoController.profileManager.previousProfile();
+    } else {
+      console.warn('Vivideo: Controller or ProfileManager not available for previous-profile');
+    }
+    sendResponse({ success: true });
+  }
+  
   return true;
 });
 
@@ -651,8 +680,11 @@ window.addEventListener('load', () => {
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
-  if (e.altKey && e.key === 'v') {
+  // Only handle keyboard shortcut if user hasn't set a custom one
+  if (shouldHandleKeyboardShortcuts && e.altKey && e.key === 'v') {
     e.preventDefault();
+    e.stopPropagation();
+    console.log('Vivideo: Alt+V keyboard shortcut detected (direct handling)');
     if (window.vivideoController) {
       window.vivideoController.toggle();
     } else {
