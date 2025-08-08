@@ -62,7 +62,7 @@ class UIHelper {
     return /*html*/ `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
-        <button class="vivideo-info" title="Information">ⓘ</button>
+        <button class="vivideo-info" title="Information">𝒾</button>
         <button class="vivideo-close" title="Close (Alt+V)">✕</button>
       </div>
     `;

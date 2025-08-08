@@ -34,7 +34,7 @@ class VivideoController {
       name: 'DEFAULT',
       settings: { ...this.defaultSettings }
     };
-    this.currentTheme = 'cybernetic';
+    this.currentTheme = window.VivideoConfig.defaultTheme;
     this.themeColors = {
       casual: { 
         fontHue: 200, 
@@ -178,18 +178,29 @@ class VivideoController {
     this.container = document.createElement('div');
     this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
     
-    this.container.innerHTML = 
-      UIHelper.createHeaderHTML() +
-      this.themeManager.createThemesHTML() +
-      this.profileManager.createProfilesHTML() +
+    // Build HTML conditionally based on config
+    let htmlContent = UIHelper.createHeaderHTML();
+    
+    // Only add themes section if testMode is enabled
+    if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
+      htmlContent += this.themeManager.createThemesHTML();
+    }
+    
+    htmlContent += this.profileManager.createProfilesHTML() +
       UIHelper.createCheckboxesHTML(this.settings) +
       UIHelper.createInfoHTML() +
       this.videoControls.createControlsHTML() +
       UIHelper.createShortcutsHTML();
 
+    this.container.innerHTML = htmlContent;
+
     document.body.appendChild(this.container);
     this.updateProfilesList();
-    this.updateThemeSelection();
+    
+    // Only update theme selection if themes panel is enabled
+    if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
+      this.updateThemeSelection();
+    }
   }
 
   bindEvents() {
@@ -207,7 +218,11 @@ class VivideoController {
     // Component events
     this.videoControls.bindEvents(this.container);
     this.profileManager.bindEvents(this.container);
-    this.themeManager.bindEvents(this.container);
+    
+    // Only bind theme events if themes panel is enabled
+    if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
+      this.themeManager.bindEvents(this.container);
+    }
 
     // Click outside to hide
     this.clickOutsideHandler = (e) => {
