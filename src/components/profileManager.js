@@ -192,7 +192,42 @@ class ProfileManager {
     }
     
     const nextIndex = (currentIndex + 1) % allProfiles.length;
-    this.controller.loadProfile(allProfiles[nextIndex]);
+    
+    // Dodaj animację przewijania do przodu dla active-profile-display
+    const profileDisplay = this.controller.container.querySelector('#active-profile-display');
+    if (profileDisplay) {
+      profileDisplay.classList.add('scroll-next');
+      setTimeout(() => {
+        profileDisplay.classList.remove('scroll-next');
+      }, 400);
+    }
+    
+    // Załaduj profil bez otwierania menu profiles
+    const targetProfile = allProfiles[nextIndex];
+    if (targetProfile.name === 'DEFAULT') {
+      this.controller.settings.activeProfile = null;
+      Object.keys(this.controller.defaultSettings).forEach(key => {
+        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+          this.controller.settings[key] = this.controller.defaultSettings[key];
+        }
+      });
+    } else {
+      this.controller.settings.activeProfile = targetProfile.name;
+      Object.keys(targetProfile.settings).forEach(key => {
+        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+          this.controller.settings[key] = targetProfile.settings[key];
+        }
+      });
+      if (targetProfile.settings.autoActivate !== undefined) {
+        this.controller.settings.autoActivate = targetProfile.settings.autoActivate;
+      }
+    }
+
+    this.controller.updateUI();
+    this.controller.applyFilters();
+    this.controller.saveSettings();
+    this.controller.saveAppState();
+    this.controller.updateProfilesList();
   }
 
   previousProfile() {
@@ -207,7 +242,42 @@ class ProfileManager {
     }
     
     const prevIndex = currentIndex === 0 ? allProfiles.length - 1 : currentIndex - 1;
-    this.controller.loadProfile(allProfiles[prevIndex]);
+    
+    // Dodaj animację przewijania do tyłu dla active-profile-display
+    const profileDisplay = this.controller.container.querySelector('#active-profile-display');
+    if (profileDisplay) {
+      profileDisplay.classList.add('scroll-prev');
+      setTimeout(() => {
+        profileDisplay.classList.remove('scroll-prev');
+      }, 400);
+    }
+    
+    // Załaduj profil bez otwierania menu profiles
+    const targetProfile = allProfiles[prevIndex];
+    if (targetProfile.name === 'DEFAULT') {
+      this.controller.settings.activeProfile = null;
+      Object.keys(this.controller.defaultSettings).forEach(key => {
+        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+          this.controller.settings[key] = this.controller.defaultSettings[key];
+        }
+      });
+    } else {
+      this.controller.settings.activeProfile = targetProfile.name;
+      Object.keys(targetProfile.settings).forEach(key => {
+        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+          this.controller.settings[key] = targetProfile.settings[key];
+        }
+      });
+      if (targetProfile.settings.autoActivate !== undefined) {
+        this.controller.settings.autoActivate = targetProfile.settings.autoActivate;
+      }
+    }
+
+    this.controller.updateUI();
+    this.controller.applyFilters();
+    this.controller.saveSettings();
+    this.controller.saveAppState();
+    this.controller.updateProfilesList();
   }
 }
 

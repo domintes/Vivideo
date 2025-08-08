@@ -66,7 +66,7 @@ class VideoControls {
           <input type="range" class="vivideo-slider" id="gamma-slider" 
                  min="0.1" max="3" value="1" step="0.01">
           <span>►</span>
-          <input type="text" class="vivideo-input" id="gamma-input" 
+          <input type="text" class="vivideo-input gamma-input" id="gamma-input" 
                  placeholder="1.00" maxlength="4">
           <button class="vivideo-reset-single" data-control="gamma" title="Reset gamma">↺</button>
         </div>
@@ -136,12 +136,74 @@ class VideoControls {
         this.controller.updateControl(control, parseFloat(e.target.value));
       });
       
-      input.addEventListener('input', (e) => {
-        const value = parseFloat(e.target.value);
-        if (!isNaN(value)) {
-          this.controller.updateControl(control, value);
-        }
-      });
+      // Specjalna obsługa dla gamma input z lepszą nawigacją
+      if (control === 'gamma') {
+        let cursorPosition = 0;
+        
+        input.addEventListener('focus', (e) => {
+          // Zapisz pozycję kursora przy fokusie
+          setTimeout(() => {
+            cursorPosition = e.target.selectionStart;
+          }, 10);
+        });
+        
+        input.addEventListener('keydown', (e) => {
+          if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            const currentValue = input.value;
+            const newValue = this.insertDigitAtPosition(currentValue, e.key, cursorPosition);
+            const numValue = parseFloat(newValue);
+            
+            if (!isNaN(numValue) && numValue >= 0.1 && numValue <= 3.0) {
+              input.value = newValue;
+              this.controller.updateControl(control, numValue);
+              // Przesuń kursor w prawo po przecinku
+              if (cursorPosition === 1) cursorPosition = 3;
+              else if (cursorPosition < 4) cursorPosition++;
+              setTimeout(() => {
+                input.setSelectionRange(cursorPosition, cursorPosition);
+              }, 10);
+            }
+          } else if (e.key === 'ArrowLeft' && cursorPosition > 0) {
+            cursorPosition = cursorPosition === 3 ? 1 : cursorPosition - 1;
+            setTimeout(() => {
+              input.setSelectionRange(cursorPosition, cursorPosition);
+            }, 10);
+          } else if (e.key === 'ArrowRight' && cursorPosition < 4) {
+            cursorPosition = cursorPosition === 1 ? 3 : cursorPosition + 1;
+            setTimeout(() => {
+              input.setSelectionRange(cursorPosition, cursorPosition);
+            }, 10);
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            if (cursorPosition > 0) {
+              cursorPosition = cursorPosition === 3 ? 1 : cursorPosition - 1;
+              setTimeout(() => {
+                input.setSelectionRange(cursorPosition, cursorPosition);
+              }, 10);
+            }
+          }
+        });
+        
+        input.addEventListener('click', (e) => {
+          cursorPosition = e.target.selectionStart;
+          // Dostosuj pozycję kursora aby ominąć przecinek
+          if (cursorPosition === 2) {
+            cursorPosition = 1;
+            setTimeout(() => {
+              input.setSelectionRange(cursorPosition, cursorPosition);
+            }, 10);
+          }
+        });
+      } else {
+        // Standardowa obsługa dla innych inputów
+        input.addEventListener('input', (e) => {
+          const value = parseFloat(e.target.value);
+          if (!isNaN(value)) {
+            this.controller.updateControl(control, value);
+          }
+        });
+      }
       
       input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -149,6 +211,26 @@ class VideoControls {
         }
       });
     });
+  }
+
+  insertDigitAtPosition(currentValue, digit, position) {
+    // Format: X.XX gdzie X to cyfry
+    const parts = currentValue.split('.');
+    let wholePart = parts[0] || '1';
+    let decimalPart = parts[1] || '00';
+    
+    if (position === 0) {
+      // Pierwsza pozycja - cyfra jedności
+      wholePart = digit;
+    } else if (position === 3) {
+      // Pierwsza pozycja po przecinku
+      decimalPart = digit + (decimalPart[1] || '0');
+    } else if (position === 4) {
+      // Druga pozycja po przecinku
+      decimalPart = (decimalPart[0] || '0') + digit;
+    }
+    
+    return wholePart + '.' + decimalPart.padEnd(2, '0');
   }
 
   updateUI(settings, container) {

@@ -344,17 +344,32 @@ class VivideoController {
       (panelType === 'themes' && this.themesVisible) ||
       (panelType === 'info' && this.infoVisible);
 
-    // Hide all panels and reset flags
+    // Hide all panels with animation
     Object.values(panels).forEach(panel => {
-      if (panel) panel.style.display = 'none';
+      if (panel && panel.style.display !== 'none') {
+        panel.classList.remove('panel-opening');
+        panel.classList.add('panel-closing');
+        setTimeout(() => {
+          panel.style.display = 'none';
+          panel.classList.remove('panel-closing');
+        }, 300);
+      }
     });
+    
     this.profilesVisible = false;
     this.themesVisible = false;
     this.infoVisible = false;
 
-    // If panel was hidden, show it
+    // If panel was hidden, show it with animation
     if (!isCurrentlyVisible) {
-      currentPanel.style.display = 'block';
+      setTimeout(() => {
+        currentPanel.style.display = 'block';
+        currentPanel.classList.add('panel-opening');
+        setTimeout(() => {
+          currentPanel.classList.remove('panel-opening');
+        }, 300);
+      }, isCurrentlyVisible ? 0 : 50);
+      
       if (panelType === 'profiles') {
         this.profilesVisible = true;
       } else if (panelType === 'themes') {
@@ -420,7 +435,7 @@ class VivideoController {
     this.saveSettings();
     this.saveAppState();
     this.updateProfilesList();
-    this.toggleProfiles();
+    // Panel profiles pozostaje otwarty po wyborze profilu
   }
 
   deleteProfile(index) {
@@ -449,13 +464,36 @@ class VivideoController {
       console.warn('Vivideo: ThemeManager not initialized yet');
       return;
     }
+    
+    // Krótko ukryj panel aby przeładować style
+    const wasVisible = this.isVisible;
+    const wasThemesVisible = this.themesVisible;
+    
+    if (wasVisible) {
+      this.container.style.opacity = '0.7';
+      this.container.style.transition = 'opacity 0.2s ease';
+    }
+    
     this.currentTheme = theme;
     this.themeManager.updateThemeColorSliders(this.container, this.currentTheme);
     this.themeManager.applyThemeColors(this.currentTheme, this.themeColors, this.container);
     this.updateThemeSelection();
     this.saveTheme();
     this.saveThemeColors();
-    this.toggleThemes();
+    
+    // Przywróć widoczność po przeładowaniu stylów
+    if (wasVisible) {
+      setTimeout(() => {
+        this.container.style.opacity = '1';
+        // Utrzymaj panel themes otwarty jeśli był otwarty
+        if (wasThemesVisible) {
+          this.themesVisible = true;
+          const themesPanel = this.container.querySelector('#themes-panel');
+          if (themesPanel) themesPanel.style.display = 'block';
+          this.updateActiveStates();
+        }
+      }, 200);
+    }
   }
 
   updateFontThemeColor(hue) {
@@ -509,17 +547,24 @@ class VivideoController {
   }
 
   hide() {
-    this.container.classList.remove('vivideo-visible');
-    this.isVisible = false;
-    if (!this.settings.autoActivate) {
-      this.removeFilters();
-    }
+    // Dodaj animację chowania panelu
+    this.container.classList.add('vivideo-hiding');
     
-    // Reset all active states when hiding
-    this.profilesVisible = false;
-    this.themesVisible = false;
-    this.infoVisible = false;
-    this.updateActiveStates();
+    setTimeout(() => {
+      this.container.classList.remove('vivideo-visible');
+      this.container.classList.remove('vivideo-hiding');
+      this.isVisible = false;
+      
+      if (!this.settings.autoActivate) {
+        this.removeFilters();
+      }
+      
+      // Reset all active states when hiding
+      this.profilesVisible = false;
+      this.themesVisible = false;
+      this.infoVisible = false;
+      this.updateActiveStates();
+    }, 300);
   }
 
   // Storage methods
