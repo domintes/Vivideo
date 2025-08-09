@@ -85,8 +85,6 @@
 
 .vivideo-container.vivideo-theme-casual .vivideo-info {
   color: #00bfff;
-  border: 1px solid rgba(0, 191, 255, 0.3);
-  background: rgba(0, 191, 255, 0.1);
 }
 
 .vivideo-container.vivideo-theme-casual .vivideo-info:hover {
@@ -1332,7 +1330,7 @@
 }
 
 .vivideo-info {
-  margin-bottom: 15px;
+  margin-bottom: 0;
   overflow: hidden;
   transition: all 0.3s ease;
 }
@@ -1388,4 +1386,8 @@
 
 .vivideo-container.vivideo-theme-casual::-webkit-scrollbar-thumb:hover {
   background: rgba(69, 160, 255, 0.6);
+}
+
+button.vivideo-close {
+  border: none; 
 }
