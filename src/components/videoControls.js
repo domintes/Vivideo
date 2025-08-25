@@ -7,8 +7,21 @@ class VideoControls {
   }
 
   createControlsHTML() {
+    const limits = {
+      brightness: UIHelper.getControlLimits('brightness', this.controller.settings.extendedLimits),
+      contrast: UIHelper.getControlLimits('contrast', this.controller.settings.extendedLimits),
+      saturation: UIHelper.getControlLimits('saturation', this.controller.settings.extendedLimits),
+      gamma: UIHelper.getControlLimits('gamma', this.controller.settings.extendedLimits),
+      colortemp: UIHelper.getControlLimits('colortemp', this.controller.settings.extendedLimits),
+      sharpness: UIHelper.getControlLimits('sharpness', this.controller.settings.extendedLimits)
+    };
+
+    const inputMaxLength = this.controller.settings.extendedLimits ? '5' : '4';
+    const gammaInputMaxLength = '4';
+
     return /*html*/ `
-      <div class="vivideo-control">
+      <div class="vivideo-controls-section">
+        <div class="vivideo-control">
         <div class="vivideo-label">
           <span>Brightness</span>
           <span class="vivideo-value" id="brightness-value">0%</span>
@@ -16,10 +29,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="brightness-slider" 
-                 min="-100" max="100" value="0" step="1">
+                 min="${limits.brightness.min}" max="${limits.brightness.max}" value="0" step="${limits.brightness.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="brightness-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="brightness" title="Reset brightness">↺</button>
         </div>
       </div>
@@ -32,10 +45,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="contrast-slider" 
-                 min="-100" max="100" value="0" step="1">
+                 min="${limits.contrast.min}" max="${limits.contrast.max}" value="0" step="${limits.contrast.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="contrast-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="contrast" title="Reset contrast">↺</button>
         </div>
       </div>
@@ -48,10 +61,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="saturation-slider" 
-                 min="-90" max="100" value="0" step="1">
+                 min="${limits.saturation.min}" max="${limits.saturation.max}" value="0" step="${limits.saturation.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="saturation-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="saturation" title="Reset saturation">↺</button>
         </div>
       </div>
@@ -64,10 +77,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="gamma-slider" 
-                 min="0.1" max="3" value="1" step="0.01">
+                 min="${limits.gamma.min}" max="${limits.gamma.max}" value="1" step="${limits.gamma.step}">
           <span>►</span>
           <input type="text" class="vivideo-input gamma-input" id="gamma-input" 
-                 placeholder="1.00" maxlength="4">
+                 placeholder="1.00" maxlength="${gammaInputMaxLength}">
           <button class="vivideo-reset-single" data-control="gamma" title="Reset gamma">↺</button>
         </div>
       </div>
@@ -80,10 +93,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="colortemp-slider" 
-                 min="-100" max="100" value="0" step="1">
+                 min="${limits.colortemp.min}" max="${limits.colortemp.max}" value="0" step="${limits.colortemp.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="colortemp-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="colortemp" title="Reset color temperature">↺</button>
         </div>
       </div>
@@ -96,7 +109,7 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="sharpness-slider" 
-                 min="0" max="100" value="0" step="1">
+                 min="${limits.sharpness.min}" max="${limits.sharpness.max}" value="0" step="${limits.sharpness.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="sharpness-input" 
                  placeholder="0" maxlength="4">
@@ -105,6 +118,7 @@ class VideoControls {
       </div>
 
       <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
+      </div>
     `;
   }
 

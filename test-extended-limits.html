@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivideo - Test Extended Limits</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00bfff;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #00ff7f;
+            margin-top: 0;
+        }
+        
+        .instructions {
+            background: #444;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00bfff;
+        }
+        
+        .video-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            background: #000;
+            border-radius: 8px;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .status.success {
+            background: rgba(0, 255, 127, 0.2);
+            color: #00ff7f;
+            border: 1px solid rgba(0, 255, 127, 0.5);
+        }
+        
+        .status.warning {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.5);
+        }
+        
+        .status.new {
+            background: rgba(255, 107, 53, 0.2);
+            color: #ff6b35;
+            border: 1px solid rgba(255, 107, 53, 0.5);
+        }
+        
+        code {
+            background: #555;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #00bfff;
+        }
+        
+        .test-steps {
+            counter-reset: step-counter;
+        }
+        
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #3a3a3a;
+            border-radius: 6px;
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .test-step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #00bfff;
+            color: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .feature-highlight {
+            background: linear-gradient(45deg, rgba(255, 107, 53, 0.1), rgba(255, 165, 0, 0.1));
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 107, 53, 0.3);
+        }
+        
+        .limits-table {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .limits-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        
+        .limits-table th,
+        .limits-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #444;
+        }
+        
+        .limits-table th {
+            color: #00bfff;
+            font-weight: bold;
+        }
+        
+        .limits-table .normal {
+            color: #fff;
+        }
+        
+        .limits-table .extended {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎥 Vivideo - Test Extended Limits (2x Range)</h1>
+        
+        <div class="feature-highlight">
+            <h3>🆕 Nowa funkcjonalność: Rozszerzone limity</h3>
+            <p>Ta funkcja zwiększa dwukrotnie zakres wszystkich kontrolek, umożliwiając bardziej ekstremalne efekty!</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Porównanie limitów</h3>
+            <div class="limits-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kontrolka</th>
+                            <th>Normalne limity</th>
+                            <th>Rozszerzone limity (2x)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Brightness</td>
+                            <td class="normal">-100% do +100%</td>
+                            <td class="extended">-200% do +200%</td>
+                        </tr>
+                        <tr>
+                            <td>Contrast</td>
+                            <td class="normal">-100% do +100%</td>
+                            <td class="extended">-200% do +200%</td>
+                        </tr>
+                        <tr>
+                            <td>Saturation</td>
+                            <td class="normal">-90% do +100%</td>
+                            <td class="extended">-180% do +200%</td>
+                        </tr>
+                        <tr>
+                            <td>Gamma</td>
+                            <td class="normal">0.1 do 3.0</td>
+                            <td class="extended">0.05 do 6.0</td>
+                        </tr>
+                        <tr>
+                            <td>Color Temperature</td>
+                            <td class="normal">-100% do +100%</td>
+                            <td class="extended">-200% do +200%</td>
+                        </tr>
+                        <tr>
+                            <td>Sharpness</td>
+                            <td class="normal">0% do 100%</td>
+                            <td class="extended">0% do 200%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Instrukcja testowania:</h3>
+            <div class="test-steps">
+                <div class="test-step">
+                    Otwórz panel Vivideo naciskając <code>Alt + V</code>
+                </div>
+                <div class="test-step">
+                    Znajdź nowy checkbox <strong>"Extended limits (2x range)"</strong> w sekcji ustawień
+                </div>
+                <div class="test-step">
+                    Zaznacz checkbox - kontrolki powinny się przebudować z nowymi limitami
+                </div>
+                <div class="test-step">
+                    Sprawdź czy kontrolki mają wizualne oznaczenie <span style="color: #ff6b35;">[2x]</span>
+                </div>
+                <div class="test-step">
+                    Przetestuj większe wartości na sliderach (np. brightness 150%)
+                </div>
+                <div class="test-step">
+                    Odznacz checkbox - sprawdź czy wartości są obcinane do normalnych limitów
+                </div>
+                <div class="test-step">
+                    Przetestuj eksport/import z rozszerzonymi limitami
+                </div>
+                <div class="test-step">
+                    Sprawdź czy profile zachowują ustawienia rozszerzonych limitów
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎬 Video test</h3>
+            <div class="video-container">
+                <video controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    <p>Twoja przeglądarka nie obsługuje elementu video. Możesz użyć dowolnego innego wideo na stronie.</p>
+                </video>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>✅ Co powinno działać:</h3>
+            <div class="status success">
+                <strong>✓ Dynamiczne limity:</strong><br>
+                • Checkbox przełącza między normalnymi a rozszerzonymi limitami<br>
+                • Sliders i inputy mają odpowiednie min/max wartości<br>
+                • Wartości są automatycznie obcinane przy zmianie limitów
+            </div>
+            
+            <div class="status success">
+                <strong>✓ Wizualne wskazówki:</strong><br>
+                • Oznaczenie [2x] przy każdej kontrolce<br>
+                • Kolorowa linia po lewej stronie kontrolek<br>
+                • Kolory dostosowane do motywu (cybernetic/casual)
+            </div>
+            
+            <div class="status success">
+                <strong>✓ Integracja:</strong><br>
+                • Ustawienie zachowywane w pamięci<br>
+                • Export/import obejmuje rozszerzone limity<br>
+                • Profile zachowują stan rozszerzonych limitów
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 Użyteczne przypadki:</h3>
+            <div class="instructions">
+                <h4>Kiedy używać rozszerzonych limitów:</h4>
+                <ul>
+                    <li><strong>Bardzo ciemne filmy:</strong> brightness +150% dla lepszej widoczności</li>
+                    <li><strong>Wysycone kolory:</strong> saturation -150% dla efektu czarno-białego</li>
+                    <li><strong>Ekstremalne kontrasty:</strong> contrast +180% dla dramatycznego efektu</li>
+                    <li><strong>Mocne wyostrzenie:</strong> sharpness 150%+ dla bardzo ostrych obrazów</li>
+                    <li><strong>Gamma korekta HDR:</strong> gamma 0.3 lub 5.0 dla specjalnych efektów</li>
+                    <li><strong>Temperatura kolorów:</strong> ±180% dla artystycznych efektów</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🚨 Testuj błędne przypadki:</h3>
+            <div class="status warning">
+                <strong>Sprawdź reakcję na:</strong><br>
+                • Włączanie/wyłączanie checkbox podczas aktywnych filtrów<br>
+                • Import profili z rozszerzonymi limitami<br>
+                • Zmiana motywu z włączonymi rozszerzonymi limitami<br>
+                • Ręczne wpisywanie wartości poza limity w input'ach
+            </div>
+        </div>
+        
+        <div class="status new">
+            <strong>🎉 Rozszerzone limity gotowe do testowania!</strong><br>
+            Checkbox "Extended limits (2x range)" zwiększy dwukrotnie zakres wszystkich kontrolek z wizualnymi wskazówkami.
+        </div>
+    </div>
+</body>
+</html>

@@ -4,6 +4,143 @@
 class ProfileManager {
   constructor(controller) {
     this.controller = controller;
+    this.defaultProfiles = this.createDefaultProfiles();
+    this.showingDefaultProfiles = false;
+  }
+
+  createDefaultProfiles() {
+    return [
+      {
+        name: 'Default',
+        description: 'Standard neutral settings',
+        settings: {
+          brightness: 0,
+          contrast: 0,
+          saturation: 0,
+          gamma: 1,
+          colorTemp: 0,
+          sharpness: 0,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Black & White',
+        description: 'Classic monochrome effect',
+        settings: {
+          brightness: 5,
+          contrast: 15,
+          saturation: -100,
+          gamma: 1.1,
+          colorTemp: 0,
+          sharpness: 10,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Vibrant Colors',
+        description: 'Enhanced color saturation',
+        settings: {
+          brightness: 8,
+          contrast: 12,
+          saturation: 45,
+          gamma: 0.95,
+          colorTemp: 5,
+          sharpness: 8,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Dark Scene',
+        description: 'Brighten very dark content',
+        settings: {
+          brightness: 35,
+          contrast: 25,
+          saturation: 10,
+          gamma: 0.7,
+          colorTemp: -8,
+          sharpness: 15,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Cinematic',
+        description: 'Film-like color grading',
+        settings: {
+          brightness: -5,
+          contrast: 20,
+          saturation: -15,
+          gamma: 1.2,
+          colorTemp: -20,
+          sharpness: 5,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'High Contrast',
+        description: 'Sharp, distinct details',
+        settings: {
+          brightness: 10,
+          contrast: 40,
+          saturation: -20,
+          gamma: 1.3,
+          colorTemp: 0,
+          sharpness: 25,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Warm Tone',
+        description: 'Cozy, warm atmosphere',
+        settings: {
+          brightness: 8,
+          contrast: 5,
+          saturation: 20,
+          gamma: 0.9,
+          colorTemp: 35,
+          sharpness: 0,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Cool Tone',
+        description: 'Modern, cool atmosphere',
+        settings: {
+          brightness: 3,
+          contrast: 8,
+          saturation: 15,
+          gamma: 1.05,
+          colorTemp: -30,
+          sharpness: 5,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Gaming',
+        description: 'Enhanced visibility for games',
+        settings: {
+          brightness: 20,
+          contrast: 30,
+          saturation: 25,
+          gamma: 0.8,
+          colorTemp: 10,
+          sharpness: 20,
+          autoActivate: true
+        }
+      },
+      {
+        name: 'Retro',
+        description: 'Vintage, washed-out look',
+        settings: {
+          brightness: -8,
+          contrast: -15,
+          saturation: -30,
+          gamma: 1.4,
+          colorTemp: 25,
+          sharpness: -5,
+          autoActivate: true
+        }
+      }
+    ];
   }
 
   createProfilesHTML() {
@@ -11,31 +148,49 @@ class ProfileManager {
       <!-- Profiles Section -->
       <div class="vivideo-bottom-controls">
         <div class="profiles-button-section button-section">
-          <button class="vivideo-control-btn" id="profiles-btn" title="Configuration profiles">Profiles</button>
+          <button class="vivideo-control-btn compact active" id="user-profiles-btn" title="User created profiles">User</button>
+          <button class="vivideo-control-btn compact" id="default-profiles-btn" title="Built-in default profiles">Defaults</button>
+          <button class="vivideo-control-btn compact" id="settings-btn" title="Import/Export settings">⚙️</button>
           <div class="active-item-status active-profile-status" id="active-profile-display">
             DEFAULT
           </div>
         </div>
       </div>
 
-      <div class="vivideo-profiles" id="profiles-panel" style="display: none;">
+      <!-- User Profiles Panel (visible by default) -->
+      <div class="vivideo-profiles" id="user-profiles-panel">
+        <div class="profile-panel-header">👤 User Profiles</div>
         <div class="vivideo-profile-list" id="profile-list"></div>
+        <!-- Profile Save Form - always visible for user profiles -->
+        <div class="vivideo-profile-save-section">
+          <div class="vivideo-profile-form">
+            <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
+            <button class="vivideo-profile-save" id="save-profile">Save Current Settings</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Profile Save Form -->
-      <div class="vivideo-profile-save-section">
-        <div class="vivideo-profile-form">
-          <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_5">
-          <button class="vivideo-profile-save" id="save-profile">Save</button>
-        </div>
+      <!-- Default Profiles Panel (hidden by default) -->
+      <div class="vivideo-profiles" id="default-profiles-panel" style="display: none;">
+        <div class="profile-panel-header">⭐ Default Profiles</div>
+        <div class="vivideo-profile-list" id="default-profile-list"></div>
       </div>
     `;
   }
 
   bindEvents(container) {
     // Profile controls
-    container.querySelector('#profiles-btn').addEventListener('click', () => {
-      this.controller.toggleProfiles();
+    container.querySelector('#user-profiles-btn').addEventListener('click', () => {
+      this.showUserProfiles(container);
+    });
+
+    container.querySelector('#default-profiles-btn').addEventListener('click', () => {
+      this.showDefaultProfiles(container);
+    });
+
+    // Settings management button
+    container.querySelector('#settings-btn').addEventListener('click', () => {
+      this.controller.toggleSettingsManagement();
     });
 
     container.querySelector('#save-profile').addEventListener('click', () => {
@@ -43,7 +198,57 @@ class ProfileManager {
     });
   }
 
-  updateProfilesList(container, profiles, settings, defaultProfile) {
+  showUserProfiles(container) {
+    this.showingDefaultProfiles = false;
+    
+    // Update button states
+    const userBtn = container.querySelector('#user-profiles-btn');
+    const defaultBtn = container.querySelector('#default-profiles-btn');
+    const userPanel = container.querySelector('#user-profiles-panel');
+    const defaultPanel = container.querySelector('#default-profiles-panel');
+    
+    if (userBtn && defaultBtn && userPanel && defaultPanel) {
+      // Update button states
+      userBtn.classList.add('active');
+      defaultBtn.classList.remove('active');
+      
+      // Show user panel, hide default panel
+      userPanel.style.display = 'block';
+      defaultPanel.style.display = 'none';
+      
+      // Update user profile list
+      this.updateUserProfilesList(container);
+      
+      console.log('Vivideo: Switched to User profiles view');
+    }
+  }
+
+  showDefaultProfiles(container) {
+    this.showingDefaultProfiles = true;
+    
+    // Update button states
+    const userBtn = container.querySelector('#user-profiles-btn');
+    const defaultBtn = container.querySelector('#default-profiles-btn');
+    const userPanel = container.querySelector('#user-profiles-panel');
+    const defaultPanel = container.querySelector('#default-profiles-panel');
+    
+    if (userBtn && defaultBtn && userPanel && defaultPanel) {
+      // Update button states
+      userBtn.classList.remove('active');
+      defaultBtn.classList.add('active');
+      
+      // Show default panel, hide user panel
+      userPanel.style.display = 'none';
+      defaultPanel.style.display = 'block';
+      
+      // Update default profile list
+      this.updateDefaultProfilesList(container);
+      
+      console.log('Vivideo: Switched to Default profiles view');
+    }
+  }
+
+  updateUserProfilesList(container) {
     const profileList = container.querySelector('#profile-list');
     if (!profileList) return;
     
@@ -52,7 +257,7 @@ class ProfileManager {
     // Add DEFAULT profile
     const defaultProfileItem = document.createElement('div');
     defaultProfileItem.className = 'vivideo-profile-item';
-    const isDefaultActive = !settings.activeProfile && this.isDefaultProfile(settings);
+    const isDefaultActive = !this.controller.settings.activeProfile && this.isDefaultProfile(this.controller.settings);
     if (isDefaultActive) {
       defaultProfileItem.classList.add('vivideo-profile-active');
     }
@@ -62,16 +267,16 @@ class ProfileManager {
     `;
     
     defaultProfileItem.addEventListener('click', () => {
-      this.controller.loadProfile(defaultProfile);
+      this.controller.loadProfile(this.controller.defaultProfile);
     });
     
     profileList.appendChild(defaultProfileItem);
     
     // Add user profiles with delete buttons
-    profiles.forEach((profile, index) => {
+    this.controller.profiles.forEach((profile, index) => {
       const profileItem = document.createElement('div');
       profileItem.className = 'vivideo-profile-item';
-      const isActive = settings.activeProfile === profile.name;
+      const isActive = this.controller.settings.activeProfile === profile.name;
       if (isActive) {
         profileItem.classList.add('vivideo-profile-active');
       }
@@ -99,8 +304,35 @@ class ProfileManager {
     // Update placeholder for new profile name
     const profileNameInput = container.querySelector('#profile-name');
     if (profileNameInput) {
-      profileNameInput.placeholder = `Profile_${profiles.length + 1}`;
+      profileNameInput.placeholder = `Profile_${this.controller.profiles.length + 1}`;
     }
+  }
+
+  updateDefaultProfilesList(container) {
+    const defaultProfileList = container.querySelector('#default-profile-list');
+    if (!defaultProfileList) return;
+    
+    defaultProfileList.innerHTML = '';
+
+    // Show default profiles (read-only)
+    const defaultProfiles = this.createDefaultProfiles();
+    defaultProfiles.forEach((profile) => {
+      const profileItem = document.createElement('div');
+      profileItem.className = 'vivideo-profile-item';
+      
+      profileItem.innerHTML = `
+        <span class="vivideo-profile-name" title="${profile.description}">${profile.name}</span>
+        <span class="vivideo-profile-description">${profile.description}</span>
+      `;
+      
+      profileItem.addEventListener('click', () => {
+        this.controller.loadProfile(profile);
+        // Switch back to user view after loading default profile
+        setTimeout(() => this.showUserProfiles(container), 100);
+      });
+      
+      defaultProfileList.appendChild(profileItem);
+    });
   }
 
   saveCurrentProfile(container) {
@@ -129,9 +361,13 @@ class ProfileManager {
     this.controller.saveProfiles();
     this.controller.saveSettings();
     this.controller.saveAppState();
-    this.updateProfilesList(container, this.controller.profiles, this.controller.settings, this.controller.defaultProfile);
+    
+    // Update user profiles list (we're always in user view when saving)
+    this.updateUserProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
     nameInput.value = '';
+    
+    console.log('Vivideo: Profile saved:', profileName);
   }
 
   isDefaultProfile(settings) {

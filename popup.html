@@ -125,6 +125,16 @@
     </div>
   </div>
   
+  <div class="settings-management">
+    <h3>⚙️ Zarządzanie ustawieniami</h3>
+    <div class="controls">
+      <button class="btn" id="export-btn">📤 Eksportuj</button>
+      <button class="btn" id="import-btn">📥 Importuj</button>
+    </div>
+    <input type="file" id="import-file" accept=".json" style="display: none;">
+    <div id="message" class="message" style="display: none;"></div>
+  </div>
+  
   <div class="status" id="status">
     <div id="video-count">Sprawdzanie filmów...</div>
     <div id="enhancement-status">Enhancement: Gotowy</div>
@@ -205,6 +215,45 @@
       border-radius: 3px;
       font-family: monospace;
       font-size: 11px;
+    }
+    
+    .settings-management {
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin: 15px;
+    }
+    
+    .settings-management h3 {
+      margin: 0 0 15px 0;
+      font-size: 14px;
+      text-align: center;
+    }
+    
+    .message {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 12px;
+    }
+    
+    .message.success {
+      background: rgba(76, 175, 80, 0.2);
+      color: #4caf50;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .message.error {
+      background: rgba(244, 67, 54, 0.2);
+      color: #f44336;
+      border: 1px solid rgba(244, 67, 54, 0.3);
+    }
+    
+    .message.info {
+      background: rgba(33, 150, 243, 0.2);
+      color: #2196f3;
+      border: 1px solid rgba(33, 150, 243, 0.3);
     }
   </style>
 </head>

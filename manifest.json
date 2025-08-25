@@ -12,7 +12,8 @@
   "permissions": [
     "storage",
     "activeTab",
-    "scripting"
+    "scripting",
+    "downloads"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -30,6 +31,7 @@
         "src/components/videoControls.js",
         "src/components/profileManager.js",
         "src/components/themeManager.js",
+        "src/components/settingsManager.js",
         "src/components/videoFilterEngine.js",
         "src/content.js"
       ],

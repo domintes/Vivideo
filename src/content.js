@@ -1,13 +1,18 @@
 // Vivideo Content Script - Main Controller (Refactored)
 // Main controller that orchestrates all components
 
-// Prevent multiple instances - improved
-if (window.vivideoController) {
-  window.vivideoController.destroy();
-  window.vivideoController = null;
-}
+// Only run in top window to avoid iframe duplicates
+if (window !== window.top) {
+  console.log('Vivideo: Skipping initialization in iframe/frame');
+  // Exit early - don't initialize in frames
+} else {
+  // Prevent multiple instances - improved
+  if (window.vivideoController) {
+    window.vivideoController.destroy();
+    window.vivideoController = null;
+  }
 
-class VivideoController {
+  class VivideoController {
   constructor() {
     // Prevent multiple instances - strict check
     if (window.vivideoController) {
@@ -26,7 +31,8 @@ class VivideoController {
       sharpness: 0,
       autoActivate: true,
       workOnImagesActivate: false,
-      activeProfile: null
+      activeProfile: null,
+      extendedLimits: false
     };
     this.defaultSettings = { ...this.settings };
     this.profiles = [];
@@ -52,6 +58,7 @@ class VivideoController {
     this.profilesVisible = false;
     this.themesVisible = false;
     this.infoVisible = false;
+    this.settingsManagementVisible = false;
     this.isDragging = false;
     this.dragOffset = { x: 0, y: 0 };
     this.clickOutsideHandler = null;
@@ -63,6 +70,7 @@ class VivideoController {
     this.profileManager = null;
     this.themeManager = null;
     this.filterEngine = null;
+    this.settingsManager = null;
     
     // Set global reference
     window.vivideoController = this;
@@ -121,6 +129,12 @@ class VivideoController {
     }
     
     this.updateUI();
+    
+    // Initialize default profile button state (User profiles active by default)
+    if (this.profileManager && this.container) {
+      this.profileManager.showUserProfiles(this.container);
+    }
+    
     this.isInitialized = true;
     console.log('Vivideo: Initialization complete');
     
@@ -154,6 +168,7 @@ class VivideoController {
     this.profileManager = new ProfileManager(this);
     this.themeManager = new ThemeManager(this);
     this.filterEngine = new VideoFilterEngine(this);
+    this.settingsManager = new SettingsManager(this);
     
     console.log('Vivideo: All components initialized successfully');
     return true;
@@ -178,6 +193,11 @@ class VivideoController {
     this.container = document.createElement('div');
     this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
     
+    // Add extended limits class if enabled
+    if (this.settings.extendedLimits) {
+      this.container.classList.add('extended-limits');
+    }
+    
     // Build HTML conditionally based on config
     let htmlContent = UIHelper.createHeaderHTML();
     
@@ -187,6 +207,7 @@ class VivideoController {
     }
     
     htmlContent += this.profileManager.createProfilesHTML() +
+      this.settingsManager.createImportExportHTML() +
       UIHelper.createCheckboxesHTML(this.settings) +
       UIHelper.createInfoHTML() +
       this.videoControls.createControlsHTML() +
@@ -218,6 +239,7 @@ class VivideoController {
     // Component events
     this.videoControls.bindEvents(this.container);
     this.profileManager.bindEvents(this.container);
+    this.settingsManager.bindEvents(this.container);
     
     // Only bind theme events if themes panel is enabled
     if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
@@ -244,14 +266,40 @@ class VivideoController {
     document.addEventListener('fullscreenchange', () => {
       if (document.fullscreenElement) {
         this.container.classList.add('vivideo-fullscreen');
+        console.log('Vivideo: Fullscreen mode detected, enhancing panel visibility');
       } else {
         this.container.classList.remove('vivideo-fullscreen');
+        console.log('Vivideo: Exited fullscreen mode');
       }
+    });
+
+    // Additional fullscreen API support for cross-browser compatibility
+    const fullscreenEvents = [
+      'webkitfullscreenchange',
+      'mozfullscreenchange', 
+      'MSFullscreenChange'
+    ];
+    
+    fullscreenEvents.forEach(eventType => {
+      document.addEventListener(eventType, () => {
+        const fullscreenElement = document.fullscreenElement || 
+                                 document.webkitFullscreenElement || 
+                                 document.mozFullScreenElement || 
+                                 document.msFullscreenElement;
+        
+        if (fullscreenElement) {
+          this.container.classList.add('vivideo-fullscreen');
+          console.log('Vivideo: Cross-browser fullscreen detected');
+        } else {
+          this.container.classList.remove('vivideo-fullscreen');
+          console.log('Vivideo: Cross-browser fullscreen exit detected');
+        }
+      });
     });
   }
 
   updateControl(control, value) {
-    value = UIHelper.clampValue(control, value);
+    value = UIHelper.clampValue(control, value, this.settings.extendedLimits);
     this.settings[control === 'colortemp' ? 'colorTemp' : control] = value;
     this.updateUI();
     this.applyFilters();
@@ -307,6 +355,7 @@ class VivideoController {
       sharpness: 0,
       autoActivate: this.settings.autoActivate,
       workOnImagesActivate: this.settings.workOnImagesActivate,
+      extendedLimits: this.settings.extendedLimits,
       activeProfile: null
     };
     
@@ -322,6 +371,52 @@ class VivideoController {
     this.updateUI();
     this.applyFilters();
     this.saveSettings();
+  }
+
+  updateSliderLimits() {
+    if (!this.container) return;
+
+    // Rebuild the entire controls section with new limits
+    const controlsSection = this.container.querySelector('.vivideo-controls-section');
+    if (controlsSection) {
+      controlsSection.innerHTML = this.videoControls.createControlsHTML();
+      
+      // Re-bind events for the new controls
+      this.videoControls.bindEvents(this.container);
+      
+      // Update UI with current values
+      this.updateUI();
+    } else {
+      // If controls section doesn't exist, rebuild entire UI
+      this.rebuildUI();
+    }
+  }
+
+  rebuildUI() {
+    if (!this.container) return;
+    
+    const wasVisible = this.isVisible;
+    const currentPosition = {
+      left: this.container.style.left,
+      top: this.container.style.top
+    };
+    
+    // Remove old container
+    if (this.container.parentNode) {
+      this.container.parentNode.removeChild(this.container);
+    }
+    
+    // Recreate UI
+    this.createUI();
+    this.bindEvents();
+    
+    // Restore position and visibility
+    if (currentPosition.left) this.container.style.left = currentPosition.left;
+    if (currentPosition.top) this.container.style.top = currentPosition.top;
+    
+    if (wasVisible) {
+      this.show();
+    }
   }
 
   // Panel visibility methods
@@ -343,11 +438,16 @@ class VivideoController {
     this.showPanel('info');
   }
 
+  toggleSettingsManagement() {
+    this.showPanel('settingsManagement');
+  }
+
   showPanel(panelType) {
     const panels = {
       profiles: this.container.querySelector('#profiles-panel'),
       themes: this.container.querySelector('#themes-panel'),
-      info: this.container.querySelector('#info-panel')
+      info: this.container.querySelector('#info-panel'),
+      settingsManagement: this.container.querySelector('#settings-management')
     };
 
     // Simple toggle logic - if panel is visible, hide it, otherwise show it and hide others
@@ -357,7 +457,8 @@ class VivideoController {
     const isCurrentlyVisible = 
       (panelType === 'profiles' && this.profilesVisible) ||
       (panelType === 'themes' && this.themesVisible) ||
-      (panelType === 'info' && this.infoVisible);
+      (panelType === 'info' && this.infoVisible) ||
+      (panelType === 'settingsManagement' && this.settingsManagementVisible);
 
     // Hide all panels with animation
     Object.values(panels).forEach(panel => {
@@ -374,6 +475,7 @@ class VivideoController {
     this.profilesVisible = false;
     this.themesVisible = false;
     this.infoVisible = false;
+    this.settingsManagementVisible = false;
 
     // If panel was hidden, show it with animation
     if (!isCurrentlyVisible) {
@@ -391,6 +493,8 @@ class VivideoController {
         this.themesVisible = true;
       } else if (panelType === 'info') {
         this.infoVisible = true;
+      } else if (panelType === 'settingsManagement') {
+        this.settingsManagementVisible = true;
       }
     }
 
@@ -401,14 +505,16 @@ class VivideoController {
     const profilesBtn = this.container.querySelector('#profiles-btn');
     const themesBtn = this.container.querySelector('#themes-btn');
     const infoBtn = this.container.querySelector('.vivideo-info');
+    const settingsBtn = this.container.querySelector('#settings-btn');
 
-    [profilesBtn, themesBtn, infoBtn].forEach(btn => {
+    [profilesBtn, themesBtn, infoBtn, settingsBtn].forEach(btn => {
       if (btn) btn.classList.remove('vivideo-active');
     });
 
     if (this.profilesVisible && profilesBtn) profilesBtn.classList.add('vivideo-active');
     if (this.themesVisible && themesBtn) themesBtn.classList.add('vivideo-active');
     if (this.infoVisible && infoBtn) infoBtn.classList.add('vivideo-active');
+    if (this.settingsManagementVisible && settingsBtn) settingsBtn.classList.add('vivideo-active');
   }
 
   // Profile methods
@@ -417,12 +523,13 @@ class VivideoController {
       console.warn('Vivideo: ProfileManager not initialized yet');
       return;
     }
-    this.profileManager.updateProfilesList(
-      this.container, 
-      this.profiles, 
-      this.settings, 
-      this.defaultProfile
-    );
+    
+    // Update the current view based on what's active
+    if (this.profileManager.showingDefaultProfiles) {
+      this.profileManager.updateDefaultProfilesList(this.container);
+    } else {
+      this.profileManager.updateUserProfilesList(this.container);
+    }
   }
 
   loadProfile(profile) {
@@ -757,3 +864,5 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+} // End of top window check

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivideo - Test Import/Export Settings</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00bfff;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #00ff7f;
+            margin-top: 0;
+        }
+        
+        .instructions {
+            background: #444;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00bfff;
+        }
+        
+        .video-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            background: #000;
+            border-radius: 8px;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        
+        .status.success {
+            background: rgba(0, 255, 127, 0.2);
+            color: #00ff7f;
+            border: 1px solid rgba(0, 255, 127, 0.5);
+        }
+        
+        .status.warning {
+            background: rgba(255, 165, 0, 0.2);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.5);
+        }
+        
+        .status.error {
+            background: rgba(255, 69, 0, 0.2);
+            color: #ff4500;
+            border: 1px solid rgba(255, 69, 0, 0.5);
+        }
+        
+        code {
+            background: #555;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #00bfff;
+        }
+        
+        .test-steps {
+            counter-reset: step-counter;
+        }
+        
+        .test-step {
+            margin: 15px 0;
+            padding: 10px;
+            background: #3a3a3a;
+            border-radius: 6px;
+            counter-increment: step-counter;
+            position: relative;
+            padding-left: 40px;
+        }
+        
+        .test-step::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #00bfff;
+            color: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+        
+        .feature-highlight {
+            background: linear-gradient(45deg, rgba(0, 191, 255, 0.1), rgba(0, 255, 127, 0.1));
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 191, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎥 Vivideo - Test Import/Export Settings</h1>
+        
+        <div class="feature-highlight">
+            <h3>🆕 Nowa funkcjonalność: Import/Export ustawień</h3>
+            <p>Ta strona testowa pozwala przetestować nową funkcjonalność importu i eksportu ustawień rozszerzenia Vivideo.</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 Instrukcja testowania:</h3>
+            <div class="test-steps">
+                <div class="test-step">
+                    Otwórz panel Vivideo naciskając <code>Alt + V</code>
+                </div>
+                <div class="test-step">
+                    Zmień niektóre ustawienia filtrów (brightness, contrast, saturation itp.)
+                </div>
+                <div class="test-step">
+                    Stwórz kilka profili użytkownika z różnymi ustawieniami
+                </div>
+                <div class="test-step">
+                    Kliknij przycisk ⚙️ obok przycisku "Profiles" aby otworzyć panel Import/Export
+                </div>
+                <div class="test-step">
+                    Przetestuj eksport - kliknij "📤 Eksportuj ustawienia"
+                </div>
+                <div class="test-step">
+                    Zmień ustawienia lub stwórz nowe profile
+                </div>
+                <div class="test-step">
+                    Przetestuj import - kliknij "📥 Importuj ustawienia" i wybierz wcześniej wyeksportowany plik
+                </div>
+                <div class="test-step">
+                    Sprawdź czy wszystkie ustawienia i profile zostały przywrócone
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎬 Video test</h3>
+            <div class="video-container">
+                <video controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    <p>Twoja przeglądarka nie obsługuje elementu video. Możesz użyć dowolnego innego wideo na stronie.</p>
+                </video>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>✅ Co powinno działać:</h3>
+            <div class="status success">
+                <strong>✓ Eksport ustawień:</strong><br>
+                • Eksport wszystkich ustawień filtrów<br>
+                • Eksport wszystkich profili użytkownika<br>
+                • Eksport ustawień motywu<br>
+                • Pobieranie pliku JSON z timestampem
+            </div>
+            
+            <div class="status success">
+                <strong>✓ Import ustawień:</strong><br>
+                • Import i przywrócenie wszystkich ustawień<br>
+                • Przywrócenie wszystkich profili<br>
+                • Przywrócenie ustawień motywu<br>
+                • Odświeżenie interfejsu po imporcie
+            </div>
+            
+            <div class="status success">
+                <strong>✓ Bezpieczeństwo:</strong><br>
+                • Walidacja importowanych danych<br>
+                • Kopia zapasowa przed importem<br>
+                • Komunikaty o błędach<br>
+                • Komunikaty o sukcesie
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🔍 Dodatkowe funkcje dostępne przez popup:</h3>
+            <div class="instructions">
+                <p>Oprócz panelu głównego, funkcje import/export są również dostępne w popup'ie rozszerzenia:</p>
+                <ul>
+                    <li>Kliknij ikonę rozszerzenia w pasku narzędzi</li>
+                    <li>W sekcji "⚙️ Zarządzanie ustawieniami" znajdziesz przyciski Import/Export</li>
+                    <li>Funkcjonalność działa identycznie jak w panelu głównym</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🚨 Błędy do sprawdzenia:</h3>
+            <div class="status warning">
+                <strong>Sprawdź reakcję na nieprawidłowe pliki:</strong><br>
+                • Import pustego pliku<br>
+                • Import pliku z nieprawidłowym JSON<br>
+                • Import pliku bez wymaganych pól
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Format eksportowanych danych:</h3>
+            <pre style="background: #222; padding: 15px; border-radius: 8px; overflow: auto; font-size: 12px;">
+{
+  "version": "1.0.0",
+  "timestamp": "2025-01-15T10:30:45.123Z",
+  "settings": {
+    "brightness": 10,
+    "contrast": 5,
+    "saturation": -5,
+    "gamma": 1.2,
+    "colorTemp": 15,
+    "sharpness": 20,
+    "autoActivate": true,
+    "workOnImagesActivate": false,
+    "activeProfile": "My Custom Profile"
+  },
+  "profiles": [
+    {
+      "name": "My Custom Profile",
+      "settings": {
+        "brightness": 10,
+        "contrast": 5,
+        "saturation": -5,
+        "gamma": 1.2,
+        "colorTemp": 15,
+        "sharpness": 20,
+        "autoActivate": true
+      }
+    }
+  ],
+  "theme": "cybernetic",
+  "themeColors": {
+    "casual": { "fontHue": 200, "backgroundHue": 220, "saturation": 100, "lightness": 50 },
+    "cybernetic": { "fontHue": 120, "backgroundHue": 140, "saturation": 100, "lightness": 40 }
+  },
+  "appState": {}
+}
+            </pre>
+        </div>
+        
+        <div class="status success">
+            <strong>🎉 Funkcjonalność gotowa do testowania!</strong><br>
+            Import/Export został dodany do rozszerzenia Vivideo i jest dostępny zarówno w panelu głównym jak i w popup'ie.
+        </div>
+    </div>
+</body>
+</html>

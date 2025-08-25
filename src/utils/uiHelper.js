@@ -47,6 +47,14 @@ class UIHelper {
           <span class="vivideo-checkbox-label">Work on images</span>
         </label>
       </div>
+
+      <div class="vivideo-extended-limits checkbox-section">
+        <label class="vivideo-checkbox-container">
+          <input type="checkbox" id="extended-limits-checkbox" ${settings.extendedLimits ? 'checked' : ''}>
+          <span class="vivideo-checkmark"></span>
+          <span class="vivideo-checkbox-label">Extended limits (max technical range)</span>
+        </label>
+      </div>
     `;
   }
 
@@ -111,6 +119,24 @@ class UIHelper {
         controller.filterEngine.removeFiltersFromImages();
       }
     });
+
+    // Extended limits checkbox
+    container.querySelector('#extended-limits-checkbox').addEventListener('change', (e) => {
+      controller.settings.extendedLimits = e.target.checked;
+      controller.saveSettings();
+      controller.saveAppState();
+      
+      // Toggle CSS class for visual indication
+      if (controller.settings.extendedLimits) {
+        controller.container.classList.add('extended-limits');
+      } else {
+        controller.container.classList.remove('extended-limits');
+      }
+      
+      // Update slider limits and current values
+      controller.updateSliderLimits();
+      controller.updateUI();
+    });
   }
 
   static updateCheckboxes(container, settings) {
@@ -122,6 +148,11 @@ class UIHelper {
     const workOnImagesCheckbox = container.querySelector('#work-on-images-checkbox');
     if (workOnImagesCheckbox) {
       workOnImagesCheckbox.checked = settings.workOnImagesActivate;
+    }
+
+    const extendedLimitsCheckbox = container.querySelector('#extended-limits-checkbox');
+    if (extendedLimitsCheckbox) {
+      extendedLimitsCheckbox.checked = settings.extendedLimits;
     }
   }
 
@@ -182,21 +213,64 @@ class UIHelper {
     };
   }
 
-  static clampValue(control, value) {
+  static clampValue(control, value, extendedLimits = false) {
+    const limits = this.getControlLimits(control, extendedLimits);
+    return Math.max(limits.min, Math.min(limits.max, value));
+  }
+
+  // Get limits for a control
+  static getControlLimits(control, extendedLimits = false) {
     switch (control) {
       case 'brightness':
+        // CSS brightness: 1 + (value/100)
+        // Casual: 0.5 to 1.8 (-50% to +80%) - usuable range
+        // Extended: 0.1 to 4.0 (-90% to +300%) - technical maximum
+        return extendedLimits 
+          ? { min: -90, max: 300, step: 1 }
+          : { min: -50, max: 80, step: 1 };
+          
       case 'contrast':
-        return Math.max(-100, Math.min(100, value));
+        // CSS contrast: 1 + (value/100)
+        // Casual: 0.3 to 2.0 (-70% to +100%) - visible improvements
+        // Extended: 0 to 5.0 (-100% to +400%) - extreme effects
+        return extendedLimits 
+          ? { min: -100, max: 400, step: 1 }
+          : { min: -70, max: 100, step: 1 };
+          
       case 'saturation':
-        return Math.max(-90, Math.min(100, value));
+        // CSS saturate: max(0, 1 + (value/100))
+        // Casual: 0.2 to 1.6 (-80% to +60%) - natural look
+        // Extended: 0 to 3.0 (-100% to +200%) - artistic effects
+        return extendedLimits 
+          ? { min: -100, max: 200, step: 1 }
+          : { min: -80, max: 60, step: 1 };
+          
       case 'gamma':
-        return Math.max(0.1, Math.min(3, value));
+        // SVG feComponentTransfer gamma correction
+        // Casual: 0.4 to 2.2 - practical gamma range
+        // Extended: 0.1 to 4.0 - full technical range
+        return extendedLimits 
+          ? { min: 0.1, max: 4.0, step: 0.01 }
+          : { min: 0.4, max: 2.2, step: 0.01 };
+          
       case 'colortemp':
-        return Math.max(-100, Math.min(100, value));
+        // Custom algorithm for color temperature
+        // Casual: -60 to +60 - noticeable but natural
+        // Extended: -100 to +100 - extreme color shifts
+        return extendedLimits 
+          ? { min: -100, max: 100, step: 1 }
+          : { min: -60, max: 60, step: 1 };
+          
       case 'sharpness':
-        return Math.max(0, Math.min(100, value));
+        // SVG feConvolveMatrix sharpening
+        // Casual: 0% to 60% - visible improvement without artifacts
+        // Extended: 0% to 120% - aggressive sharpening
+        return extendedLimits 
+          ? { min: 0, max: 120, step: 1 }
+          : { min: 0, max: 60, step: 1 };
+          
       default:
-        return value;
+        return { min: 0, max: 100, step: 1 };
     }
   }
 }

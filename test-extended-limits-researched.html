@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vivideo - Test Extended Limits (Researched)</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #ffffff;
+        }
+        
+        .test-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 10px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00bfff;
+            margin-bottom: 30px;
+        }
+        
+        .limits-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .limits-table th {
+            background: #444;
+            padding: 12px;
+            text-align: left;
+            color: #00ff7f;
+            font-weight: bold;
+        }
+        
+        .limits-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #555;
+        }
+        
+        .limits-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .standard {
+            color: #87ceeb;
+            font-weight: 500;
+        }
+        
+        .extended {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+        
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+        }
+        
+        .test-section h3 {
+            color: #00ff7f;
+            margin-top: 0;
+        }
+        
+        .video-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: 360px;
+            background: #000;
+            border-radius: 8px;
+        }
+        
+        .feature-highlight {
+            background: linear-gradient(45deg, rgba(0, 191, 255, 0.1), rgba(0, 255, 127, 0.1));
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(0, 191, 255, 0.3);
+        }
+        
+        .warning {
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        
+        .warning h4 {
+            color: #ff6b35;
+            margin-top: 0;
+        }
+        
+        .test-scenarios {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .scenario {
+            background: #3a3a3a;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #00bfff;
+        }
+        
+        .scenario.extreme {
+            border-left-color: #ff6b35;
+        }
+        
+        .scenario h5 {
+            margin: 0 0 10px 0;
+            color: #00ff7f;
+        }
+        
+        .scenario.extreme h5 {
+            color: #ff6b35;
+        }
+        
+        .code {
+            background: #222;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #00bfff;
+        }
+        
+        @media (max-width: 768px) {
+            .test-scenarios {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎥 Vivideo - Test Extended Limits (Research-Based)</h1>
+        
+        <div class="feature-highlight">
+            <h3>🔬 Research-Based Limits</h3>
+            <p>Extended limits zostały przeprojektowane na podstawie researchu technicznego możliwości CSS filters i praktycznych potrzeb użytkowników.</p>
+            <p><strong>Standard:</strong> Casual-friendly limity dla codziennego użytku<br>
+            <strong>Extended:</strong> Maksymalne techniczne możliwości dla zaawansowanych efektów</p>
+        </div>
+        
+        <div class="test-section">
+            <h3>📊 Nowe Limity (Research-Based)</h3>
+            <table class="limits-table">
+                <thead>
+                    <tr>
+                        <th>Kontrolka</th>
+                        <th>Standard (Casual-Friendly)</th>
+                        <th>Extended (Max Technical)</th>
+                        <th>Techniczne tło</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Brightness</strong></td>
+                        <td class="standard">-50% do +80%</td>
+                        <td class="extended">-90% do +300%</td>
+                        <td>CSS brightness(0.1-4.0)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Contrast</strong></td>
+                        <td class="standard">-70% do +100%</td>
+                        <td class="extended">-100% do +400%</td>
+                        <td>CSS contrast(0-5.0)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Saturation</strong></td>
+                        <td class="standard">-80% do +60%</td>
+                        <td class="extended">-100% do +200%</td>
+                        <td>CSS saturate(0-3.0)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gamma</strong></td>
+                        <td class="standard">0.4 do 2.2</td>
+                        <td class="extended">0.1 do 4.0</td>
+                        <td>SVG feComponentTransfer</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Color Temperature</strong></td>
+                        <td class="standard">-60 do +60</td>
+                        <td class="extended">-100 do +100</td>
+                        <td>Custom algorithm</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sharpness</strong></td>
+                        <td class="standard">0% do 60%</td>
+                        <td class="extended">0% do 120%</td>
+                        <td>SVG feConvolveMatrix</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="test-section">
+            <h3>🎬 Video Test</h3>
+            <div class="video-container">
+                <video controls>
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                    <p>Twoja przeglądarka nie obsługuje elementu video. Możesz użyć dowolnego innego wideo na stronie.</p>
+                </video>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Scenariusze testowe</h3>
+            <div class="test-scenarios">
+                <div class="scenario">
+                    <h5>Standard - Ciemny film</h5>
+                    <p>Brightness: <span class="code">+50% do +80%</span><br>
+                    Gamma: <span class="code">0.6 do 0.8</span><br>
+                    <em>Bezpieczne poprawy widoczności</em></p>
+                </div>
+                
+                <div class="scenario extreme">
+                    <h5>Extended - Bardzo ciemny film</h5>
+                    <p>Brightness: <span class="code">+200% do +300%</span><br>
+                    Gamma: <span class="code">0.2 do 0.3</span><br>
+                    <em>Ekstremalne rozjaśnienie</em></p>
+                </div>
+                
+                <div class="scenario">
+                    <h5>Standard - Blawe kolory</h5>
+                    <p>Saturation: <span class="code">+30% do +60%</span><br>
+                    Color Temp: <span class="code">+20 do +40</span><br>
+                    <em>Naturalne wzmocnienie</em></p>
+                </div>
+                
+                <div class="scenario extreme">
+                    <h5>Extended - Artystyczny efekt</h5>
+                    <p>Saturation: <span class="code">+150% do +200%</span><br>
+                    Color Temp: <span class="code">-100 lub +100</span><br>
+                    <em>Surrealistyczne kolory</em></p>
+                </div>
+                
+                <div class="scenario">
+                    <h5>Standard - Rozmyty obraz</h5>
+                    <p>Sharpness: <span class="code">20% do 60%</span><br>
+                    Contrast: <span class="code">+20% do +50%</span><br>
+                    <em>Poprawa ostrości</em></p>
+                </div>
+                
+                <div class="scenario extreme">
+                    <h5>Extended - Agresywne wyostrzanie</h5>
+                    <p>Sharpness: <span class="code">80% do 120%</span><br>
+                    Contrast: <span class="code">+200% do +400%</span><br>
+                    <em>Możliwe artefakty</em></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <h4>⚠️ Ważne różnice</h4>
+            <p><strong>Stare podejście:</strong> Wszystkie limity x2 (nie zawsze praktyczne)</p>
+            <p><strong>Nowe podejście:</strong> Indywidualnie dobrane limity na podstawie:</p>
+            <ul>
+                <li>✅ <strong>Możliwości technicznych</strong> CSS filters i SVG</li>
+                <li>✅ <strong>Praktycznych potrzeb</strong> użytkowników</li>
+                <li>✅ <strong>Researchu użyteczności</strong> różnych zakresów</li>
+                <li>✅ <strong>Bezpieczeństwa</strong> dla casualnych użytkowników</li>
+            </ul>
+        </div>
+        
+        <div class="test-section">
+            <h3>📋 Instrukcja testowania</h3>
+            <ol>
+                <li><strong>Test Standard:</strong> Użyj normalnych ustawień dla typowych poprawek</li>
+                <li><strong>Włącz Extended:</strong> Zaznacz "Extended limits (max technical range)"</li>
+                <li><strong>Zauważ [MAX]:</strong> Sprawdź wizualne wskaźniki przy kontrolkach</li>
+                <li><strong>Test ekstremów:</strong> Wypróbuj maksymalne wartości każdej kontrolki</li>
+                <li><strong>Porównaj efekty:</strong> Zobacz różnicę między Standard a Extended</li>
+                <li><strong>Test profili:</strong> Zapisz i wczytaj profile z różnymi limitami</li>
+                <li><strong>Export/Import:</strong> Sprawdź czy limity są zachowane</li>
+            </ol>
+        </div>
+        
+        <div class="feature-highlight">
+            <h3>✨ Co się zmieniło</h3>
+            <p>✅ <strong>Standard limity:</strong> Bardziej konserwatywne, casualowo-przyjazne<br>
+            ✅ <strong>Extended limity:</strong> Pełne techniczne możliwości, nie x2<br>
+            ✅ <strong>Indywidualne podejście:</strong> Każda kontrolka ma swoje optymalne zakresy<br>
+            ✅ <strong>Oznaczenie [MAX]:</strong> Zamiast [2x] - bardziej precyzyjne<br>
+            ✅ <strong>Research-based:</strong> Oparte na badaniu możliwości technicznych</p>
+        </div>
+    </div>
+</body>
+</html>

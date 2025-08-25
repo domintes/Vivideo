@@ -808,6 +808,23 @@
   transform: translateY(-1px);
 }
 
+/* Compact buttons for profile sections */
+.vivideo-control-btn.compact {
+  padding: 6px 12px;
+  font-size: 14px;
+  min-width: 60px;
+}
+
+.vivideo-control-btn.active {
+  transform: scale(0.98);
+  opacity: 0.8;
+}
+
+/* Profiles button section spacing */
+.profiles-button-section {
+  margin-bottom: 10px;
+}
+
 /* Expandable Panels */
 .vivideo-expandable {
   margin-bottom: 10px;
@@ -942,6 +959,14 @@
   font-weight: 500;
 }
 
+.vivideo-profile-description {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  margin-top: 2px;
+  display: block;
+}
+
 .vivideo-profile-delete {
   background: none;
   border: none;
@@ -1037,6 +1062,34 @@
 /* Fullscreen support */
 .vivideo-container.vivideo-fullscreen {
   z-index: 2147483647;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-height: calc(100vh - 40px);
+}
+
+/* High specificity for fullscreen contexts */
+:fullscreen .vivideo-container.vivideo-fullscreen,
+:-webkit-full-screen .vivideo-container.vivideo-fullscreen,
+:-moz-full-screen .vivideo-container.vivideo-fullscreen,
+:-ms-fullscreen .vivideo-container.vivideo-fullscreen {
+  z-index: 2147483647;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  max-height: calc(100vh - 40px);
+}
+
+/* Fullscreen specific visual adjustments */
+.vivideo-container.vivideo-fullscreen .vivideo-header {
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+}
+
+.vivideo-container.vivideo-fullscreen {
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Draggable cursor */
@@ -1390,4 +1443,185 @@
 
 button.vivideo-close {
   border: none; 
+}
+
+/* Settings Management Styles */
+.vivideo-settings-management {
+  margin-top: 15px;
+  padding: 15px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vivideo-settings-section h3 {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.settings-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.export-btn, .import-btn {
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.export-btn:hover, .import-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.export-btn:active, .import-btn:active {
+  transform: translateY(0);
+}
+
+.import-section {
+  position: relative;
+}
+
+.settings-info {
+  margin-top: 15px;
+  font-size: 12px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.settings-info p {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.settings-info ul {
+  margin: 0;
+  padding-left: 20px;
+  list-style: none;
+}
+
+.settings-info li {
+  margin-bottom: 4px;
+  position: relative;
+}
+
+.settings-info li:before {
+  content: '';
+  position: absolute;
+  left: -15px;
+  top: 8px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+}
+
+.settings-message {
+  padding: 10px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 10px;
+  border: 1px solid;
+  animation: message-appear 0.3s ease;
+}
+
+.settings-message.success {
+  background: rgba(76, 175, 80, 0.2);
+  color: #4caf50;
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.settings-message.error {
+  background: rgba(244, 67, 54, 0.2);
+  color: #f44336;
+  border-color: rgba(244, 67, 54, 0.4);
+}
+
+.settings-message.info {
+  background: rgba(33, 150, 243, 0.2);
+  color: #2196f3;
+  border-color: rgba(33, 150, 243, 0.4);
+}
+
+@keyframes message-appear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cybernetic theme settings styles */
+.vivideo-theme-cybernetic .export-btn,
+.vivideo-theme-cybernetic .import-btn {
+  border-color: rgba(0, 255, 170, 0.3);
+}
+
+.vivideo-theme-cybernetic .export-btn:hover,
+.vivideo-theme-cybernetic .import-btn:hover {
+  background: rgba(0, 255, 170, 0.1);
+  border-color: rgba(0, 255, 170, 0.5);
+}
+
+/* Casual theme settings styles */
+.vivideo-theme-casual .export-btn,
+.vivideo-theme-casual .import-btn {
+  border-color: rgba(69, 160, 255, 0.3);
+}
+
+.vivideo-theme-casual .export-btn:hover,
+.vivideo-theme-casual .import-btn:hover {
+  background: rgba(69, 160, 255, 0.1);
+  border-color: rgba(69, 160, 255, 0.5);
+}
+
+/* Extended limits indicator */
+.vivideo-container.extended-limits .vivideo-control .vivideo-label::after {
+  content: ' [MAX]';
+  color: #ff6b35;
+  font-size: 10px;
+  font-weight: bold;
+  opacity: 0.9;
+  text-shadow: 0 0 3px rgba(255, 107, 53, 0.5);
+}
+
+.vivideo-container.extended-limits .vivideo-control {
+  border-left: 3px solid rgba(255, 107, 53, 0.5);
+  padding-left: 12px;
+  margin-left: -3px;
+}
+
+/* Extended limits theme colors */
+.vivideo-theme-cybernetic.extended-limits .vivideo-control {
+  border-left-color: rgba(0, 255, 170, 0.6);
+}
+
+.vivideo-theme-cybernetic.extended-limits .vivideo-control .vivideo-label::after {
+  color: #00ffaa;
+  text-shadow: 0 0 3px rgba(0, 255, 170, 0.6);
+}
+
+.vivideo-theme-casual.extended-limits .vivideo-control {
+  border-left-color: rgba(69, 160, 255, 0.6);
+}
+
+.vivideo-theme-casual.extended-limits .vivideo-control .vivideo-label::after {
+  color: #45a0ff;
+  text-shadow: 0 0 3px rgba(69, 160, 255, 0.6);
 }

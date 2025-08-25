@@ -4,6 +4,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const statusDiv = document.getElementById('status');
   const videoCountDiv = document.getElementById('video-count');
   const enhancementStatusDiv = document.getElementById('enhancement-status');
+  const exportBtn = document.getElementById('export-btn');
+  const importBtn = document.getElementById('import-btn');
+  const importFile = document.getElementById('import-file');
+  const messageDiv = document.getElementById('message');
 
   // Get current tab
   chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
@@ -50,6 +54,79 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
+  // Export settings
+  exportBtn.addEventListener('click', async function() {
+    showMessage('Eksportowanie ustawień...', 'info');
+    
+    try {
+      const allData = await getAllSettings();
+      const exportData = {
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+        settings: allData.vivideoSettings || {},
+        profiles: allData.vivideoProfiles || [],
+        theme: allData.vivideoTheme || 'cybernetic',
+        themeColors: allData.vivideoThemeColors || {},
+        appState: allData.vivideoAppState || {}
+      };
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const fileName = `vivideo-settings-${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.json`;
+      
+      // Download file
+      const url = URL.createObjectURL(dataBlob);
+      chrome.downloads.download({
+        url: url,
+        filename: fileName,
+        saveAs: true
+      }, (downloadId) => {
+        URL.revokeObjectURL(url);
+        showMessage('Ustawienia zostały wyeksportowane pomyślnie!', 'success');
+      });
+
+    } catch (error) {
+      console.error('Export error:', error);
+      showMessage('Błąd podczas eksportu: ' + error.message, 'error');
+    }
+  });
+
+  // Import settings
+  importBtn.addEventListener('click', function() {
+    importFile.click();
+  });
+
+  importFile.addEventListener('change', async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    showMessage('Importowanie ustawień...', 'info');
+
+    try {
+      const fileText = await readFile(file);
+      const importData = JSON.parse(fileText);
+      
+      // Validate data
+      if (!validateImportData(importData)) {
+        throw new Error('Nieprawidłowy format pliku ustawień');
+      }
+
+      // Import settings
+      await importSettings(importData);
+      
+      const profilesCount = importData.profiles ? importData.profiles.length : 0;
+      showMessage(`Ustawienia zostały zaimportowane pomyślnie! Zaimportowano ${profilesCount} profili.`, 'success');
+      
+      // Clear file input
+      importFile.value = '';
+      
+    } catch (error) {
+      console.error('Import error:', error);
+      showMessage('Błąd podczas importu: ' + error.message, 'error');
+      importFile.value = '';
+    }
+  });
+
   // Load current settings and display status
   chrome.storage.sync.get('vivideoSettings', function(result) {
     if (result.vivideoSettings) {
@@ -65,6 +142,105 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+
+  // Helper functions
+  function showMessage(text, type) {
+    messageDiv.textContent = text;
+    messageDiv.className = `message ${type}`;
+    messageDiv.style.display = 'block';
+    
+    if (type !== 'info') {
+      setTimeout(() => {
+        messageDiv.style.display = 'none';
+      }, 5000);
+    }
+  }
+
+  function getAllSettings() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get([
+        'vivideoSettings', 
+        'vivideoProfiles', 
+        'vivideoTheme', 
+        'vivideoThemeColors', 
+        'vivideoAppState'
+      ], resolve);
+    });
+  }
+
+  function readFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = () => reject(new Error('Błąd podczas odczytu pliku'));
+      reader.readAsText(file);
+    });
+  }
+
+  function validateImportData(data) {
+    if (!data || typeof data !== 'object') return false;
+    if (!data.settings && !data.profiles) return false;
+    
+    if (data.settings) {
+      const requiredKeys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp'];
+      const hasRequiredKeys = requiredKeys.some(key => data.settings.hasOwnProperty(key));
+      if (!hasRequiredKeys) return false;
+    }
+
+    if (data.profiles && Array.isArray(data.profiles)) {
+      for (let profile of data.profiles) {
+        if (!profile.name || !profile.settings) return false;
+      }
+    }
+
+    return true;
+  }
+
+  async function importSettings(importData) {
+    const savePromises = [];
+
+    if (importData.settings) {
+      savePromises.push(
+        new Promise(resolve => {
+          chrome.storage.sync.set({ vivideoSettings: importData.settings }, resolve);
+        })
+      );
+    }
+
+    if (importData.profiles) {
+      savePromises.push(
+        new Promise(resolve => {
+          chrome.storage.sync.set({ vivideoProfiles: importData.profiles }, resolve);
+        })
+      );
+    }
+
+    if (importData.theme) {
+      savePromises.push(
+        new Promise(resolve => {
+          chrome.storage.sync.set({ vivideoTheme: importData.theme }, resolve);
+        })
+      );
+    }
+
+    if (importData.themeColors) {
+      savePromises.push(
+        new Promise(resolve => {
+          chrome.storage.sync.set({ vivideoThemeColors: importData.themeColors }, resolve);
+        })
+      );
+    }
+
+    if (importData.appState) {
+      savePromises.push(
+        new Promise(resolve => {
+          chrome.storage.sync.set({ vivideoAppState: importData.appState }, resolve);
+        })
+      );
+    }
+
+    await Promise.all(savePromises);
+  }
 });
 
 // Function to inject for checking videos
