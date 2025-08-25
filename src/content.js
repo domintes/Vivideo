@@ -22,6 +22,7 @@ if (window !== window.top) {
     
     this.isVisible = false;
     this.container = null;
+    this.profileLoadTimeout = null;
     this.settings = {
       brightness: 0,
       contrast: 0,
@@ -599,31 +600,50 @@ if (window !== window.top) {
   }
 
   loadProfile(profile) {
-    if (profile.name === 'DEFAULT') {
-      this.settings.activeProfile = null;
-      Object.keys(this.defaultSettings).forEach(key => {
-        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-          this.settings[key] = this.defaultSettings[key];
-        }
-      });
-    } else {
-      this.settings.activeProfile = profile.name;
-      Object.keys(profile.settings).forEach(key => {
-        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-          this.settings[key] = profile.settings[key];
-        }
-      });
-      if (profile.settings.autoActivate !== undefined) {
-        this.settings.autoActivate = profile.settings.autoActivate;
-      }
+    console.log('Vivideo: Loading profile:', profile.name);
+    
+    // Clear any existing timeout to prevent race conditions
+    if (this.profileLoadTimeout) {
+      clearTimeout(this.profileLoadTimeout);
     }
+    
+    try {
+      if (profile.name === 'DEFAULT') {
+        this.settings.activeProfile = null;
+        Object.keys(this.defaultSettings).forEach(key => {
+          if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+            this.settings[key] = this.defaultSettings[key];
+          }
+        });
+      } else {
+        this.settings.activeProfile = profile.name;
+        Object.keys(profile.settings).forEach(key => {
+          if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+            this.settings[key] = profile.settings[key];
+          }
+        });
+        if (profile.settings.autoActivate !== undefined) {
+          this.settings.autoActivate = profile.settings.autoActivate;
+        }
+      }
 
-    this.updateUI();
-    this.applyFilters();
-    this.saveSettings();
-    this.saveAppState();
-    this.updateProfilesList();
-    // Panel profiles pozostaje otwarty po wyborze profilu
+      console.log('Vivideo: Profile settings loaded, active profile:', this.settings.activeProfile);
+
+      // Force immediate UI update
+      this.updateUI();
+      this.applyFilters();
+      
+      // Save settings with slight delay to ensure consistency
+      this.profileLoadTimeout = setTimeout(() => {
+        this.saveSettings();
+        this.saveAppState();
+        this.updateProfilesList();
+        console.log('Vivideo: Profile fully loaded and saved');
+      }, 50);
+      
+    } catch (error) {
+      console.error('Vivideo: Error loading profile:', error);
+    }
   }
 
   deleteProfile(index) {
@@ -790,6 +810,12 @@ if (window !== window.top) {
   }
 
   destroy() {
+    // Clear any pending timeouts
+    if (this.profileLoadTimeout) {
+      clearTimeout(this.profileLoadTimeout);
+      this.profileLoadTimeout = null;
+    }
+    
     if (this.container && this.container.parentNode) {
       this.container.parentNode.removeChild(this.container);
     }

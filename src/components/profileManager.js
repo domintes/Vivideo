@@ -306,7 +306,20 @@ class ProfileManager {
       <span class="vivideo-profile-name">DEFAULT</span>
     `;
     
-    defaultProfileItem.addEventListener('click', () => {
+    defaultProfileItem.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      console.log('Vivideo: Switching to DEFAULT profile');
+      
+      // Remove active class from all profiles first
+      container.querySelectorAll('.vivideo-profile-item').forEach(item => {
+        item.classList.remove('vivideo-profile-active');
+      });
+      
+      // Add active class to clicked profile
+      defaultProfileItem.classList.add('vivideo-profile-active');
+      
+      // Load profile
       this.controller.loadProfile(this.controller.defaultProfile);
     });
     
@@ -329,7 +342,20 @@ class ProfileManager {
         <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
       `;
       
-      profileItem.querySelector('.vivideo-profile-name').addEventListener('click', () => {
+      profileItem.querySelector('.vivideo-profile-name').addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Vivideo: Switching to profile:', profile.name);
+        
+        // Remove active class from all profiles first
+        container.querySelectorAll('.vivideo-profile-item').forEach(item => {
+          item.classList.remove('vivideo-profile-active');
+        });
+        
+        // Add active class to clicked profile
+        profileItem.classList.add('vivideo-profile-active');
+        
+        // Load profile
         this.controller.loadProfile(profile);
       });
       
@@ -365,10 +391,16 @@ class ProfileManager {
         <span class="vivideo-profile-description">${profile.description}</span>
       `;
       
-      profileItem.addEventListener('click', () => {
+      profileItem.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Vivideo: Loading default profile:', profile.name);
+        
         this.controller.loadProfile(profile);
-        // Switch back to user view after loading default profile
-        setTimeout(() => this.showUserProfiles(container), 100);
+        // Switch back to user view after loading default profile with delay
+        setTimeout(() => {
+          this.showUserProfiles(container);
+        }, 150);
       });
       
       defaultProfileList.appendChild(profileItem);
@@ -547,21 +579,51 @@ class ProfileManager {
     const profileDisplay = container.querySelector('#active-profile-display');
     if (!profileDisplay) return;
     
-    if (settings.activeProfile) {
-      if (this.isProfileModified(settings, this.controller.profiles)) {
+    // Force re-check of active profile state
+    setTimeout(() => {
+      if (settings.activeProfile) {
+        // First check if it's a default profile
+        const defaultProfiles = this.createDefaultProfiles();
+        const isDefaultProfile = defaultProfiles.find(p => p.name === settings.activeProfile);
+        
+        if (isDefaultProfile) {
+          // It's a default profile - check if settings match exactly
+          if (this.profilesMatch(settings, isDefaultProfile.settings)) {
+            profileDisplay.textContent = settings.activeProfile;
+            profileDisplay.className = 'active-item-status active-profile-status active';
+          } else {
+            profileDisplay.textContent = 'NOT SAVED';
+            profileDisplay.className = 'active-item-status active-profile-status modified';
+          }
+        } else {
+          // Check if it's a user profile
+          const userProfile = this.controller.profiles.find(p => p.name === settings.activeProfile);
+          
+          if (userProfile) {
+            // It's a saved user profile - check if settings match
+            if (this.profilesMatch(settings, userProfile.settings)) {
+              profileDisplay.textContent = settings.activeProfile;
+              profileDisplay.className = 'active-item-status active-profile-status active';
+            } else {
+              profileDisplay.textContent = 'NOT SAVED';
+              profileDisplay.className = 'active-item-status active-profile-status modified';
+            }
+          } else {
+            // Profile name set but doesn't exist anywhere
+            profileDisplay.textContent = 'NOT SAVED';
+            profileDisplay.className = 'active-item-status active-profile-status modified';
+          }
+        }
+      } else if (this.isDefaultProfile(settings)) {
+        // No active profile but settings match default (all zeros)
+        profileDisplay.textContent = 'DEFAULT';
+        profileDisplay.className = 'active-item-status active-profile-status default';
+      } else {
+        // No active profile and settings don't match default
         profileDisplay.textContent = 'NOT SAVED';
         profileDisplay.className = 'active-item-status active-profile-status modified';
-      } else {
-        profileDisplay.textContent = settings.activeProfile;
-        profileDisplay.className = 'active-item-status active-profile-status active';
       }
-    } else if (this.isDefaultProfile(settings)) {
-      profileDisplay.textContent = 'DEFAULT';
-      profileDisplay.className = 'active-item-status active-profile-status default';
-    } else {
-      profileDisplay.textContent = 'NOT SAVED';
-      profileDisplay.className = 'active-item-status active-profile-status modified';
-    }
+    }, 10);
   }
 
   // Profile switching methods for keyboard shortcuts
