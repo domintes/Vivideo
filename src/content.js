@@ -64,6 +64,7 @@ if (window !== window.top) {
     this.clickOutsideHandler = null;
     this.isInitialized = false;
     this.dragHandlers = null;
+    this.originalParent = null; // For fullscreen panel management
     
     // Initialize components (will be created later)
     this.videoControls = null;
@@ -265,11 +266,9 @@ if (window !== window.top) {
     // Handle fullscreen changes
     document.addEventListener('fullscreenchange', () => {
       if (document.fullscreenElement) {
-        this.container.classList.add('vivideo-fullscreen');
-        console.log('Vivideo: Fullscreen mode detected, enhancing panel visibility');
+        this.enterFullscreenMode(document.fullscreenElement);
       } else {
-        this.container.classList.remove('vivideo-fullscreen');
-        console.log('Vivideo: Exited fullscreen mode');
+        this.exitFullscreenMode();
       }
     });
 
@@ -288,14 +287,60 @@ if (window !== window.top) {
                                  document.msFullscreenElement;
         
         if (fullscreenElement) {
-          this.container.classList.add('vivideo-fullscreen');
-          console.log('Vivideo: Cross-browser fullscreen detected');
+          this.enterFullscreenMode(fullscreenElement);
         } else {
-          this.container.classList.remove('vivideo-fullscreen');
-          console.log('Vivideo: Cross-browser fullscreen exit detected');
+          this.exitFullscreenMode();
         }
       });
     });
+  }
+
+  enterFullscreenMode(fullscreenElement) {
+    console.log('Vivideo: Entering fullscreen mode');
+    
+    // Store original parent for restoration
+    this.originalParent = this.container.parentNode;
+    
+    // Add fullscreen class for styling
+    this.container.classList.add('vivideo-fullscreen');
+    
+    // Move panel to fullscreen element to make it visible
+    try {
+      if (fullscreenElement && fullscreenElement.appendChild) {
+        fullscreenElement.appendChild(this.container);
+        console.log('Vivideo: Panel moved to fullscreen element');
+      }
+    } catch (error) {
+      console.warn('Vivideo: Could not move panel to fullscreen element:', error);
+      // Fallback: ensure panel is visible with higher z-index
+      this.container.style.zIndex = '2147483647';
+      this.container.style.position = 'fixed';
+    }
+  }
+
+  exitFullscreenMode() {
+    console.log('Vivideo: Exiting fullscreen mode');
+    
+    // Remove fullscreen class
+    this.container.classList.remove('vivideo-fullscreen');
+    
+    // Restore panel to original parent
+    try {
+      if (this.originalParent && this.originalParent.appendChild) {
+        this.originalParent.appendChild(this.container);
+        console.log('Vivideo: Panel restored to original position');
+      } else if (document.body) {
+        // Fallback: move to body
+        document.body.appendChild(this.container);
+        console.log('Vivideo: Panel restored to document body');
+      }
+    } catch (error) {
+      console.warn('Vivideo: Could not restore panel position:', error);
+    }
+    
+    // Reset inline styles
+    this.container.style.zIndex = '';
+    this.container.style.position = '';
   }
 
   updateControl(control, value) {
@@ -663,6 +708,16 @@ if (window !== window.top) {
       const panel = this.container.querySelector(`#${panelId}`);
       if (panel) panel.style.display = 'none';
     });
+    
+    // Check if we're in fullscreen and need to reposition panel
+    const fullscreenElement = document.fullscreenElement || 
+                             document.webkitFullscreenElement || 
+                             document.mozFullScreenElement || 
+                             document.msFullscreenElement;
+    
+    if (fullscreenElement) {
+      this.enterFullscreenMode(fullscreenElement);
+    }
     
     this.updateActiveStates();
     this.applyFilters();

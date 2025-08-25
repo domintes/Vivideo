@@ -1059,16 +1059,19 @@
   font-size: 10px;
 }
 
-/* Fullscreen support */
+/* Fullscreen support - Enhanced for visibility */
 .vivideo-container.vivideo-fullscreen {
   z-index: 2147483647;
   position: fixed;
   top: 20px;
   right: 20px;
   max-height: calc(100vh - 40px);
+  /* Ensure panel is always on top in fullscreen */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
-/* High specificity for fullscreen contexts */
+/* Ultra-high specificity for fullscreen contexts */
 :fullscreen .vivideo-container.vivideo-fullscreen,
 :-webkit-full-screen .vivideo-container.vivideo-fullscreen,
 :-moz-full-screen .vivideo-container.vivideo-fullscreen,
@@ -1078,18 +1081,35 @@
   top: 20px;
   right: 20px;
   max-height: calc(100vh - 40px);
+  /* Force GPU compositing for better performance */
+  transform: translateZ(0);
+  will-change: transform;
 }
 
-/* Fullscreen specific visual adjustments */
+/* Additional fullscreen element child styling */
+video:fullscreen .vivideo-container,
+video:-webkit-full-screen .vivideo-container,
+video:-moz-full-screen .vivideo-container,
+video:-ms-fullscreen .vivideo-container {
+  z-index: 2147483647;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  max-height: calc(100vh - 40px);
+}
+
+/* Fullscreen specific visual enhancements */
 .vivideo-container.vivideo-fullscreen .vivideo-header {
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(25px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .vivideo-container.vivideo-fullscreen {
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(20px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(25px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
 /* Draggable cursor */
