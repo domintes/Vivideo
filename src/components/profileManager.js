@@ -175,6 +175,37 @@ class ProfileManager {
         <div class="profile-panel-header">⭐ Default Profiles</div>
         <div class="vivideo-profile-list" id="default-profile-list"></div>
       </div>
+
+      <!-- Compare Mode Section -->
+      <div class="vivideo-compare-section">
+        <div class="vivideo-compare-header">
+          <div class="vivideo-checkbox-container">
+            <input type="checkbox" id="compare-mode-checkbox" class="vivideo-checkbox">
+            <label for="compare-mode-checkbox" class="vivideo-checkbox-label">
+              <span class="vivideo-checkbox-text">Compare Mode</span>
+              <span class="vivideo-checkbox-description">Split-screen profile comparison</span>
+            </label>
+          </div>
+        </div>
+        
+        <!-- Compare Profile Selection (hidden by default) -->
+        <div class="vivideo-compare-controls" id="compare-controls" style="display: none;">
+          <div class="vivideo-compare-info">
+            <div class="compare-side-label">
+              <span class="side-indicator left">L</span>
+              <span>Current Profile</span>
+            </div>
+            <div class="compare-vs">VS</div>
+            <div class="compare-side-label">
+              <span class="side-indicator right">R</span>
+              <span>Compare With:</span>
+            </div>
+          </div>
+          <select id="compare-profile-select" class="vivideo-compare-select">
+            <option value="">Select profile to compare...</option>
+          </select>
+        </div>
+      </div>
     `;
   }
 
@@ -195,6 +226,15 @@ class ProfileManager {
 
     container.querySelector('#save-profile').addEventListener('click', () => {
       this.saveCurrentProfile(container);
+    });
+
+    // Compare Mode controls
+    container.querySelector('#compare-mode-checkbox').addEventListener('change', (e) => {
+      this.toggleCompareMode(container, e.target.checked);
+    });
+
+    container.querySelector('#compare-profile-select').addEventListener('change', (e) => {
+      this.selectCompareProfile(container, e.target.value);
     });
   }
 
@@ -368,6 +408,115 @@ class ProfileManager {
     nameInput.value = '';
     
     console.log('Vivideo: Profile saved:', profileName);
+  }
+
+  toggleCompareMode(container, enabled) {
+    const compareControls = container.querySelector('#compare-controls');
+    const compareSelect = container.querySelector('#compare-profile-select');
+    
+    if (enabled) {
+      // Show compare controls
+      compareControls.style.display = 'block';
+      
+      // Populate profile select
+      this.populateCompareSelect(compareSelect);
+      
+      // Enable compare mode in controller
+      this.controller.settings.compareMode = true;
+      this.controller.settings.compareProfile = null;
+      
+      console.log('Vivideo: Compare mode enabled');
+    } else {
+      // Hide compare controls
+      compareControls.style.display = 'none';
+      
+      // Disable compare mode in controller
+      this.controller.settings.compareMode = false;
+      this.controller.settings.compareProfile = null;
+      
+      // Reset video filters to normal
+      this.controller.applyFilters();
+      
+      console.log('Vivideo: Compare mode disabled');
+    }
+    
+    // Save settings
+    this.controller.saveSettings();
+  }
+
+  selectCompareProfile(container, profileId) {
+    if (!profileId) {
+      this.controller.settings.compareProfile = null;
+      this.controller.applyFilters();
+      return;
+    }
+
+    // Find the selected profile
+    let selectedProfile = null;
+    
+    // Check if it's DEFAULT profile
+    if (profileId === 'DEFAULT') {
+      selectedProfile = this.controller.defaultProfile;
+    }
+    // Check user profiles
+    else {
+      selectedProfile = this.controller.profiles.find(p => p.name === profileId);
+      
+      // Check default profiles if not found in user profiles
+      if (!selectedProfile) {
+        const defaultProfiles = this.createDefaultProfiles();
+        selectedProfile = defaultProfiles.find(p => p.name === profileId);
+      }
+    }
+
+    if (selectedProfile) {
+      this.controller.settings.compareProfile = selectedProfile;
+      this.controller.applyCompareFilters();
+      console.log('Vivideo: Compare profile selected:', selectedProfile.name);
+    }
+    
+    // Save settings
+    this.controller.saveSettings();
+  }
+
+  populateCompareSelect(selectElement) {
+    selectElement.innerHTML = '<option value="">Select profile to compare...</option>';
+    
+    // Add DEFAULT profile
+    const defaultOption = document.createElement('option');
+    defaultOption.value = 'DEFAULT';
+    defaultOption.textContent = 'DEFAULT';
+    selectElement.appendChild(defaultOption);
+    
+    // Add user profiles
+    if (this.controller.profiles.length > 0) {
+      const userGroup = document.createElement('optgroup');
+      userGroup.label = '👤 User Profiles';
+      
+      this.controller.profiles.forEach(profile => {
+        const option = document.createElement('option');
+        option.value = profile.name;
+        option.textContent = profile.name;
+        userGroup.appendChild(option);
+      });
+      
+      selectElement.appendChild(userGroup);
+    }
+    
+    // Add default profiles
+    const defaultProfiles = this.createDefaultProfiles();
+    const defaultGroup = document.createElement('optgroup');
+    defaultGroup.label = '⭐ Default Profiles';
+    
+    // Skip first one (DEFAULT) as it's already added
+    defaultProfiles.slice(1).forEach(profile => {
+      const option = document.createElement('option');
+      option.value = profile.name;
+      option.textContent = `${profile.name} - ${profile.description}`;
+      defaultGroup.appendChild(option);
+    });
+    
+    selectElement.appendChild(defaultGroup);
   }
 
   isDefaultProfile(settings) {

@@ -32,7 +32,9 @@ if (window !== window.top) {
       autoActivate: true,
       workOnImagesActivate: false,
       activeProfile: null,
-      extendedLimits: false
+      extendedLimits: false,
+      compareMode: false,
+      compareProfile: null
     };
     this.defaultSettings = { ...this.settings };
     this.profiles = [];
@@ -367,7 +369,26 @@ if (window !== window.top) {
       console.warn('Vivideo: FilterEngine not initialized yet');
       return;
     }
-    this.filterEngine.applyFilters(this.settings);
+    
+    // Check if compare mode is active
+    if (this.settings.compareMode && this.settings.compareProfile) {
+      this.applyCompareFilters();
+    } else {
+      this.filterEngine.applyFilters(this.settings);
+    }
+  }
+
+  applyCompareFilters() {
+    if (!this.filterEngine) {
+      console.warn('Vivideo: FilterEngine not initialized yet');
+      return;
+    }
+    
+    // Apply split-screen filters
+    const leftSettings = this.settings; // Current profile
+    const rightSettings = this.settings.compareProfile.settings; // Compare profile
+    
+    this.filterEngine.applySplitFilters(leftSettings, rightSettings);
   }
 
   removeFilters() {

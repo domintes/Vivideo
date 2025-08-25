@@ -1645,3 +1645,169 @@ button.vivideo-close {
   color: #45a0ff;
   text-shadow: 0 0 3px rgba(69, 160, 255, 0.6);
 }
+
+/* Compare Mode Styles */
+.vivideo-compare-section {
+  margin-top: 15px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vivideo-compare-header {
+  margin-bottom: 10px;
+}
+
+.vivideo-checkbox-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.vivideo-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.vivideo-checkbox-label {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  flex: 1;
+}
+
+.vivideo-checkbox-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: white;
+}
+
+.vivideo-checkbox-description {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 2px;
+}
+
+.vivideo-compare-controls {
+  margin-top: 12px;
+}
+
+.vivideo-compare-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 11px;
+}
+
+.compare-side-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+}
+
+.side-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+}
+
+.side-indicator.left {
+  background: rgba(78, 205, 196, 0.7);
+}
+
+.side-indicator.right {
+  background: rgba(255, 107, 107, 0.7);
+}
+
+.compare-vs {
+  font-size: 12px;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0 10px;
+}
+
+.vivideo-compare-select {
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+  font-size: 11px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.vivideo-compare-select:focus {
+  border-color: rgba(78, 205, 196, 0.5);
+  box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.2);
+}
+
+.vivideo-compare-select option {
+  background: #222;
+  color: white;
+}
+
+.vivideo-compare-select optgroup {
+  background: #333;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: bold;
+}
+
+/* Split Screen Visual Indicators */
+.vivideo-split-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.vivideo-split-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, 
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(255, 255, 255, 0.8) 100%);
+  z-index: 10;
+  pointer-events: none;
+  transform: translateX(-1px);
+}
+
+/* Compare mode theme variations */
+.vivideo-theme-cybernetic .side-indicator.left {
+  background: rgba(0, 255, 170, 0.7);
+}
+
+.vivideo-theme-cybernetic .side-indicator.right {
+  background: rgba(255, 50, 150, 0.7);
+}
+
+.vivideo-theme-cybernetic .vivideo-compare-select:focus {
+  border-color: rgba(0, 255, 170, 0.5);
+  box-shadow: 0 0 0 2px rgba(0, 255, 170, 0.2);
+}
+
+.vivideo-theme-casual .side-indicator.left {
+  background: rgba(69, 160, 255, 0.7);
+}
+
+.vivideo-theme-casual .side-indicator.right {
+  background: rgba(255, 140, 0, 0.7);
+}
+
+.vivideo-theme-casual .vivideo-compare-select:focus {
+  border-color: rgba(69, 160, 255, 0.5);
+  box-shadow: 0 0 0 2px rgba(69, 160, 255, 0.2);
+}

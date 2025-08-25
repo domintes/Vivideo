@@ -169,6 +169,9 @@ class VideoFilterEngine {
     if (existingSvg) {
       existingSvg.remove();
     }
+    
+    // Remove split filters
+    this.removeSplitFilters();
   }
 
   observeVideos(callback) {
@@ -195,6 +198,148 @@ class VideoFilterEngine {
     });
 
     return observer;
+  }
+
+  applySplitFilters(leftSettings, rightSettings) {
+    this.findVideos().forEach(video => {
+      this.applySplitFilterToElement(video, leftSettings, rightSettings);
+    });
+    
+    if (leftSettings.workOnImagesActivate || rightSettings.workOnImagesActivate) {
+      this.applySplitFiltersToImages(leftSettings, rightSettings);
+    }
+  }
+
+  applySplitFilterToElement(element, leftSettings, rightSettings) {
+    // Remove existing split filter elements
+    const existingLeftOverlay = element.parentNode.querySelector('.vivideo-left-overlay');
+    const existingRightOverlay = element.parentNode.querySelector('.vivideo-right-overlay');
+    if (existingLeftOverlay) existingLeftOverlay.remove();
+    if (existingRightOverlay) existingRightOverlay.remove();
+
+    // Reset element's direct filters
+    element.style.filter = '';
+    
+    // Create container if needed
+    let container = element.parentNode.querySelector('.vivideo-split-container');
+    if (!container || container.querySelector('video') !== element) {
+      // Remove any existing container
+      const existingContainer = element.parentNode.querySelector('.vivideo-split-container');
+      if (existingContainer) existingContainer.remove();
+      
+      // Create new container
+      container = document.createElement('div');
+      container.className = 'vivideo-split-container';
+      container.style.position = 'relative';
+      container.style.display = 'inline-block';
+      container.style.overflow = 'hidden';
+      
+      // Wrap the video element
+      element.parentNode.insertBefore(container, element);
+      container.appendChild(element);
+    }
+
+    // Create left overlay (current profile)
+    const leftOverlay = document.createElement('div');
+    leftOverlay.className = 'vivideo-left-overlay';
+    this.setupSplitOverlay(leftOverlay, 'left', leftSettings);
+    container.appendChild(leftOverlay);
+
+    // Create right overlay (compare profile)  
+    const rightOverlay = document.createElement('div');
+    rightOverlay.className = 'vivideo-right-overlay';
+    this.setupSplitOverlay(rightOverlay, 'right', rightSettings);
+    container.appendChild(rightOverlay);
+
+    console.log('Vivideo: Split filters applied to video element');
+  }
+
+  setupSplitOverlay(overlay, side, settings) {
+    const brightness = 1 + (settings.brightness / 100);
+    const contrast = 1 + (settings.contrast / 100);
+    const saturation = Math.max(0, 1 + (settings.saturation / 100));
+    
+    let cssFilters = `
+      brightness(${brightness})
+      contrast(${contrast})
+      saturate(${saturation})
+    `;
+
+    // Apply advanced filters if needed
+    const advancedFilterExists = settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
+    if (advancedFilterExists) {
+      // For split mode, we'll use a simplified approach without SVG filters
+      // as SVG filters are complex to implement for split-screen
+      const gamma = Math.max(0.1, Math.min(3.0, settings.gamma));
+      const tempFactor = settings.colorTemp / 100;
+      
+      // Approximate gamma with CSS filters
+      if (gamma !== 1) {
+        const gammaAdjust = gamma < 1 ? (1 - gamma) * 0.3 : (gamma - 1) * 0.2;
+        const gammaContrast = gamma < 1 ? 1 - gammaAdjust : 1 + gammaAdjust;
+        cssFilters += ` contrast(${gammaContrast})`;
+      }
+      
+      // Approximate color temperature with hue-rotate and sepia
+      if (tempFactor !== 0) {
+        const hueRotate = tempFactor * 15; // Simplified hue adjustment
+        const sepia = Math.abs(tempFactor) * 0.2;
+        cssFilters += ` hue-rotate(${hueRotate}deg) sepia(${sepia})`;
+      }
+    }
+    
+    // Style the overlay
+    overlay.style.position = 'absolute';
+    overlay.style.top = '0';
+    overlay.style.left = side === 'left' ? '0' : '50%';
+    overlay.style.width = '50%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'inherit';
+    overlay.style.filter = cssFilters.trim();
+    overlay.style.pointerEvents = 'none';
+    overlay.style.zIndex = '1';
+    overlay.style.clipPath = side === 'left' ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)';
+    
+    // Add visual indicator
+    const indicator = document.createElement('div');
+    indicator.style.position = 'absolute';
+    indicator.style.top = '10px';
+    indicator.style[side] = '10px';
+    indicator.style.background = 'rgba(0, 0, 0, 0.7)';
+    indicator.style.color = 'white';
+    indicator.style.padding = '4px 8px';
+    indicator.style.fontSize = '12px';
+    indicator.style.borderRadius = '4px';
+    indicator.style.fontFamily = 'monospace';
+    indicator.style.zIndex = '2';
+    
+    const profileName = settings.name || (side === 'left' ? 'Current' : 'Compare');
+    indicator.textContent = `${side.toUpperCase()}: ${profileName}`;
+    overlay.appendChild(indicator);
+  }
+
+  applySplitFiltersToImages(leftSettings, rightSettings) {
+    if (!leftSettings.workOnImagesActivate && !rightSettings.workOnImagesActivate) return;
+    
+    this.findImages().forEach(image => {
+      // For images, we'll apply a simpler split effect
+      this.applySplitFilterToElement(image, leftSettings, rightSettings);
+    });
+  }
+
+  removeSplitFilters() {
+    // Remove all split containers and restore normal state
+    const splitContainers = document.querySelectorAll('.vivideo-split-container');
+    splitContainers.forEach(container => {
+      const video = container.querySelector('video, img');
+      if (video && container.parentNode) {
+        // Move video back to original parent
+        container.parentNode.insertBefore(video, container);
+        container.remove();
+      }
+    });
+    
+    console.log('Vivideo: Split filters removed');
   }
 }
 

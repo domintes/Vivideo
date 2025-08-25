@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare Mode Test - Vivideo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #111;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+        
+        .test-info {
+            background: #222;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .test-info h2 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        
+        .video-container {
+            position: relative;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        .test-video {
+            width: 100%;
+            height: 450px;
+            background: linear-gradient(90deg, 
+                #ff6b6b 0%, #ff6b6b 10%,
+                #4ecdc4 10%, #4ecdc4 20%,
+                #45b7d1 20%, #45b7d1 30%,
+                #f9ca24 30%, #f9ca24 40%,
+                #e056fd 40%, #e056fd 50%,
+                #ff9f00 50%, #ff9f00 60%,
+                #2ed573 60%, #2ed573 70%,
+                #ff3838 70%, #ff3838 80%,
+                #3742fa 80%, #3742fa 90%,
+                #7bed9f 90%, #7bed9f 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            position: relative;
+            animation: colorShift 8s ease-in-out infinite;
+        }
+        
+        .test-video::before {
+            content: 'LEFT SIDE';
+            position: absolute;
+            left: 25%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #4ecdc4;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+        
+        .test-video::after {
+            content: 'RIGHT SIDE';
+            position: absolute;
+            right: 25%;
+            top: 50%;
+            transform: translate(50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: #ff6b6b;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+        }
+        
+        @keyframes colorShift {
+            0% { filter: hue-rotate(0deg); }
+            25% { filter: hue-rotate(90deg); }
+            50% { filter: hue-rotate(180deg); }
+            75% { filter: hue-rotate(270deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+        
+        .split-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.8) 0%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0.8) 100%);
+            transform: translateX(-50%);
+            z-index: 2;
+        }
+        
+        .test-checklist {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .checklist-section {
+            background: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .checklist-section h3 {
+            color: #f9ca24;
+            margin-top: 0;
+        }
+        
+        .test-step {
+            background: #444;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .critical-test {
+            border-left: 4px solid #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+        }
+        
+        .feature-highlight {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid #4ecdc4;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .feature-highlight h4 {
+            color: #4ecdc4;
+            margin-top: 0;
+        }
+        
+        video {
+            width: 100%;
+            border-radius: 8px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-info">
+        <h2>🔄 Compare Mode Test - Vivideo Extension</h2>
+        <p><strong>New Feature:</strong> Split-screen profile comparison allows you to see different filter effects side by side!</p>
+        <div class="feature-highlight">
+            <h4>🎯 How Compare Mode Works</h4>
+            <ul>
+                <li><strong>Left Half:</strong> Current active profile settings</li>
+                <li><strong>Right Half:</strong> Selected comparison profile settings</li>
+                <li><strong>Real-time:</strong> Changes apply instantly as you adjust settings</li>
+                <li><strong>Profile Library:</strong> Compare with any user or default profile</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="video-container">
+        <div class="test-video" id="testVideo">
+            <div class="split-line"></div>
+        </div>
+    </div>
+
+    <video controls autoplay muted loop>
+        <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+        <source src="https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <div class="test-checklist">
+        <div class="checklist-section">
+            <h3>🧪 Basic Compare Tests</h3>
+            <div class="test-step critical-test">
+                <strong>1. Enable Compare Mode</strong><br>
+                □ Open Vivideo (Alt+V)<br>
+                □ Find "Compare Mode" checkbox<br>
+                □ Check the checkbox<br>
+                □ Compare controls should appear
+            </div>
+            <div class="test-step critical-test">
+                <strong>2. Profile Selection</strong><br>
+                □ Select dropdown should populate<br>
+                □ Should show User profiles group<br>
+                □ Should show Default profiles group<br>
+                □ Each option should have proper labels
+            </div>
+            <div class="test-step">
+                <strong>3. Visual Indicators</strong><br>
+                □ "L" and "R" indicators should show<br>
+                □ "Current Profile" vs "Compare With" labels<br>
+                □ Left side shows current settings<br>
+                □ Right side shows compare settings
+            </div>
+        </div>
+
+        <div class="checklist-section">
+            <h3>🎬 Split-Screen Tests</h3>
+            <div class="test-step critical-test">
+                <strong>4. Split Effect Application</strong><br>
+                □ Select a profile to compare<br>
+                □ Video should split into left/right halves<br>
+                □ Different filters on each side<br>
+                □ Central divider line visible
+            </div>
+            <div class="test-step">
+                <strong>5. Real-time Updates</strong><br>
+                □ Adjust current settings (sliders)<br>
+                □ Left side should update immediately<br>
+                □ Right side should remain unchanged<br>
+                □ Switch profiles and see changes
+            </div>
+            <div class="test-step">
+                <strong>6. Profile Comparison</strong><br>
+                □ Try Default profiles (Black & White, Vivid, etc.)<br>
+                □ Try User profiles (if any created)<br>
+                □ Compare DEFAULT vs enhanced profiles<br>
+                □ Test extreme differences (bright vs dark)
+            </div>
+        </div>
+    </div>
+
+    <div class="feature-highlight">
+        <h4>🔍 Advanced Testing Scenarios</h4>
+        <div class="test-checklist">
+            <div class="checklist-section">
+                <h3>📊 Profile Comparisons to Try</h3>
+                <ul>
+                    <li><strong>DEFAULT vs Black & White</strong> - See color removal effect</li>
+                    <li><strong>DEFAULT vs Vivid</strong> - Compare color enhancement</li>
+                    <li><strong>Warm vs Cool Tone</strong> - Temperature comparison</li>
+                    <li><strong>Gaming vs Cinematic</strong> - Contrast styles</li>
+                    <li><strong>High Contrast vs Soft</strong> - Sharpness differences</li>
+                </ul>
+            </div>
+            <div class="checklist-section">
+                <h3>⚙️ Technical Validation</h3>
+                <ul>
+                    <li>□ No console errors during switching</li>
+                    <li>□ Smooth transitions between profiles</li>
+                    <li>□ Proper cleanup when disabling compare</li>
+                    <li>□ Split line positioned correctly</li>
+                    <li>□ Profile indicators show correct names</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-info">
+        <h2>🛠️ Testing Instructions</h2>
+        <ol>
+            <li><strong>Open Vivideo:</strong> Press Alt+V to open the panel</li>
+            <li><strong>Find Compare Mode:</strong> Look for the checkbox at the bottom of profiles section</li>
+            <li><strong>Enable Compare Mode:</strong> Check the "Compare Mode" checkbox</li>
+            <li><strong>Select Compare Profile:</strong> Choose a profile from the dropdown</li>
+            <li><strong>Observe Split Effect:</strong> Video should split with different filters on each side</li>
+            <li><strong>Test Different Profiles:</strong> Try various combinations to see differences</li>
+            <li><strong>Adjust Settings:</strong> Modify current settings and see left side update</li>
+            <li><strong>Disable Compare:</strong> Uncheck to return to normal mode</li>
+        </ol>
+        
+        <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <h4 style="color: #ff6b6b; margin-top: 0;">Expected Console Messages:</h4>
+            <code style="background: #000; color: #0f0; padding: 5px; display: block; font-size: 11px;">
+                "Vivideo: Compare mode enabled"<br>
+                "Vivideo: Compare profile selected: [profile name]"<br>
+                "Vivideo: Split filters applied to video element"<br>
+                "Vivideo: Compare mode disabled"
+            </code>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔄 Compare Mode Test Page Loaded');
+        
+        // Monitor compare mode changes
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Compare mode test page ready for testing');
+        });
+
+        // Add some visual feedback for testing
+        let testVideoColorIndex = 0;
+        const testColors = [
+            'linear-gradient(45deg, #ff6b6b, #4ecdc4)',
+            'linear-gradient(45deg, #45b7d1, #f9ca24)',
+            'linear-gradient(45deg, #e056fd, #ff9f00)',
+            'linear-gradient(45deg, #2ed573, #ff3838)'
+        ];
+
+        setInterval(() => {
+            const testVideo = document.getElementById('testVideo');
+            if (testVideo && !testVideo.style.filter.includes('split')) {
+                testVideo.style.background = testColors[testVideoColorIndex];
+                testVideoColorIndex = (testVideoColorIndex + 1) % testColors.length;
+            }
+        }, 3000);
+    </script>
+</body>
+</html>
