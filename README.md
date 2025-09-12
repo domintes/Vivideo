@@ -21,6 +21,7 @@ Rozszerzenie do przeglądarek opartych na Chromium, które umożliwia regulację
 ## 📋 Użytkowanie
 
 ### Podstawowe sterowanie:
+
 - **Kliknij ikonę rozszerzenia** - Otwiera stronę informacyjną i przycisk do uruchomienia panelu
 - **Alt + V** - Przełącza widoczność panelu kontrolnego
 - **Przeciągnij nagłówek** - Przesuwa panel w inne miejsce
@@ -29,6 +30,7 @@ Rozszerzenie do przeglądarek opartych na Chromium, które umożliwia regulację
 - **Przycisk ⓘ** - Pokazuje/ukrywa informacje w panelu
 
 ### Regulacja parametrów:
+
 - **Suwaki** - Przeciągnij aby zmienić wartość
 - **Pola tekstowe** - Wpisz dokładną wartość
 - **Reset All** - Przywraca wszystkie ustawienia do domyślnych
@@ -41,7 +43,7 @@ Wszystkie parametry mają domyślną wartość 0 (lub 1.0 dla gamma), co oznacza
 ## 🔧 Oczekiwane zachowanie
 
 - **Brightness -50%** → Video ciemniejsze
-- **Brightness +50%** → Video jaśniejsze  
+- **Brightness +50%** → Video jaśniejsze
 - **Contrast -50%** → Płaski obraz, mniejszy kontrast
 - **Contrast +50%** → Zwiększony kontrast
 - **Saturation -90%** → Prawie czarno-biały obraz
@@ -54,7 +56,7 @@ Wszystkie parametry mają domyślną wartość 0 (lub 1.0 dla gamma), co oznacza
 ## 🌐 Kompatybilność
 
 - ✅ YouTube
-- ✅ Vimeo  
+- ✅ Vimeo
 - ✅ Netflix
 - ✅ Twitch
 - ✅ Facebook Video
@@ -91,6 +93,7 @@ Vivideo/
 ## 🛠️ Rozwój
 
 Rozszerzenie zostało stworzone z myślą o prostocie i wydajności. Używa:
+
 - CSS filters dla podstawowych efektów
 - SVG filters dla korekcji gamma
 - Chrome Extension API v3

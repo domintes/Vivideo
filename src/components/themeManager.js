@@ -45,7 +45,7 @@ class ThemeManager {
       this.controller.toggleThemes();
     });
 
-    container.querySelectorAll('.vivideo-theme-option').forEach(option => {
+    container.querySelectorAll('.vivideo-theme-option').forEach((option) => {
       option.addEventListener('click', (e) => {
         const theme = e.currentTarget.getAttribute('data-theme');
         this.controller.changeTheme(theme);
@@ -65,7 +65,7 @@ class ThemeManager {
   }
 
   updateThemeSelection(container, currentTheme) {
-    container.querySelectorAll('.vivideo-theme-option').forEach(option => {
+    container.querySelectorAll('.vivideo-theme-option').forEach((option) => {
       const theme = option.getAttribute('data-theme');
       if (theme === currentTheme) {
         option.classList.add('vivideo-theme-selected');
@@ -80,15 +80,15 @@ class ThemeManager {
     const fontColorSlider = container.querySelector('#font-theme-color-slider');
     const backgroundColorSlider = container.querySelector('#background-theme-color-slider');
     const themeColors = this.controller.themeColors;
-    
+
     if (fontColorSlider && themeColors[currentTheme]) {
       fontColorSlider.value = themeColors[currentTheme].fontHue;
     }
-    
+
     if (backgroundColorSlider && themeColors[currentTheme]) {
       backgroundColorSlider.value = themeColors[currentTheme].backgroundHue;
     }
-    
+
     this.updateColorPreviews(container, currentTheme);
   }
 
@@ -96,12 +96,12 @@ class ThemeManager {
     const fontColorPreview = container.querySelector('#font-color-preview');
     const backgroundColorPreview = container.querySelector('#background-color-preview');
     const currentColor = this.controller.themeColors[currentTheme];
-    
+
     if (fontColorPreview && currentColor) {
       const fontHsl = `hsl(${currentColor.fontHue}, ${currentColor.saturation}%, ${currentColor.lightness}%)`;
       fontColorPreview.style.backgroundColor = fontHsl;
     }
-    
+
     if (backgroundColorPreview && currentColor) {
       const backgroundHsl = `hsl(${currentColor.backgroundHue}, ${currentColor.saturation}%, ${Math.max(currentColor.lightness - 30, 10)}%)`;
       backgroundColorPreview.style.backgroundColor = backgroundHsl;
@@ -111,7 +111,7 @@ class ThemeManager {
   updateActiveThemeDisplay(container, currentTheme) {
     const themeDisplay = container.querySelector('#active-theme-display');
     if (!themeDisplay) return;
-    
+
     const themeDisplayName = currentTheme === 'cybernetic' ? 'CYBERNETIC' : 'CASUAL';
     themeDisplay.textContent = themeDisplayName;
     themeDisplay.className = 'active-item-status active-theme-status active';
@@ -130,21 +130,21 @@ class ThemeManager {
     // Create new dynamic styles
     const style = document.createElement('style');
     style.id = 'vivideo-dynamic-theme';
-    
+
     const fontHue = currentColor.fontHue;
     const backgroundHue = currentColor.backgroundHue;
     const saturation = currentColor.saturation;
     const lightness = currentColor.lightness;
-    
+
     const fontColor = `hsl(${fontHue}, ${saturation}%, ${lightness}%)`;
     const fontLightColor = `hsl(${fontHue}, ${saturation}%, ${Math.min(lightness + 20, 90)}%)`;
     const fontDarkColor = `hsl(${fontHue}, ${saturation}%, ${Math.max(lightness - 20, 10)}%)`;
-    
+
     const bgColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.max(lightness - 30, 10)}%)`;
     const bgLightColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.min(lightness - 15, 25)}%)`;
     const bgDarkColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.max(lightness - 45, 5)}%)`;
-    
-    style.textContent = /*css*/`
+
+    style.textContent = /*css*/ `
       .vivideo-container.vivideo-theme-${currentTheme} {
         color: ${fontColor};
         background: linear-gradient(135deg, ${bgDarkColor} 0%, ${bgColor} 50%, ${bgDarkColor} 100%);
@@ -278,12 +278,31 @@ class ThemeManager {
         box-shadow: 0 0 8px ${fontColor}4D;
       }
     `;
-    
+
     document.head.appendChild(style);
     container.className = `vivideo-container vivideo-theme-${currentTheme}`;
     if (container.classList.contains('vivideo-visible')) {
       container.classList.add('vivideo-visible');
     }
+  }
+
+  // Navigation methods for keyboard shortcuts
+  nextTheme() {
+    const themes = ['cybernetic', 'casual'];
+    const currentIndex = themes.indexOf(this.controller.currentTheme);
+    const nextIndex = (currentIndex + 1) % themes.length;
+    const nextTheme = themes[nextIndex];
+
+    this.controller.changeTheme(nextTheme);
+  }
+
+  previousTheme() {
+    const themes = ['cybernetic', 'casual'];
+    const currentIndex = themes.indexOf(this.controller.currentTheme);
+    const prevIndex = currentIndex === 0 ? themes.length - 1 : currentIndex - 1;
+    const prevTheme = themes[prevIndex];
+
+    this.controller.changeTheme(prevTheme);
   }
 }
 

@@ -9,38 +9,38 @@ class VideoFilterEngine {
   findVideos() {
     const videos = [];
     videos.push(...document.querySelectorAll('video'));
-    
+
     // Find videos in shadow DOM
     const elementsWithShadow = document.querySelectorAll('*');
-    elementsWithShadow.forEach(element => {
+    elementsWithShadow.forEach((element) => {
       if (element.shadowRoot) {
         videos.push(...element.shadowRoot.querySelectorAll('video'));
       }
     });
-    
+
     return videos;
   }
 
   findImages() {
     const images = [];
     images.push(...document.querySelectorAll('img'));
-    
+
     // Find images in shadow DOM
     const elementsWithShadow = document.querySelectorAll('*');
-    elementsWithShadow.forEach(element => {
+    elementsWithShadow.forEach((element) => {
       if (element.shadowRoot) {
         images.push(...element.shadowRoot.querySelectorAll('img'));
       }
     });
-    
+
     return images;
   }
 
   applyFilters(settings) {
-    this.findVideos().forEach(video => {
+    this.findVideos().forEach((video) => {
       this.applyFilterToElement(video, settings);
     });
-    
+
     if (settings.workOnImagesActivate) {
       this.applyFiltersToImages(settings);
     }
@@ -48,23 +48,23 @@ class VideoFilterEngine {
 
   applyFiltersToImages(settings) {
     if (!settings.workOnImagesActivate) return;
-    
-    this.findImages().forEach(image => {
+
+    this.findImages().forEach((image) => {
       this.applyFilterToElement(image, settings);
     });
   }
 
   removeFiltersFromImages() {
-    this.findImages().forEach(image => {
+    this.findImages().forEach((image) => {
       image.style.filter = '';
     });
   }
 
   applyFilterToElement(element, settings) {
-    const brightness = 1 + (settings.brightness / 100);
-    const contrast = 1 + (settings.contrast / 100);
-    const saturation = Math.max(0, 1 + (settings.saturation / 100));
-    
+    const brightness = 1 + settings.brightness / 100;
+    const contrast = 1 + settings.contrast / 100;
+    const saturation = Math.max(0, 1 + settings.saturation / 100);
+
     let cssFilters = `
       brightness(${brightness})
       contrast(${contrast})
@@ -73,11 +73,12 @@ class VideoFilterEngine {
 
     // Apply advanced filters if needed
     this.applyAdvancedFilters(settings);
-    const advancedFilterExists = settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
+    const advancedFilterExists =
+      settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
     if (advancedFilterExists) {
       cssFilters += ` url(#vivideo-advanced-filter)`;
     }
-    
+
     element.style.filter = cssFilters.trim();
   }
 
@@ -106,23 +107,27 @@ class VideoFilterEngine {
 
     // Calculate color temperature values - improved algorithm
     const tempFactor = colorTemp / 100;
-    let rSlope = 1, gSlope = 1, bSlope = 1;
-    let rExponent = gamma, gExponent = gamma, bExponent = gamma;
+    let rSlope = 1,
+      gSlope = 1,
+      bSlope = 1;
+    let rExponent = gamma,
+      gExponent = gamma,
+      bExponent = gamma;
 
     if (tempFactor > 0) {
-      rSlope = 1 + (tempFactor * 0.3);
-      gSlope = 1 + (tempFactor * 0.15);
-      bSlope = Math.max(0.4, 1 - (tempFactor * 0.4));
+      rSlope = 1 + tempFactor * 0.3;
+      gSlope = 1 + tempFactor * 0.15;
+      bSlope = Math.max(0.4, 1 - tempFactor * 0.4);
     } else if (tempFactor < 0) {
       const coolness = Math.abs(tempFactor);
-      rSlope = Math.max(0.5, 1 - (coolness * 0.3));
-      gSlope = Math.max(0.7, 1 - (coolness * 0.1));
-      bSlope = 1 + (coolness * 0.4);
+      rSlope = Math.max(0.5, 1 - coolness * 0.3);
+      gSlope = Math.max(0.7, 1 - coolness * 0.1);
+      bSlope = 1 + coolness * 0.4;
     }
 
     // Calculate sharpness matrix
-    const sharpAmount = sharpness / 100 * 0.8;
-    const sharpCenter = 1 + (4 * sharpAmount);
+    const sharpAmount = (sharpness / 100) * 0.8;
+    const sharpCenter = 1 + 4 * sharpAmount;
     const sharpEdge = -sharpAmount;
 
     let filterContent = '';
@@ -159,17 +164,17 @@ class VideoFilterEngine {
   }
 
   removeFilters() {
-    this.findVideos().forEach(video => {
+    this.findVideos().forEach((video) => {
       video.style.filter = '';
     });
     this.removeFiltersFromImages();
-    
+
     // Remove SVG filters
     const existingSvg = document.querySelector('#vivideo-svg-container');
     if (existingSvg) {
       existingSvg.remove();
     }
-    
+
     // Remove split filters
     this.removeSplitFilters();
   }
@@ -177,8 +182,8 @@ class VideoFilterEngine {
   observeVideos(callback) {
     const observer = new MutationObserver((mutations) => {
       let hasNewVideos = false;
-      mutations.forEach(mutation => {
-        mutation.addedNodes.forEach(node => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
             if (node.tagName === 'VIDEO' || node.querySelector('video')) {
               hasNewVideos = true;
@@ -186,7 +191,7 @@ class VideoFilterEngine {
           }
         });
       });
-      
+
       if (hasNewVideos && callback) {
         callback();
       }
@@ -200,11 +205,30 @@ class VideoFilterEngine {
     return observer;
   }
 
+  // Attach 'play' listeners to videos so filters reapply when a new video starts playing
+  attachPlayListeners() {
+    this.findVideos().forEach((video) => {
+      if (video.__vivideo_play_listener_attached) return;
+      const handler = () => {
+        try {
+          // Reapply current settings when video starts
+          if (window.vivideoController) {
+            window.vivideoController.applyFilters();
+          }
+        } catch (e) {
+          console.warn('Vivideo: play handler error', e);
+        }
+      };
+      video.addEventListener('play', handler);
+      video.__vivideo_play_listener_attached = true;
+    });
+  }
+
   applySplitFilters(leftSettings, rightSettings) {
-    this.findVideos().forEach(video => {
+    this.findVideos().forEach((video) => {
       this.applySplitFilterToElement(video, leftSettings, rightSettings);
     });
-    
+
     if (leftSettings.workOnImagesActivate || rightSettings.workOnImagesActivate) {
       this.applySplitFiltersToImages(leftSettings, rightSettings);
     }
@@ -219,21 +243,21 @@ class VideoFilterEngine {
 
     // Reset element's direct filters
     element.style.filter = '';
-    
+
     // Create container if needed
     let container = element.parentNode.querySelector('.vivideo-split-container');
     if (!container || container.querySelector('video') !== element) {
       // Remove any existing container
       const existingContainer = element.parentNode.querySelector('.vivideo-split-container');
       if (existingContainer) existingContainer.remove();
-      
+
       // Create new container
       container = document.createElement('div');
       container.className = 'vivideo-split-container';
       container.style.position = 'relative';
       container.style.display = 'inline-block';
       container.style.overflow = 'hidden';
-      
+
       // Wrap the video element
       element.parentNode.insertBefore(container, element);
       container.appendChild(element);
@@ -245,7 +269,7 @@ class VideoFilterEngine {
     this.setupSplitOverlay(leftOverlay, 'left', leftSettings);
     container.appendChild(leftOverlay);
 
-    // Create right overlay (compare profile)  
+    // Create right overlay (compare profile)
     const rightOverlay = document.createElement('div');
     rightOverlay.className = 'vivideo-right-overlay';
     this.setupSplitOverlay(rightOverlay, 'right', rightSettings);
@@ -255,10 +279,10 @@ class VideoFilterEngine {
   }
 
   setupSplitOverlay(overlay, side, settings) {
-    const brightness = 1 + (settings.brightness / 100);
-    const contrast = 1 + (settings.contrast / 100);
-    const saturation = Math.max(0, 1 + (settings.saturation / 100));
-    
+    const brightness = 1 + settings.brightness / 100;
+    const contrast = 1 + settings.contrast / 100;
+    const saturation = Math.max(0, 1 + settings.saturation / 100);
+
     let cssFilters = `
       brightness(${brightness})
       contrast(${contrast})
@@ -266,20 +290,21 @@ class VideoFilterEngine {
     `;
 
     // Apply advanced filters if needed
-    const advancedFilterExists = settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
+    const advancedFilterExists =
+      settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
     if (advancedFilterExists) {
       // For split mode, we'll use a simplified approach without SVG filters
       // as SVG filters are complex to implement for split-screen
       const gamma = Math.max(0.1, Math.min(3.0, settings.gamma));
       const tempFactor = settings.colorTemp / 100;
-      
+
       // Approximate gamma with CSS filters
       if (gamma !== 1) {
         const gammaAdjust = gamma < 1 ? (1 - gamma) * 0.3 : (gamma - 1) * 0.2;
         const gammaContrast = gamma < 1 ? 1 - gammaAdjust : 1 + gammaAdjust;
         cssFilters += ` contrast(${gammaContrast})`;
       }
-      
+
       // Approximate color temperature with hue-rotate and sepia
       if (tempFactor !== 0) {
         const hueRotate = tempFactor * 15; // Simplified hue adjustment
@@ -287,7 +312,7 @@ class VideoFilterEngine {
         cssFilters += ` hue-rotate(${hueRotate}deg) sepia(${sepia})`;
       }
     }
-    
+
     // Style the overlay
     overlay.style.position = 'absolute';
     overlay.style.top = '0';
@@ -299,7 +324,7 @@ class VideoFilterEngine {
     overlay.style.pointerEvents = 'none';
     overlay.style.zIndex = '1';
     overlay.style.clipPath = side === 'left' ? 'inset(0 50% 0 0)' : 'inset(0 0 0 50%)';
-    
+
     // Add visual indicator
     const indicator = document.createElement('div');
     indicator.style.position = 'absolute';
@@ -312,7 +337,7 @@ class VideoFilterEngine {
     indicator.style.borderRadius = '4px';
     indicator.style.fontFamily = 'monospace';
     indicator.style.zIndex = '2';
-    
+
     const profileName = settings.name || (side === 'left' ? 'Current' : 'Compare');
     indicator.textContent = `${side.toUpperCase()}: ${profileName}`;
     overlay.appendChild(indicator);
@@ -320,8 +345,8 @@ class VideoFilterEngine {
 
   applySplitFiltersToImages(leftSettings, rightSettings) {
     if (!leftSettings.workOnImagesActivate && !rightSettings.workOnImagesActivate) return;
-    
-    this.findImages().forEach(image => {
+
+    this.findImages().forEach((image) => {
       // For images, we'll apply a simpler split effect
       this.applySplitFilterToElement(image, leftSettings, rightSettings);
     });
@@ -330,7 +355,7 @@ class VideoFilterEngine {
   removeSplitFilters() {
     // Remove all split containers and restore normal state
     const splitContainers = document.querySelectorAll('.vivideo-split-container');
-    splitContainers.forEach(container => {
+    splitContainers.forEach((container) => {
       const video = container.querySelector('video, img');
       if (video && container.parentNode) {
         // Move video back to original parent
@@ -338,7 +363,7 @@ class VideoFilterEngine {
         container.remove();
       }
     });
-    
+
     console.log('Vivideo: Split filters removed');
   }
 }

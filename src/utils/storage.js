@@ -34,10 +34,10 @@ class StorageUtils {
 
   static async loadSettings() {
     const response = await this.getStorage([
-      'vivideoSettings', 
-      'vivideoProfiles', 
-      'vivideoTheme', 
-      'vivideoAppState', 
+      'vivideoSettings',
+      'vivideoProfiles',
+      'vivideoTheme',
+      'vivideoAppState',
       'vivideoThemeColors'
     ]);
     return response;

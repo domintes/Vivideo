@@ -5,14 +5,19 @@ class ProfileManager {
   constructor(controller) {
     this.controller = controller;
     this.defaultProfiles = this.createDefaultProfiles();
-    this.showingDefaultProfiles = false;
+    this.showingProfiles = true; // Currently showing profiles (vs themes)
+    this.displayDefaultProfiles = true; // Display default profile in list
+    this.previousProfile = null; // Store previous profile for Alt+M toggle
+    this.showProfileAfterChange = true; // Show profile name notification
+    this.workOnAllSites = false; // Work on all websites, not just YouTube
   }
 
   createDefaultProfiles() {
+    // Simplified - only one default profile with neutral settings
     return [
       {
         name: 'Default',
-        description: 'Standard neutral settings',
+        description: 'Neutral settings (no changes)',
         settings: {
           brightness: 0,
           contrast: 0,
@@ -20,123 +25,8 @@ class ProfileManager {
           gamma: 1,
           colorTemp: 0,
           sharpness: 0,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Black & White',
-        description: 'Classic monochrome effect',
-        settings: {
-          brightness: 5,
-          contrast: 15,
-          saturation: -100,
-          gamma: 1.1,
-          colorTemp: 0,
-          sharpness: 10,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Vibrant Colors',
-        description: 'Enhanced color saturation',
-        settings: {
-          brightness: 8,
-          contrast: 12,
-          saturation: 45,
-          gamma: 0.95,
-          colorTemp: 5,
-          sharpness: 8,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Dark Scene',
-        description: 'Brighten very dark content',
-        settings: {
-          brightness: 35,
-          contrast: 25,
-          saturation: 10,
-          gamma: 0.7,
-          colorTemp: -8,
-          sharpness: 15,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Cinematic',
-        description: 'Film-like color grading',
-        settings: {
-          brightness: -5,
-          contrast: 20,
-          saturation: -15,
-          gamma: 1.2,
-          colorTemp: -20,
-          sharpness: 5,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'High Contrast',
-        description: 'Sharp, distinct details',
-        settings: {
-          brightness: 10,
-          contrast: 40,
-          saturation: -20,
-          gamma: 1.3,
-          colorTemp: 0,
-          sharpness: 25,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Warm Tone',
-        description: 'Cozy, warm atmosphere',
-        settings: {
-          brightness: 8,
-          contrast: 5,
-          saturation: 20,
-          gamma: 0.9,
-          colorTemp: 35,
-          sharpness: 0,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Cool Tone',
-        description: 'Modern, cool atmosphere',
-        settings: {
-          brightness: 3,
-          contrast: 8,
-          saturation: 15,
-          gamma: 1.05,
-          colorTemp: -30,
-          sharpness: 5,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Gaming',
-        description: 'Enhanced visibility for games',
-        settings: {
-          brightness: 20,
-          contrast: 30,
-          saturation: 25,
-          gamma: 0.8,
-          colorTemp: 10,
-          sharpness: 20,
-          autoActivate: true
-        }
-      },
-      {
-        name: 'Retro',
-        description: 'Vintage, washed-out look',
-        settings: {
-          brightness: -8,
-          contrast: -15,
-          saturation: -30,
-          gamma: 1.4,
-          colorTemp: 25,
-          sharpness: -5,
+          speed: 1.0,
+          speedStep: 0.25,
           autoActivate: true
         }
       }
@@ -148,8 +38,8 @@ class ProfileManager {
       <!-- Profiles Section -->
       <div class="vivideo-bottom-controls">
         <div class="profiles-button-section button-section">
-          <button class="vivideo-control-btn compact active" id="user-profiles-btn" title="User created profiles">User</button>
-          <button class="vivideo-control-btn compact" id="default-profiles-btn" title="Built-in default profiles">Defaults</button>
+          <button class="vivideo-control-btn compact active" id="profiles-btn" title="Video Profiles">Profiles</button>
+          <button class="vivideo-control-btn compact" id="themes-btn" title="Themes">Themes</button>
           <button class="vivideo-control-btn compact" id="settings-btn" title="Import/Export settings">⚙️</button>
           <div class="active-item-status active-profile-status" id="active-profile-display">
             DEFAULT
@@ -157,12 +47,15 @@ class ProfileManager {
         </div>
       </div>
 
-      <!-- User Profiles Panel (visible by default) -->
-      <div class="vivideo-profiles" id="user-profiles-panel">
-        <div class="profile-panel-header">👤 User Profiles</div>
+      <!-- Profiles Panel -->
+      <div class="vivideo-profiles" id="profiles-panel">
+        <div class="profile-panel-header">
+          🎥 Video Profiles
+            <!-- removed "Display default profiles" option - simplified single default profile model -->
+        </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
-        <!-- Profile Save Form - always visible for user profiles -->
-        <div class="vivideo-profile-save-section">
+        <!-- Profile Save Form -->
+  <div class="vivideo-profile-save-section">
           <div class="vivideo-profile-form">
             <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
             <button class="vivideo-profile-save" id="save-profile">Save Current Settings</button>
@@ -170,10 +63,30 @@ class ProfileManager {
         </div>
       </div>
 
-      <!-- Default Profiles Panel (hidden by default) -->
-      <div class="vivideo-profiles" id="default-profiles-panel" style="display: none;">
-        <div class="profile-panel-header">⭐ Default Profiles</div>
-        <div class="vivideo-profile-list" id="default-profile-list"></div>
+      <!-- Profile Settings Section -->
+      <div class="vivideo-profile-settings-section">
+        <div class="vivideo-checkbox-container">
+          <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-checkbox" checked>
+          <label for="show-profile-after-change-checkbox" class="vivideo-checkbox-label">
+            <span class="vivideo-checkbox-text">Show current profile after change</span>
+            <span class="vivideo-checkbox-description">Display profile name for 3 seconds after switching</span>
+          </label>
+        </div>
+        
+        <div class="vivideo-checkbox-container">
+          <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-checkbox">
+          <label for="work-on-all-sites-checkbox" class="vivideo-checkbox-label">
+            <span class="vivideo-checkbox-text">Work on all websites</span>
+            <span class="vivideo-checkbox-description">Apply video filters to all websites, not just YouTube</span>
+          </label>
+        </div>
+
+        <div class="vivideo-setting-item">
+          <label for="speed-step-input" class="vivideo-setting-label">Speed Change Step (Alt+[/]):</label>
+          <input type="number" id="speed-step-input" class="vivideo-setting-input" 
+                 min="0.05" max="1.0" step="0.05" value="0.25">
+          <span class="vivideo-setting-unit">x</span>
+        </div>
       </div>
 
       <!-- Compare Mode Section -->
@@ -210,13 +123,14 @@ class ProfileManager {
   }
 
   bindEvents(container) {
-    // Profile controls
-    container.querySelector('#user-profiles-btn').addEventListener('click', () => {
-      this.showUserProfiles(container);
+    // Profiles button
+    container.querySelector('#profiles-btn').addEventListener('click', () => {
+      this.showProfiles(container);
     });
 
-    container.querySelector('#default-profiles-btn').addEventListener('click', () => {
-      this.showDefaultProfiles(container);
+    // Themes button
+    container.querySelector('#themes-btn').addEventListener('click', () => {
+      this.showThemes(container);
     });
 
     // Settings management button
@@ -226,6 +140,50 @@ class ProfileManager {
 
     container.querySelector('#save-profile').addEventListener('click', () => {
       this.saveCurrentProfile(container);
+    });
+
+    // Display default profiles checkbox
+    // (display-default-profiles removed)
+
+    // Show profile after change checkbox
+    container
+      .querySelector('#show-profile-after-change-checkbox')
+      .addEventListener('change', (e) => {
+        this.showProfileAfterChange = e.target.checked;
+        console.log('Vivideo: Show profile after change:', this.showProfileAfterChange);
+
+        // Save setting
+        this.controller.saveAppState();
+      });
+
+    // Work on all sites checkbox
+    container.querySelector('#work-on-all-sites-checkbox').addEventListener('change', (e) => {
+      this.workOnAllSites = e.target.checked;
+      console.log('Vivideo: Work on all sites:', this.workOnAllSites);
+
+      // Save setting
+      this.controller.saveAppState();
+
+      // Apply or remove filters based on new setting
+      if (this.workOnAllSites) {
+        // Apply filters to current site if not YouTube
+        this.controller.applyFilters();
+      } else {
+        // Remove filters from non-YouTube sites
+        if (!this.isYouTubeSite()) {
+          this.controller.removeFilters();
+        }
+      }
+    });
+
+    // Speed step input
+    container.querySelector('#speed-step-input').addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      if (!isNaN(value) && value >= 0.05 && value <= 1.0) {
+        this.controller.settings.speedStep = value;
+        this.controller.saveSettings();
+        console.log(`Vivideo: Speed step changed to ${value}x`);
+      }
     });
 
     // Compare Mode controls
@@ -238,132 +196,181 @@ class ProfileManager {
     });
   }
 
-  showUserProfiles(container) {
-    this.showingDefaultProfiles = false;
-    
+  // Check if current site is YouTube
+  isYouTubeSite() {
+    return (
+      window.location.hostname.includes('youtube.com') ||
+      window.location.hostname.includes('youtu.be')
+    );
+  }
+
+  // Show profiles panel
+  showProfiles(container) {
+    this.showingProfiles = true;
+
     // Update button states
-    const userBtn = container.querySelector('#user-profiles-btn');
-    const defaultBtn = container.querySelector('#default-profiles-btn');
-    const userPanel = container.querySelector('#user-profiles-panel');
-    const defaultPanel = container.querySelector('#default-profiles-panel');
-    
-    if (userBtn && defaultBtn && userPanel && defaultPanel) {
-      // Update button states
-      userBtn.classList.add('active');
-      defaultBtn.classList.remove('active');
-      
-      // Show user panel, hide default panel
-      userPanel.style.display = 'block';
-      defaultPanel.style.display = 'none';
-      
-      // Update user profile list
-      this.updateUserProfilesList(container);
-      
-      console.log('Vivideo: Switched to User profiles view');
+    const profilesBtn = container.querySelector('#profiles-btn');
+    const themesBtn = container.querySelector('#themes-btn');
+
+    if (profilesBtn && themesBtn) {
+      profilesBtn.classList.add('active');
+      themesBtn.classList.remove('active');
+
+      // Show profiles panel, hide themes
+      const profilesPanel = container.querySelector('#profiles-panel');
+      if (profilesPanel) {
+        profilesPanel.style.display = 'block';
+      }
+
+      // Hide themes panel if it exists
+      this.controller.themesVisible = false;
+      this.controller.updateActiveStates();
+
+      // Update profile list
+      this.updateProfilesList(container);
+
+      console.log('Vivideo: Switched to Profiles view');
     }
   }
 
-  showDefaultProfiles(container) {
-    this.showingDefaultProfiles = true;
-    
+  // Show themes panel
+  showThemes(container) {
+    this.showingProfiles = false;
+
     // Update button states
-    const userBtn = container.querySelector('#user-profiles-btn');
-    const defaultBtn = container.querySelector('#default-profiles-btn');
-    const userPanel = container.querySelector('#user-profiles-panel');
-    const defaultPanel = container.querySelector('#default-profiles-panel');
-    
-    if (userBtn && defaultBtn && userPanel && defaultPanel) {
-      // Update button states
-      userBtn.classList.remove('active');
-      defaultBtn.classList.add('active');
-      
-      // Show default panel, hide user panel
-      userPanel.style.display = 'none';
-      defaultPanel.style.display = 'block';
-      
-      // Update default profile list
-      this.updateDefaultProfilesList(container);
-      
-      console.log('Vivideo: Switched to Default profiles view');
+    const profilesBtn = container.querySelector('#profiles-btn');
+    const themesBtn = container.querySelector('#themes-btn');
+
+    if (profilesBtn && themesBtn) {
+      profilesBtn.classList.remove('active');
+      themesBtn.classList.add('active');
+
+      // Hide profiles panel
+      const profilesPanel = container.querySelector('#profiles-panel');
+      if (profilesPanel) {
+        profilesPanel.style.display = 'none';
+      }
+
+      // Show themes panel
+      this.controller.showThemes();
+
+      console.log('Vivideo: Switched to Themes view');
     }
   }
 
-  updateUserProfilesList(container) {
+  // Update unified profiles list
+  updateProfilesList(container) {
     const profileList = container.querySelector('#profile-list');
     if (!profileList) return;
-    
+
     profileList.innerHTML = '';
 
     // Add DEFAULT profile
     const defaultProfileItem = document.createElement('div');
     defaultProfileItem.className = 'vivideo-profile-item';
-    const isDefaultActive = !this.controller.settings.activeProfile && this.isDefaultProfile(this.controller.settings);
+    const isDefaultActive =
+      !this.controller.settings.activeProfile && this.isDefaultProfile(this.controller.settings);
     if (isDefaultActive) {
       defaultProfileItem.classList.add('vivideo-profile-active');
     }
-    
+
     defaultProfileItem.innerHTML = `
       <span class="vivideo-profile-name">DEFAULT</span>
+      <span class="vivideo-profile-badge">Built-in</span>
     `;
-    
+
+    // Default profile cannot be edited, removed or reordered. Click always loads it.
     defaultProfileItem.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Vivideo: Switching to DEFAULT profile');
-      
-      // Remove active class from all profiles first
-      container.querySelectorAll('.vivideo-profile-item').forEach(item => {
-        item.classList.remove('vivideo-profile-active');
-      });
-      
-      // Add active class to clicked profile
+      // Visual active state
+      container
+        .querySelectorAll('.vivideo-profile-item')
+        .forEach((item) => item.classList.remove('vivideo-profile-active'));
       defaultProfileItem.classList.add('vivideo-profile-active');
-      
-      // Load profile
+      // Load immediately without race conditions
       this.controller.loadProfile(this.controller.defaultProfile);
     });
-    
+
     profileList.appendChild(defaultProfileItem);
-    
+
+    // Add default profile if displayDefaultProfiles is true
+    // (legacy built-in default profiles removed) - only single DEFAULT above
+
     // Add user profiles with delete buttons
+    // Add user profiles with drag handle and delete button
     this.controller.profiles.forEach((profile, index) => {
       const profileItem = document.createElement('div');
-      profileItem.className = 'vivideo-profile-item';
+      profileItem.className = 'vivideo-profile-item user-profile';
+      profileItem.setAttribute('data-index', index);
       const isActive = this.controller.settings.activeProfile === profile.name;
-      if (isActive) {
-        profileItem.classList.add('vivideo-profile-active');
-      }
-      
-      // Truncate long profile names with ellipsis
-      const displayName = profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
-      
+      if (isActive) profileItem.classList.add('vivideo-profile-active');
+
+      const displayName =
+        profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
+
       profileItem.innerHTML = `
+        <span class="vivideo-drag-handle" title="Drag to reorder">\u2630</span>
         <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
-        <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
+        <div class="vivideo-profile-actions">
+          <button class="vivideo-profile-edit" data-index="${index}" title="Edit profile">✎</button>
+          <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
+        </div>
       `;
-      
+
+      // Click loads profile reliably
       profileItem.querySelector('.vivideo-profile-name').addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Vivideo: Switching to profile:', profile.name);
-        
-        // Remove active class from all profiles first
-        container.querySelectorAll('.vivideo-profile-item').forEach(item => {
-          item.classList.remove('vivideo-profile-active');
-        });
-        
-        // Add active class to clicked profile
+        container
+          .querySelectorAll('.vivideo-profile-item')
+          .forEach((item) => item.classList.remove('vivideo-profile-active'));
         profileItem.classList.add('vivideo-profile-active');
-        
-        // Load profile
+        // ensure immediate load
         this.controller.loadProfile(profile);
       });
-      
+
+      // Edit
+      profileItem.querySelector('.vivideo-profile-edit').addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+        this.editProfile(idx);
+      });
+
+      // Delete
       profileItem.querySelector('.vivideo-profile-delete').addEventListener('click', (e) => {
         e.stopPropagation();
-        this.controller.deleteProfile(index);
+        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+        this.controller.deleteProfile(idx);
       });
-      
+
+      // Drag & drop reordering
+      const handle = profileItem.querySelector('.vivideo-drag-handle');
+      handle.setAttribute('draggable', 'true');
+      handle.addEventListener('dragstart', (ev) => {
+        ev.dataTransfer.setData('text/plain', String(index));
+        profileItem.classList.add('dragging');
+      });
+      handle.addEventListener('dragend', (ev) => {
+        profileItem.classList.remove('dragging');
+      });
+
+      profileItem.addEventListener('dragover', (ev) => {
+        ev.preventDefault();
+      });
+
+      profileItem.addEventListener('drop', (ev) => {
+        ev.preventDefault();
+        const fromIndex = parseInt(ev.dataTransfer.getData('text/plain'));
+        const toIndex = parseInt(profileItem.getAttribute('data-index'));
+        if (!isNaN(fromIndex) && !isNaN(toIndex) && fromIndex !== toIndex) {
+          const moved = this.controller.profiles.splice(fromIndex, 1)[0];
+          this.controller.profiles.splice(toIndex, 0, moved);
+          this.controller.saveProfiles();
+          this.updateProfilesList(container);
+        }
+      });
+
       profileList.appendChild(profileItem);
     });
 
@@ -374,104 +381,126 @@ class ProfileManager {
     }
   }
 
-  updateDefaultProfilesList(container) {
-    const defaultProfileList = container.querySelector('#default-profile-list');
-    if (!defaultProfileList) return;
-    
-    defaultProfileList.innerHTML = '';
-
-    // Show default profiles (read-only)
-    const defaultProfiles = this.createDefaultProfiles();
-    defaultProfiles.forEach((profile) => {
-      const profileItem = document.createElement('div');
-      profileItem.className = 'vivideo-profile-item';
-      
-      profileItem.innerHTML = `
-        <span class="vivideo-profile-name" title="${profile.description}">${profile.name}</span>
-        <span class="vivideo-profile-description">${profile.description}</span>
-      `;
-      
-      profileItem.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('Vivideo: Loading default profile:', profile.name);
-        
-        this.controller.loadProfile(profile);
-        // Switch back to user view after loading default profile with delay
-        setTimeout(() => {
-          this.showUserProfiles(container);
-        }, 150);
-      });
-      
-      defaultProfileList.appendChild(profileItem);
-    });
-  }
-
   saveCurrentProfile(container) {
     const nameInput = container.querySelector('#profile-name');
     let profileName = nameInput.value.trim();
-    
+
     if (!profileName) {
       profileName = `Profile_${this.controller.profiles.length + 1}`;
     }
 
-    const profile = {
-      name: profileName,
-      settings: { 
-        brightness: this.controller.settings.brightness,
-        contrast: this.controller.settings.contrast,
-        saturation: this.controller.settings.saturation,
-        gamma: this.controller.settings.gamma,
-        colorTemp: this.controller.settings.colorTemp,
-        sharpness: this.controller.settings.sharpness,
-        autoActivate: this.controller.settings.autoActivate
-      }
+    const currentSettings = {
+      brightness: this.controller.settings.brightness,
+      contrast: this.controller.settings.contrast,
+      saturation: this.controller.settings.saturation,
+      gamma: this.controller.settings.gamma,
+      colorTemp: this.controller.settings.colorTemp,
+      sharpness: this.controller.settings.sharpness
     };
-    
-    this.controller.profiles.push(profile);
+
+    // Check if settings match any existing profile
+    const matchingProfile = this.findMatchingProfile(currentSettings);
+
+    if (matchingProfile) {
+      // Settings match an existing profile - show warning and don't save
+      console.warn('Vivideo: Cannot save - settings match existing profile:', matchingProfile.name);
+
+      // Show temporary warning message
+      const originalPlaceholder = nameInput.placeholder;
+      nameInput.placeholder = `Already exists: ${matchingProfile.name}`;
+      nameInput.style.color = '#ff6b6b';
+      nameInput.style.backgroundColor = '#2d1b1b';
+
+      setTimeout(() => {
+        nameInput.placeholder = originalPlaceholder;
+        nameInput.style.color = '';
+        nameInput.style.backgroundColor = '';
+      }, 3000);
+
+      // Auto-select the matching profile
+      this.controller.settings.activeProfile = matchingProfile.name;
+      this.controller.saveSettings();
+      this.controller.saveAppState();
+      this.updateProfilesList(container);
+      this.updateActiveProfileDisplay(container, this.controller.settings);
+      nameInput.value = '';
+
+      return;
+    }
+
+    // Check if profile name already exists
+    const existingProfile = this.controller.profiles.find((p) => p.name === profileName);
+    if (existingProfile) {
+      // Update existing profile
+      existingProfile.settings = {
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      };
+      console.log('Vivideo: Profile updated:', profileName);
+    } else {
+      // Create new profile
+      const profile = {
+        name: profileName,
+        settings: {
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        }
+      };
+      this.controller.profiles.push(profile);
+      console.log('Vivideo: Profile saved:', profileName);
+    }
+
     this.controller.settings.activeProfile = profileName;
     this.controller.saveProfiles();
     this.controller.saveSettings();
     this.controller.saveAppState();
-    
-    // Update user profiles list (we're always in user view when saving)
-    this.updateUserProfilesList(container);
+
+    // Update profiles list
+    this.updateProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
     nameInput.value = '';
-    
-    console.log('Vivideo: Profile saved:', profileName);
+  }
+
+  editProfile(index) {
+    const profile = this.controller.profiles[index];
+    if (!profile) return;
+    const newName = prompt('Edit profile name:', profile.name);
+    if (!newName) return;
+    profile.name = newName.trim();
+    this.controller.saveProfiles();
+    this.updateProfilesList(this.controller.container);
   }
 
   toggleCompareMode(container, enabled) {
     const compareControls = container.querySelector('#compare-controls');
     const compareSelect = container.querySelector('#compare-profile-select');
-    
+
     if (enabled) {
       // Show compare controls
       compareControls.style.display = 'block';
-      
+
       // Populate profile select
       this.populateCompareSelect(compareSelect);
-      
+
       // Enable compare mode in controller
       this.controller.settings.compareMode = true;
       this.controller.settings.compareProfile = null;
-      
+
       console.log('Vivideo: Compare mode enabled');
     } else {
       // Hide compare controls
       compareControls.style.display = 'none';
-      
+
       // Disable compare mode in controller
       this.controller.settings.compareMode = false;
       this.controller.settings.compareProfile = null;
-      
+
       // Reset video filters to normal
       this.controller.applyFilters();
-      
+
       console.log('Vivideo: Compare mode disabled');
     }
-    
+
     // Save settings
     this.controller.saveSettings();
   }
@@ -485,19 +514,19 @@ class ProfileManager {
 
     // Find the selected profile
     let selectedProfile = null;
-    
+
     // Check if it's DEFAULT profile
     if (profileId === 'DEFAULT') {
       selectedProfile = this.controller.defaultProfile;
     }
     // Check user profiles
     else {
-      selectedProfile = this.controller.profiles.find(p => p.name === profileId);
-      
+      selectedProfile = this.controller.profiles.find((p) => p.name === profileId);
+
       // Check default profiles if not found in user profiles
       if (!selectedProfile) {
         const defaultProfiles = this.createDefaultProfiles();
-        selectedProfile = defaultProfiles.find(p => p.name === profileId);
+        selectedProfile = defaultProfiles.find((p) => p.name === profileId);
       }
     }
 
@@ -506,63 +535,65 @@ class ProfileManager {
       this.controller.applyCompareFilters();
       console.log('Vivideo: Compare profile selected:', selectedProfile.name);
     }
-    
+
     // Save settings
     this.controller.saveSettings();
   }
 
   populateCompareSelect(selectElement) {
     selectElement.innerHTML = '<option value="">Select profile to compare...</option>';
-    
+
     // Add DEFAULT profile
     const defaultOption = document.createElement('option');
     defaultOption.value = 'DEFAULT';
     defaultOption.textContent = 'DEFAULT';
     selectElement.appendChild(defaultOption);
-    
+
     // Add user profiles
     if (this.controller.profiles.length > 0) {
       const userGroup = document.createElement('optgroup');
       userGroup.label = '👤 User Profiles';
-      
-      this.controller.profiles.forEach(profile => {
+
+      this.controller.profiles.forEach((profile) => {
         const option = document.createElement('option');
         option.value = profile.name;
         option.textContent = profile.name;
         userGroup.appendChild(option);
       });
-      
+
       selectElement.appendChild(userGroup);
     }
-    
+
     // Add default profiles
     const defaultProfiles = this.createDefaultProfiles();
     const defaultGroup = document.createElement('optgroup');
     defaultGroup.label = '⭐ Default Profiles';
-    
+
     // Skip first one (DEFAULT) as it's already added
-    defaultProfiles.slice(1).forEach(profile => {
+    defaultProfiles.slice(1).forEach((profile) => {
       const option = document.createElement('option');
       option.value = profile.name;
       option.textContent = `${profile.name} - ${profile.description}`;
       defaultGroup.appendChild(option);
     });
-    
+
     selectElement.appendChild(defaultGroup);
   }
 
   isDefaultProfile(settings) {
-    return settings.brightness === 0 &&
-           settings.contrast === 0 &&
-           settings.saturation === 0 &&
-           settings.gamma === 1 &&
-           settings.colorTemp === 0 &&
-           settings.sharpness === 0;
+    return (
+      settings.brightness === 0 &&
+      settings.contrast === 0 &&
+      settings.saturation === 0 &&
+      settings.gamma === 1 &&
+      settings.colorTemp === 0 &&
+      settings.sharpness === 0
+    );
   }
 
   isProfileModified(settings, profiles) {
     if (settings.activeProfile) {
-      const activeProfile = profiles.find(p => p.name === settings.activeProfile);
+      const activeProfile = profiles.find((p) => p.name === settings.activeProfile);
       if (activeProfile) {
         return !this.profilesMatch(settings, activeProfile.settings);
       }
@@ -572,75 +603,144 @@ class ProfileManager {
 
   profilesMatch(settings1, settings2) {
     const keys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp', 'sharpness'];
-    return keys.every(key => settings1[key] === settings2[key]);
+    return keys.every((key) => settings1[key] === settings2[key]);
+  }
+
+  // Auto-detect profile based on current settings
+  autoDetectProfile(settings) {
+    // First check default profiles
+    const defaultProfiles = this.createDefaultProfiles();
+    for (const profile of defaultProfiles) {
+      if (this.profilesMatch(settings, profile.settings)) {
+        console.log('Vivideo: Auto-detected default profile:', profile.name);
+        return { profile, isDefault: true };
+      }
+    }
+
+    // Then check user profiles
+    for (const profile of this.controller.profiles) {
+      if (this.profilesMatch(settings, profile.settings)) {
+        console.log('Vivideo: Auto-detected user profile:', profile.name);
+        return { profile, isDefault: false };
+      }
+    }
+
+    // Check if it matches the neutral DEFAULT profile
+    if (this.isDefaultProfile(settings)) {
+      console.log('Vivideo: Auto-detected neutral DEFAULT profile');
+      return { profile: this.controller.defaultProfile, isDefault: true };
+    }
+
+    return null;
+  }
+
+  // Check if current settings match any existing profile to prevent duplicates
+  findMatchingProfile(settings) {
+    const detection = this.autoDetectProfile(settings);
+    return detection ? detection.profile : null;
+  }
+
+  // Helper methods to determine profile type
+  isCurrentProfileDefault() {
+    if (!this.controller.settings.activeProfile) {
+      return this.isDefaultProfile(this.controller.settings);
+    }
+
+    const defaultProfiles = this.createDefaultProfiles();
+    return defaultProfiles.some((p) => p.name === this.controller.settings.activeProfile);
+  }
+
+  isCurrentProfileUser() {
+    if (!this.controller.settings.activeProfile) {
+      return false;
+    }
+
+    return this.controller.profiles.some((p) => p.name === this.controller.settings.activeProfile);
   }
 
   updateActiveProfileDisplay(container, settings) {
     const profileDisplay = container.querySelector('#active-profile-display');
     if (!profileDisplay) return;
-    
+
     // Force re-check of active profile state
     setTimeout(() => {
-      if (settings.activeProfile) {
-        // First check if it's a default profile
-        const defaultProfiles = this.createDefaultProfiles();
-        const isDefaultProfile = defaultProfiles.find(p => p.name === settings.activeProfile);
-        
-        if (isDefaultProfile) {
-          // It's a default profile - check if settings match exactly
-          if (this.profilesMatch(settings, isDefaultProfile.settings)) {
-            profileDisplay.textContent = settings.activeProfile;
-            profileDisplay.className = 'active-item-status active-profile-status active';
-          } else {
-            profileDisplay.textContent = 'NOT SAVED';
-            profileDisplay.className = 'active-item-status active-profile-status modified';
-          }
-        } else {
-          // Check if it's a user profile
-          const userProfile = this.controller.profiles.find(p => p.name === settings.activeProfile);
-          
-          if (userProfile) {
-            // It's a saved user profile - check if settings match
-            if (this.profilesMatch(settings, userProfile.settings)) {
-              profileDisplay.textContent = settings.activeProfile;
-              profileDisplay.className = 'active-item-status active-profile-status active';
-            } else {
-              profileDisplay.textContent = 'NOT SAVED';
-              profileDisplay.className = 'active-item-status active-profile-status modified';
-            }
-          } else {
-            // Profile name set but doesn't exist anywhere
-            profileDisplay.textContent = 'NOT SAVED';
-            profileDisplay.className = 'active-item-status active-profile-status modified';
-          }
+      // Try to auto-detect profile based on current settings
+      const detection = this.autoDetectProfile(settings);
+
+      if (detection) {
+        // Settings match an existing profile - auto-select it
+        if (settings.activeProfile !== detection.profile.name) {
+          console.log('Vivideo: Auto-switching to detected profile:', detection.profile.name);
+          this.controller.settings.activeProfile = detection.profile.name;
+          this.controller.saveSettings();
+          this.controller.saveAppState();
         }
-      } else if (this.isDefaultProfile(settings)) {
-        // No active profile but settings match default (all zeros)
-        profileDisplay.textContent = 'DEFAULT';
-        profileDisplay.className = 'active-item-status active-profile-status default';
+
+        profileDisplay.textContent =
+          detection.profile.name === 'Default' ? 'DEFAULT' : detection.profile.name;
+        profileDisplay.className =
+          detection.profile.name === 'Default'
+            ? 'active-item-status active-profile-status default'
+            : 'active-item-status active-profile-status active';
+
+        // Update profile list to show correct active state
+        this.controller.updateProfilesList();
       } else {
-        // No active profile and settings don't match default
+        // Settings don't match any existing profile
         profileDisplay.textContent = 'NOT SAVED';
         profileDisplay.className = 'active-item-status active-profile-status modified';
+
+        // Clear active profile since settings don't match any profile
+        if (settings.activeProfile) {
+          this.controller.settings.activeProfile = null;
+          this.controller.saveSettings();
+          this.controller.saveAppState();
+        }
       }
     }, 10);
   }
 
   // Profile switching methods for keyboard shortcuts
   nextProfile() {
-    const allProfiles = [this.controller.defaultProfile, ...this.controller.profiles];
+    console.log('Vivideo: Next profile shortcut (Alt+B)');
+
+    let targetProfiles;
     let currentIndex = -1;
-    
+
+    // Build target profiles list
+    targetProfiles = [this.controller.defaultProfile];
+
+    // Add default profile if displayDefaultProfiles is true
+    if (this.displayDefaultProfiles) {
+      const defaultProfiles = this.createDefaultProfiles();
+      // Skip the neutral "Default" as it's already added
+      targetProfiles.push(...defaultProfiles.filter((p) => p.name !== 'Default'));
+    }
+
+    // Add user profiles
+    targetProfiles.push(...this.controller.profiles);
+
+    console.log('Vivideo: Cycling through all available profiles');
+
+    // Find current profile index
     if (!this.controller.settings.activeProfile) {
-      // Currently on DEFAULT
+      // Currently on DEFAULT (neutral)
       currentIndex = 0;
     } else {
-      currentIndex = allProfiles.findIndex(p => p.name === this.controller.settings.activeProfile);
+      currentIndex = targetProfiles.findIndex(
+        (p) => p.name === this.controller.settings.activeProfile
+      );
     }
-    
-    const nextIndex = (currentIndex + 1) % allProfiles.length;
-    
-    // Dodaj animację przewijania do przodu dla active-profile-display
+
+    // If no profiles in the target category, do nothing
+    if (targetProfiles.length === 0) {
+      console.log('Vivideo: No profiles to cycle through');
+      return;
+    }
+
+    const nextIndex = (currentIndex + 1) % targetProfiles.length;
+
+    // Add animation for active-profile-display
     const profileDisplay = this.controller.container.querySelector('#active-profile-display');
     if (profileDisplay) {
       profileDisplay.classList.add('scroll-next');
@@ -648,49 +748,60 @@ class ProfileManager {
         profileDisplay.classList.remove('scroll-next');
       }, 400);
     }
-    
-    // Załaduj profil bez otwierania menu profiles
-    const targetProfile = allProfiles[nextIndex];
-    if (targetProfile.name === 'DEFAULT') {
-      this.controller.settings.activeProfile = null;
-      Object.keys(this.controller.defaultSettings).forEach(key => {
-        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-          this.controller.settings[key] = this.controller.defaultSettings[key];
-        }
-      });
-    } else {
-      this.controller.settings.activeProfile = targetProfile.name;
-      Object.keys(targetProfile.settings).forEach(key => {
-        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-          this.controller.settings[key] = targetProfile.settings[key];
-        }
-      });
-      if (targetProfile.settings.autoActivate !== undefined) {
-        this.controller.settings.autoActivate = targetProfile.settings.autoActivate;
-      }
-    }
 
-    this.controller.updateUI();
-    this.controller.applyFilters();
-    this.controller.saveSettings();
-    this.controller.saveAppState();
-    this.controller.updateProfilesList();
+    // Load the target profile
+    const targetProfile = targetProfiles[nextIndex];
+    console.log('Vivideo: Switching to next profile:', targetProfile.name);
+    this.controller.loadProfile(targetProfile);
+
+    // Show notification if enabled
+    if (this.showProfileAfterChange) {
+      this.showProfileNotification(
+        targetProfile.name === 'Default' ? 'DEFAULT' : targetProfile.name
+      );
+    }
   }
 
   previousProfile() {
-    const allProfiles = [this.controller.defaultProfile, ...this.controller.profiles];
+    console.log('Vivideo: Previous profile shortcut (Alt+C)');
+
+    let targetProfiles;
     let currentIndex = -1;
-    
+
+    // Build target profiles list
+    targetProfiles = [this.controller.defaultProfile];
+
+    // Add default profile if displayDefaultProfiles is true
+    if (this.displayDefaultProfiles) {
+      const defaultProfiles = this.createDefaultProfiles();
+      // Skip the neutral "Default" as it's already added
+      targetProfiles.push(...defaultProfiles.filter((p) => p.name !== 'Default'));
+    }
+
+    // Add user profiles
+    targetProfiles.push(...this.controller.profiles);
+
+    console.log('Vivideo: Cycling through all available profiles');
+
+    // Find current profile index
     if (!this.controller.settings.activeProfile) {
-      // Currently on DEFAULT
+      // Currently on DEFAULT (neutral)
       currentIndex = 0;
     } else {
-      currentIndex = allProfiles.findIndex(p => p.name === this.controller.settings.activeProfile);
+      currentIndex = targetProfiles.findIndex(
+        (p) => p.name === this.controller.settings.activeProfile
+      );
     }
-    
-    const prevIndex = currentIndex === 0 ? allProfiles.length - 1 : currentIndex - 1;
-    
-    // Dodaj animację przewijania do tyłu dla active-profile-display
+
+    // If no profiles in the target category, do nothing
+    if (targetProfiles.length === 0) {
+      console.log('Vivideo: No profiles to cycle through');
+      return;
+    }
+
+    const prevIndex = currentIndex === 0 ? targetProfiles.length - 1 : currentIndex - 1;
+
+    // Add animation for active-profile-display
     const profileDisplay = this.controller.container.querySelector('#active-profile-display');
     if (profileDisplay) {
       profileDisplay.classList.add('scroll-prev');
@@ -698,33 +809,179 @@ class ProfileManager {
         profileDisplay.classList.remove('scroll-prev');
       }, 400);
     }
-    
-    // Załaduj profil bez otwierania menu profiles
-    const targetProfile = allProfiles[prevIndex];
-    if (targetProfile.name === 'DEFAULT') {
-      this.controller.settings.activeProfile = null;
-      Object.keys(this.controller.defaultSettings).forEach(key => {
-        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-          this.controller.settings[key] = this.controller.defaultSettings[key];
-        }
-      });
+
+    // Load the target profile
+    const targetProfile = targetProfiles[prevIndex];
+    console.log('Vivideo: Switching to previous profile:', targetProfile.name);
+    this.controller.loadProfile(targetProfile);
+
+    // Show notification if enabled
+    if (this.showProfileAfterChange) {
+      this.showProfileNotification(
+        targetProfile.name === 'Default' ? 'DEFAULT' : targetProfile.name
+      );
+    }
+  }
+
+  // Quick access to DEFAULT profile with toggle functionality
+  setDefaultProfile() {
+    console.log('Vivideo: DEFAULT profile toggle (Alt+M)');
+
+    const defaultProfile = this.controller.defaultProfile;
+
+    // If current profile is DEFAULT, toggle to previous profile
+    if (this.currentProfile === defaultProfile && this.previousProfile) {
+      console.log('Vivideo: Current is DEFAULT, switching to previous:', this.previousProfile.name);
+      this.currentProfile = this.previousProfile;
+
+      // Load the previous profile
+      this.controller.loadProfile(this.currentProfile);
+
+      // Store DEFAULT as previous
+      this.previousProfile = defaultProfile;
     } else {
-      this.controller.settings.activeProfile = targetProfile.name;
-      Object.keys(targetProfile.settings).forEach(key => {
-        if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-          this.controller.settings[key] = targetProfile.settings[key];
-        }
-      });
-      if (targetProfile.settings.autoActivate !== undefined) {
-        this.controller.settings.autoActivate = targetProfile.settings.autoActivate;
+      // Store current profile as previous before switching to DEFAULT
+      if (this.currentProfile && this.currentProfile !== defaultProfile) {
+        this.previousProfile = this.currentProfile;
+        console.log('Vivideo: Storing previous profile:', this.previousProfile.name);
       }
+
+      console.log('Vivideo: Switching to DEFAULT profile');
+      this.currentProfile = defaultProfile;
+
+      // Load DEFAULT profile
+      this.controller.loadProfile(this.controller.defaultProfile);
     }
 
-    this.controller.updateUI();
-    this.controller.applyFilters();
-    this.controller.saveSettings();
-    this.controller.saveAppState();
-    this.controller.updateProfilesList();
+    // Add animation for active-profile-display
+    const profileDisplay = this.controller.container.querySelector('#active-profile-display');
+    if (profileDisplay) {
+      profileDisplay.classList.add('scroll-default');
+      setTimeout(() => {
+        profileDisplay.classList.remove('scroll-default');
+      }, 400);
+    }
+
+    // Show notification if enabled
+    if (this.showProfileAfterChange) {
+      const profileName =
+        this.currentProfile.name === 'Default' ? 'DEFAULT' : this.currentProfile.name;
+      this.showProfileNotification(profileName);
+    }
+  }
+
+  // Enhanced fullscreen detection for YouTube
+  isVideoFullscreen() {
+    // Standard fullscreen API
+    const standardFullscreen = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    );
+
+    // YouTube specific fullscreen detection
+    const ytPlayerFullscreen =
+      document.querySelector('.html5-video-player.ytp-fullscreen') !== null;
+
+    // Video element specific fullscreen
+    const videoElement = document.querySelector('video');
+    const videoFullscreen =
+      videoElement &&
+      (videoElement.webkitDisplayingFullscreen ||
+        videoElement.mozDisplayingFullscreen ||
+        (videoElement.offsetWidth === screen.width && videoElement.offsetHeight === screen.height));
+
+    // Theater mode (not fullscreen but might be useful for positioning)
+    const theaterMode = document.querySelector('.html5-video-player.ytp-large-width-mode') !== null;
+
+    const result = standardFullscreen || ytPlayerFullscreen || videoFullscreen;
+
+    if (result) {
+      console.log('Vivideo: Fullscreen mode detected:', {
+        standard: standardFullscreen,
+        youtube: ytPlayerFullscreen,
+        video: videoFullscreen,
+        theater: theaterMode
+      });
+    }
+
+    return result;
+  }
+
+  // Show profile change notification
+  showProfileNotification(profileName) {
+    console.log('Vivideo: Showing profile notification for:', profileName);
+
+    // Use enhanced fullscreen detection
+    const isFullscreen = this.isVideoFullscreen();
+
+    // Create or get notification element
+    let notification = document.querySelector('#vivideo-profile-notification');
+    if (!notification) {
+      notification = document.createElement('div');
+      notification.id = 'vivideo-profile-notification';
+
+      // Base styles
+      const baseStyles = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(40, 44, 52, 0.95);
+        color: #61dafb;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-family: 'Orbitron', monospace;
+        font-size: 14px;
+        font-weight: 500;
+        box-shadow: 0 4px 20px rgba(97, 218, 251, 0.3);
+        border: 1px solid rgba(97, 218, 251, 0.5);
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        pointer-events: none;
+        backdrop-filter: blur(10px);
+      `;
+
+      // Adjust z-index for fullscreen
+      const zIndex = isFullscreen ? '2147483647' : '10000';
+      notification.style.cssText = baseStyles + `z-index: ${zIndex};`;
+
+      // Use document.body for fullscreen to ensure visibility
+      const container = isFullscreen ? document.body : document.body;
+      container.appendChild(notification);
+    } else {
+      // Update z-index for existing notification
+      const zIndex = isFullscreen ? '2147483647' : '10000';
+      notification.style.zIndex = zIndex;
+    }
+
+    // Update content and show
+    notification.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 16px;">🎥</span>
+        <span>Profile: <strong>${profileName}</strong></span>
+        ${isFullscreen ? '<span style="font-size: 12px; opacity: 0.8;">(Fullscreen)</span>' : ''}
+      </div>
+    `;
+
+    // Animate in
+    requestAnimationFrame(() => {
+      notification.style.opacity = '1';
+      notification.style.transform = 'translateX(0)';
+    });
+
+    // Auto-hide after duration (longer in fullscreen for better visibility)
+    const hideDelay = isFullscreen ? 3000 : 2000;
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, hideDelay);
   }
 }
 

@@ -10,9 +10,9 @@ class SettingsManager {
   async exportSettings() {
     try {
       const allData = await StorageUtils.loadSettings();
-      
+
       const exportData = {
-        version: "1.0.0",
+        version: '1.0.0',
         timestamp: new Date().toISOString(),
         settings: allData.vivideoSettings || this.controller.defaultSettings,
         profiles: allData.vivideoProfiles || [],
@@ -24,20 +24,23 @@ class SettingsManager {
       // Create and download JSON file
       const dataStr = JSON.stringify(exportData, null, 2);
       const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      
+
       const fileName = `vivideo-settings-${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.json`;
-      
+
       // Use Chrome downloads API if available, otherwise fallback to anchor download
       if (typeof chrome !== 'undefined' && chrome.downloads) {
         const url = URL.createObjectURL(dataBlob);
-        chrome.downloads.download({
-          url: url,
-          filename: fileName,
-          saveAs: true
-        }, (downloadId) => {
-          URL.revokeObjectURL(url);
-          console.log('Settings exported successfully');
-        });
+        chrome.downloads.download(
+          {
+            url: url,
+            filename: fileName,
+            saveAs: true
+          },
+          (_downloadId) => {
+            URL.revokeObjectURL(url);
+            console.log('Settings exported successfully');
+          }
+        );
       } else {
         // Fallback for content script context
         const url = URL.createObjectURL(dataBlob);
@@ -69,7 +72,7 @@ class SettingsManager {
       reader.onload = async (e) => {
         try {
           const importData = JSON.parse(e.target.result);
-          
+
           // Validate import data structure
           if (!this.validateImportData(importData)) {
             reject(new Error('Nieprawidłowy format pliku ustawień'));
@@ -85,19 +88,18 @@ class SettingsManager {
             themeColors: currentData.vivideoThemeColors || this.controller.themeColors,
             appState: currentData.vivideoAppState || {}
           };
-          
+
           // Store backup in sessionStorage for potential rollback
           sessionStorage.setItem('vivideoBackup', JSON.stringify(backupData));
 
           // Import new settings
           await this.applyImportedSettings(importData);
-          
-          resolve({ 
-            success: true, 
+
+          resolve({
+            success: true,
             message: 'Ustawienia zostały zaimportowane pomyślnie!',
             profilesCount: importData.profiles ? importData.profiles.length : 0
           });
-
         } catch (error) {
           console.error('Import error:', error);
           reject(new Error('Błąd podczas importu: ' + error.message));
@@ -115,14 +117,14 @@ class SettingsManager {
   // Validate imported data structure
   validateImportData(data) {
     if (!data || typeof data !== 'object') return false;
-    
+
     // Check for required structure
     if (!data.settings && !data.profiles) return false;
-    
+
     // Validate settings if present
     if (data.settings) {
       const requiredKeys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp'];
-      const hasRequiredKeys = requiredKeys.some(key => data.settings.hasOwnProperty(key));
+      const hasRequiredKeys = requiredKeys.some((key) => Object.hasOwn(data.settings, key));
       if (!hasRequiredKeys) return false;
     }
 
@@ -257,8 +259,8 @@ class SettingsManager {
           try {
             const result = await this.importSettings(file);
             this.showMessage(
-              messageDiv, 
-              `${result.message} Zaimportowano ${result.profilesCount} profili.`, 
+              messageDiv,
+              `${result.message} Zaimportowano ${result.profilesCount} profili.`,
               'success'
             );
             // Clear file input
@@ -275,11 +277,11 @@ class SettingsManager {
   // Show message to user
   showMessage(messageDiv, text, type) {
     if (!messageDiv) return;
-    
+
     messageDiv.textContent = text;
     messageDiv.className = `settings-message ${type}`;
     messageDiv.style.display = 'block';
-    
+
     // Auto-hide success/error messages after 5 seconds
     if (type !== 'info') {
       setTimeout(() => {
@@ -298,10 +300,10 @@ class SettingsManager {
 
       const backup = JSON.parse(backupData);
       await this.applyImportedSettings(backup);
-      
+
       // Clear backup after successful restore
       sessionStorage.removeItem('vivideoBackup');
-      
+
       return { success: true, message: 'Przywrócono poprzednie ustawienia' };
     } catch (error) {
       console.error('Restore error:', error);

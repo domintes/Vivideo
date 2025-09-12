@@ -16,12 +16,17 @@ class UIHelper {
             <li><strong>Gamma:</strong> 0.1 to 3.0 - Gamma correction</li>
             <li><strong>Color Temp:</strong> -100% to +100% - Color temperature</li>
             <li><strong>Sharpness:</strong> 0% to 100% - Image sharpness</li>
+            <li><strong>Playback Speed:</strong> 0.25x to 4.0x - Video playback speed</li>
           </ul>
           <h5>Keyboard shortcuts:</h5>
           <ul>
             <li><code>Alt + V</code> - Toggle panel</li>
-            <li><code>Alt + N</code> - Next profile</li>
-            <li><code>Alt + B</code> - Previous profile</li>
+            <li><code>Alt + M</code> - Reset to DEFAULT profile</li>
+            <li><code>Alt + [</code> - Increase speed</li>
+            <li><code>Alt + ]</code> - Decrease speed</li>
+            <li><code>Alt + \\</code> - Reset speed to 1.00x</li>
+            <li><code>Alt + -</code> - Previous theme</li>
+            <li><code>Alt + =</code> - Next theme</li>
             <li>Drag header - Move panel</li>
             <li>Click outside panel - Hide panel</li>
           </ul>
@@ -95,7 +100,7 @@ class UIHelper {
       controller.settings.autoActivate = e.target.checked;
       controller.saveSettings();
       controller.saveAppState();
-      
+
       // Apply or remove filters based on checkbox state
       if (controller.settings.autoActivate) {
         controller.applyFilters();
@@ -111,7 +116,7 @@ class UIHelper {
     container.querySelector('#work-on-images-checkbox').addEventListener('change', (e) => {
       controller.settings.workOnImagesActivate = e.target.checked;
       controller.saveSettings();
-      
+
       // Apply or remove filters based on checkbox state
       if (controller.settings.workOnImagesActivate) {
         controller.filterEngine.applyFiltersToImages(controller.settings);
@@ -125,14 +130,14 @@ class UIHelper {
       controller.settings.extendedLimits = e.target.checked;
       controller.saveSettings();
       controller.saveAppState();
-      
+
       // Toggle CSS class for visual indication
       if (controller.settings.extendedLimits) {
         controller.container.classList.add('extended-limits');
       } else {
         controller.container.classList.remove('extended-limits');
       }
-      
+
       // Update slider limits and current values
       controller.updateSliderLimits();
       controller.updateUI();
@@ -161,13 +166,16 @@ class UIHelper {
     let mouseDownHandler = null;
     let mouseMoveHandler = null;
     let mouseUpHandler = null;
-    
+
     mouseDownHandler = (e) => {
       // Only start dragging if clicking on the header area, not buttons
-      if (e.target.classList.contains('vivideo-close') || e.target.classList.contains('vivideo-info')) {
+      if (
+        e.target.classList.contains('vivideo-close') ||
+        e.target.classList.contains('vivideo-info')
+      ) {
         return;
       }
-      
+
       controller.isDragging = true;
       container.classList.add('vivideo-dragging');
       const rect = container.getBoundingClientRect();
@@ -178,12 +186,14 @@ class UIHelper {
 
     mouseMoveHandler = (e) => {
       if (!controller.isDragging) return;
-      
+
       const x = e.clientX - controller.dragOffset.x;
       const y = e.clientY - controller.dragOffset.y;
-      
-      container.style.left = Math.max(0, Math.min(x, window.innerWidth - container.offsetWidth)) + 'px';
-      container.style.top = Math.max(0, Math.min(y, window.innerHeight - container.offsetHeight)) + 'px';
+
+      container.style.left =
+        Math.max(0, Math.min(x, window.innerWidth - container.offsetWidth)) + 'px';
+      container.style.top =
+        Math.max(0, Math.min(y, window.innerHeight - container.offsetHeight)) + 'px';
       container.style.right = 'auto';
       e.preventDefault();
     };
@@ -192,14 +202,14 @@ class UIHelper {
       if (controller.isDragging) {
         controller.isDragging = false;
         container.classList.remove('vivideo-dragging');
-        
+
         // Small delay to prevent immediate hiding when drag ends
         setTimeout(() => {
           controller.isDragging = false;
         }, 10);
       }
     };
-    
+
     header.addEventListener('mousedown', mouseDownHandler);
     document.addEventListener('mousemove', mouseMoveHandler);
     document.addEventListener('mouseup', mouseUpHandler);
@@ -225,50 +235,48 @@ class UIHelper {
         // CSS brightness: 1 + (value/100)
         // Casual: 0.5 to 1.8 (-50% to +80%) - usuable range
         // Extended: 0.1 to 4.0 (-90% to +300%) - technical maximum
-        return extendedLimits 
-          ? { min: -90, max: 300, step: 1 }
-          : { min: -50, max: 80, step: 1 };
-          
+        return extendedLimits ? { min: -90, max: 300, step: 1 } : { min: -50, max: 80, step: 1 };
+
       case 'contrast':
         // CSS contrast: 1 + (value/100)
         // Casual: 0.3 to 2.0 (-70% to +100%) - visible improvements
         // Extended: 0 to 5.0 (-100% to +400%) - extreme effects
-        return extendedLimits 
-          ? { min: -100, max: 400, step: 1 }
-          : { min: -70, max: 100, step: 1 };
-          
+        return extendedLimits ? { min: -100, max: 400, step: 1 } : { min: -70, max: 100, step: 1 };
+
       case 'saturation':
         // CSS saturate: max(0, 1 + (value/100))
         // Casual: 0.2 to 1.6 (-80% to +60%) - natural look
         // Extended: 0 to 3.0 (-100% to +200%) - artistic effects
-        return extendedLimits 
-          ? { min: -100, max: 200, step: 1 }
-          : { min: -80, max: 60, step: 1 };
-          
+        return extendedLimits ? { min: -100, max: 200, step: 1 } : { min: -80, max: 60, step: 1 };
+
       case 'gamma':
         // SVG feComponentTransfer gamma correction
         // Casual: 0.4 to 2.2 - practical gamma range
         // Extended: 0.1 to 4.0 - full technical range
-        return extendedLimits 
+        return extendedLimits
           ? { min: 0.1, max: 4.0, step: 0.01 }
           : { min: 0.4, max: 2.2, step: 0.01 };
-          
+
       case 'colortemp':
         // Custom algorithm for color temperature
         // Casual: -60 to +60 - noticeable but natural
         // Extended: -100 to +100 - extreme color shifts
-        return extendedLimits 
-          ? { min: -100, max: 100, step: 1 }
-          : { min: -60, max: 60, step: 1 };
-          
+        return extendedLimits ? { min: -100, max: 100, step: 1 } : { min: -60, max: 60, step: 1 };
+
       case 'sharpness':
         // SVG feConvolveMatrix sharpening
         // Casual: 0% to 60% - visible improvement without artifacts
         // Extended: 0% to 120% - aggressive sharpening
-        return extendedLimits 
-          ? { min: 0, max: 120, step: 1 }
-          : { min: 0, max: 60, step: 1 };
-          
+        return extendedLimits ? { min: 0, max: 120, step: 1 } : { min: 0, max: 60, step: 1 };
+
+      case 'speed':
+        // Video playback speed
+        // Casual: 0.5 to 2.0 - practical speed range
+        // Extended: 0.25 to 4.0 - full technical range
+        return extendedLimits
+          ? { min: 0.25, max: 4.0, step: 0.01 }
+          : { min: 0.5, max: 2.0, step: 0.01 };
+
       default:
         return { min: 0, max: 100, step: 1 };
     }

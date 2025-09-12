@@ -5,19 +5,12 @@
   "manifest_version": 3,
   "icons": {
     "16": "src/assets/icon/icon_16.png",
-    "32": "src/assets/icon/icon_32.png", 
+    "32": "src/assets/icon/icon_32.png",
     "48": "src/assets/icon/icon_48.png",
     "128": "src/assets/icon/icon_128.png"
   },
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting",
-    "downloads"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "permissions": ["storage", "activeTab", "scripting", "downloads"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
@@ -27,7 +20,7 @@
       "js": [
         "src/config.js",
         "src/utils/storage.js",
-        "src/utils/uiHelper.js", 
+        "src/utils/uiHelper.js",
         "src/components/videoControls.js",
         "src/components/profileManager.js",
         "src/components/themeManager.js",
@@ -46,21 +39,27 @@
   "commands": {
     "toggle-vivideo": {
       "suggested_key": {
-        "default": "Alt+V"
+        "default": "Alt+Shift+V"
       },
       "description": "Toggle Vivideo controls"
     },
-    "next-profile": {
+    "next-theme": {
       "suggested_key": {
-        "default": "Alt+N"
+        "default": "Alt+Shift+N"
       },
-      "description": "Next profile"
+      "description": "Switch to next theme"
     },
-    "previous-profile": {
+    "previous-theme": {
       "suggested_key": {
-        "default": "Alt+B"
+        "default": "Alt+Shift+P"
       },
-      "description": "Previous profile"
+      "description": "Switch to previous theme"
+    },
+    "default-profile": {
+      "suggested_key": {
+        "default": "Alt+Shift+M"
+      },
+      "description": "Toggle default profile"
     }
   }
 }

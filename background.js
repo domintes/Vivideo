@@ -27,7 +27,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true;
   }
-  
+
   if (request.action === 'set-storage') {
     chrome.storage.sync.set(request.data, () => {
       sendResponse({ success: true });

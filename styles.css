@@ -8,7 +8,8 @@
 
 @font-face {
   font-family: 'Rajdhani';
-  src: url('https://fonts.gstatic.com/s/rajdhani/v15/LDI2apCSOBg7S-QT7q4AOeekWPrP.woff2') format('woff2');
+  src: url('https://fonts.gstatic.com/s/rajdhani/v15/LDI2apCSOBg7S-QT7q4AOeekWPrP.woff2')
+    format('woff2');
   font-weight: 300 700;
   font-display: swap;
 }
@@ -39,7 +40,7 @@
   right: 0;
   bottom: 0;
   opacity: 0.1;
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 191, 255, 0.3) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 191, 255, 0.3) 1px, transparent 1px);
   background-size: 20px 20px;
@@ -49,14 +50,18 @@
 }
 
 .vivideo-container.vivideo-theme-cybernetic::before {
-  background-image: 
+  background-image:
     linear-gradient(rgba(0, 255, 65, 0.3) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 255, 65, 0.3) 1px, transparent 1px);
 }
 
 @keyframes grid-move {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(20px, 20px); }
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(20px, 20px);
+  }
 }
 
 /* Casual Theme (Default) */
@@ -64,8 +69,8 @@
   background: linear-gradient(135deg, #0a0a23 0%, #1a1a3e 50%, #0d1b3d 100%);
   color: #00bfff;
   border: 1px solid rgba(0, 191, 255, 0.4);
-  box-shadow: 
-    0 0 25px rgba(0, 191, 255, 0.4), 
+  box-shadow:
+    0 0 25px rgba(0, 191, 255, 0.4),
     0 10px 35px rgba(0, 0, 0, 0.8),
     inset 0 1px 0 rgba(0, 191, 255, 0.2);
 }
@@ -121,7 +126,7 @@
 
 .vivideo-container.vivideo-theme-casual .vivideo-slider::-webkit-slider-thumb {
   background: linear-gradient(135deg, #00bfff, #0080ff);
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(0, 191, 255, 0.6),
     0 0 25px rgba(0, 191, 255, 0.3);
   border: 2px solid #00bfff;
@@ -205,8 +210,8 @@
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0d1421 100%);
   color: #00ff41;
   border: 1px solid rgba(0, 255, 65, 0.4);
-  box-shadow: 
-    0 0 25px rgba(0, 255, 65, 0.4), 
+  box-shadow:
+    0 0 25px rgba(0, 255, 65, 0.4),
     0 10px 35px rgba(0, 0, 0, 0.8),
     inset 0 1px 0 rgba(0, 255, 65, 0.2);
 }
@@ -264,7 +269,7 @@
 
 .vivideo-container.vivideo-theme-cybernetic .vivideo-slider::-webkit-slider-thumb {
   background: linear-gradient(135deg, #00ff41, #00cc33);
-  box-shadow: 
+  box-shadow:
     0 0 15px rgba(0, 255, 65, 0.6),
     0 0 25px rgba(0, 255, 65, 0.3);
   border: 2px solid #00ff41;
@@ -420,6 +425,19 @@
   }
 }
 
+@keyframes profile-scroll-default {
+  from {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
 .vivideo-container.vivideo-visible {
   display: block;
 }
@@ -450,7 +468,7 @@
   flex: 1;
 }
 
-.vivideo-header .vivideo-close, 
+.vivideo-header .vivideo-close,
 .vivideo-header .vivideo-info {
   background: none;
   border: none;
@@ -477,7 +495,9 @@
 
 .vivideo-header .vivideo-close:hover {
   color: #33ffcc;
-  text-shadow: 0 0 10px #00ffac, 0 0 20px #00ffac;
+  text-shadow:
+    0 0 10px #00ffac,
+    0 0 20px #00ffac;
   transform: scale(1.1);
 }
 
@@ -487,7 +507,9 @@
 
 .vivideo-header .vivideo-info:hover {
   color: #33ffcc;
-  text-shadow: 0 0 10px #00ffac, 0 0 20px #00ffac;
+  text-shadow:
+    0 0 10px #00ffac,
+    0 0 20px #00ffac;
   transform: scale(1.1);
 }
 
@@ -579,9 +601,18 @@
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.1); opacity: 0.1; }
-  100% { transform: scale(1); opacity: 0.3; }
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
 }
 
 .vivideo-info-content h4 {
@@ -967,6 +998,21 @@
   display: block;
 }
 
+.vivideo-profile-type {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vivideo-profile-item.default-profile {
+  border-left: 3px solid rgba(255, 255, 255, 0.3);
+}
+
 .vivideo-profile-delete {
   background: none;
   border: none;
@@ -1195,9 +1241,15 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 @keyframes pulse-orange {
-  0% { opacity: 0.8; }
-  50% { opacity: 1; }
-  100% { opacity: 0.8; }
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.8;
+  }
 }
 
 /* Theme Color Picker Styles */
@@ -1219,25 +1271,26 @@ video:-ms-fullscreen .vivideo-container {
   font-family: 'Rajdhani', monospace;
 }
 
-.vivideo-theme-color-picker input[type="range"] {
+.vivideo-theme-color-picker input[type='range'] {
   width: 100%;
   height: 8px;
   border-radius: 4px;
   outline: none;
-  background: linear-gradient(to right, 
-    hsl(0, 100%, 50%), 
-    hsl(60, 100%, 50%), 
-    hsl(120, 100%, 50%), 
-    hsl(180, 100%, 50%), 
-    hsl(240, 100%, 50%), 
-    hsl(300, 100%, 50%), 
+  background: linear-gradient(
+    to right,
+    hsl(0, 100%, 50%),
+    hsl(60, 100%, 50%),
+    hsl(120, 100%, 50%),
+    hsl(180, 100%, 50%),
+    hsl(240, 100%, 50%),
+    hsl(300, 100%, 50%),
     hsl(360, 100%, 50%)
   );
   appearance: none;
   margin-bottom: 8px;
 }
 
-.vivideo-theme-color-picker input[type="range"]::-webkit-slider-thumb {
+.vivideo-theme-color-picker input[type='range']::-webkit-slider-thumb {
   width: 18px;
   height: 18px;
   border-radius: 50%;
@@ -1253,7 +1306,15 @@ video:-ms-fullscreen .vivideo-container {
   height: 20px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.1) 25%, rgba(255,255,255,0.1) 50%, transparent 50%, transparent 75%, rgba(255,255,255,0.1) 75%);
+  background: linear-gradient(
+    45deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 50%,
+    transparent 75%,
+    rgba(255, 255, 255, 0.1) 75%
+  );
   background-size: 10px 10px;
 }
 
@@ -1319,7 +1380,7 @@ video:-ms-fullscreen .vivideo-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 15px;
+  padding: 4px;
   margin: 8px 0;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
@@ -1424,6 +1485,10 @@ video:-ms-fullscreen .vivideo-container {
   animation: profile-scroll-prev 0.4s ease;
 }
 
+.active-profile-display.scroll-default {
+  animation: profile-scroll-default 0.4s ease;
+}
+
 /* Custom scrollbar styling */
 .vivideo-container::-webkit-scrollbar {
   width: 8px;
@@ -1462,7 +1527,7 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 button.vivideo-close {
-  border: none; 
+  border: none;
 }
 
 /* Settings Management Styles */
@@ -1488,7 +1553,8 @@ button.vivideo-close {
   margin-bottom: 15px;
 }
 
-.export-btn, .import-btn {
+.export-btn,
+.import-btn {
   padding: 12px 16px;
   border-radius: 6px;
   font-size: 14px;
@@ -1499,12 +1565,14 @@ button.vivideo-close {
   background: rgba(255, 255, 255, 0.1);
 }
 
-.export-btn:hover, .import-btn:hover {
+.export-btn:hover,
+.import-btn:hover {
   background: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
 }
 
-.export-btn:active, .import-btn:active {
+.export-btn:active,
+.import-btn:active {
   transform: translateY(0);
 }
 
@@ -1663,6 +1731,18 @@ button.vivideo-close {
   gap: 10px;
 }
 
+.vivideo-checkbox-container.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.vivideo-checkbox-container.inline .vivideo-checkbox-text {
+  font-size: 12px;
+  font-weight: 400;
+}
+
 .vivideo-checkbox {
   width: 16px;
   height: 16px;
@@ -1776,10 +1856,12 @@ button.vivideo-close {
   left: 50%;
   width: 2px;
   height: 100%;
-  background: linear-gradient(to bottom, 
+  background: linear-gradient(
+    to bottom,
     rgba(255, 255, 255, 0.8) 0%,
     rgba(255, 255, 255, 0.4) 50%,
-    rgba(255, 255, 255, 0.8) 100%);
+    rgba(255, 255, 255, 0.8) 100%
+  );
   z-index: 10;
   pointer-events: none;
   transform: translateX(-1px);

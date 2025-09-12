@@ -117,6 +117,22 @@ class VideoControls {
         </div>
       </div>
 
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Playback Speed</span>
+          <span class="vivideo-value" id="speed-value">1.00x</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="speed-slider" 
+                 min="0.25" max="4.0" value="1.0" step="0.05">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="speed-input" 
+                 placeholder="1.00" maxlength="4">
+          <button class="vivideo-reset-single" data-control="speed" title="Reset speed">↺</button>
+        </div>
+      </div>
+
       <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
       </div>
     `;
@@ -129,7 +145,7 @@ class VideoControls {
     });
 
     // Single reset buttons
-    container.querySelectorAll('.vivideo-reset-single').forEach(btn => {
+    container.querySelectorAll('.vivideo-reset-single').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const control = e.target.getAttribute('data-control');
         this.controller.resetSingle(control);
@@ -140,34 +156,42 @@ class VideoControls {
   }
 
   bindControlEvents(container) {
-    const controls = ['brightness', 'contrast', 'saturation', 'gamma', 'colortemp', 'sharpness'];
-    
-    controls.forEach(control => {
+    const controls = [
+      'brightness',
+      'contrast',
+      'saturation',
+      'gamma',
+      'colortemp',
+      'sharpness',
+      'speed'
+    ];
+
+    controls.forEach((control) => {
       const slider = container.querySelector(`#${control}-slider`);
       const input = container.querySelector(`#${control}-input`);
-      
+
       slider.addEventListener('input', (e) => {
         this.controller.updateControl(control, parseFloat(e.target.value));
       });
-      
+
       // Specjalna obsługa dla gamma input z lepszą nawigacją
       if (control === 'gamma') {
         let cursorPosition = 0;
-        
+
         input.addEventListener('focus', (e) => {
           // Zapisz pozycję kursora przy fokusie
           setTimeout(() => {
             cursorPosition = e.target.selectionStart;
           }, 10);
         });
-        
+
         input.addEventListener('keydown', (e) => {
           if (e.key >= '0' && e.key <= '9') {
             e.preventDefault();
             const currentValue = input.value;
             const newValue = this.insertDigitAtPosition(currentValue, e.key, cursorPosition);
             const numValue = parseFloat(newValue);
-            
+
             if (!isNaN(numValue) && numValue >= 0.1 && numValue <= 3.0) {
               input.value = newValue;
               this.controller.updateControl(control, numValue);
@@ -198,10 +222,69 @@ class VideoControls {
             }
           }
         });
-        
+
         input.addEventListener('click', (e) => {
           cursorPosition = e.target.selectionStart;
           // Dostosuj pozycję kursora aby ominąć przecinek
+          if (cursorPosition === 2) {
+            cursorPosition = 1;
+            setTimeout(() => {
+              input.setSelectionRange(cursorPosition, cursorPosition);
+            }, 10);
+          }
+        });
+      } else if (control === 'speed') {
+        // Special handling for speed input with better navigation
+        let cursorPosition = 0;
+
+        input.addEventListener('focus', (e) => {
+          // Save cursor position on focus
+          setTimeout(() => {
+            cursorPosition = e.target.selectionStart;
+          }, 10);
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key >= '0' && e.key <= '9') {
+            e.preventDefault();
+            const currentValue = input.value;
+            const newValue = this.insertDigitAtPosition(currentValue, e.key, cursorPosition);
+            const numValue = parseFloat(newValue);
+
+            if (!isNaN(numValue) && numValue >= 0.25 && numValue <= 4.0) {
+              input.value = newValue;
+              this.controller.updateControl(control, numValue);
+              // Move cursor right after decimal
+              if (cursorPosition === 1) cursorPosition = 3;
+              else if (cursorPosition < 4) cursorPosition++;
+              setTimeout(() => {
+                input.setSelectionRange(cursorPosition, cursorPosition);
+              }, 10);
+            }
+          } else if (e.key === 'ArrowLeft' && cursorPosition > 0) {
+            cursorPosition = cursorPosition === 3 ? 1 : cursorPosition - 1;
+            setTimeout(() => {
+              input.setSelectionRange(cursorPosition, cursorPosition);
+            }, 10);
+          } else if (e.key === 'ArrowRight' && cursorPosition < 4) {
+            cursorPosition = cursorPosition === 1 ? 3 : cursorPosition + 1;
+            setTimeout(() => {
+              input.setSelectionRange(cursorPosition, cursorPosition);
+            }, 10);
+          } else if (e.key === 'Backspace') {
+            e.preventDefault();
+            if (cursorPosition > 0) {
+              cursorPosition = cursorPosition === 3 ? 1 : cursorPosition - 1;
+              setTimeout(() => {
+                input.setSelectionRange(cursorPosition, cursorPosition);
+              }, 10);
+            }
+          }
+        });
+
+        input.addEventListener('click', (e) => {
+          cursorPosition = e.target.selectionStart;
+          // Adjust cursor position to skip decimal
           if (cursorPosition === 2) {
             cursorPosition = 1;
             setTimeout(() => {
@@ -218,7 +301,7 @@ class VideoControls {
           }
         });
       }
-      
+
       input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           e.target.blur();
@@ -232,7 +315,7 @@ class VideoControls {
     const parts = currentValue.split('.');
     let wholePart = parts[0] || '1';
     let decimalPart = parts[1] || '00';
-    
+
     if (position === 0) {
       // Pierwsza pozycja - cyfra jedności
       wholePart = digit;
@@ -243,7 +326,7 @@ class VideoControls {
       // Druga pozycja po przecinku
       decimalPart = (decimalPart[0] || '0') + digit;
     }
-    
+
     return wholePart + '.' + decimalPart.padEnd(2, '0');
   }
 
@@ -252,7 +335,7 @@ class VideoControls {
     const brightnessSlider = container.querySelector('#brightness-slider');
     const brightnessInput = container.querySelector('#brightness-input');
     const brightnessValue = container.querySelector('#brightness-value');
-    
+
     if (brightnessSlider) {
       brightnessSlider.value = settings.brightness;
       brightnessInput.value = settings.brightness;
@@ -263,7 +346,7 @@ class VideoControls {
     const contrastSlider = container.querySelector('#contrast-slider');
     const contrastInput = container.querySelector('#contrast-input');
     const contrastValue = container.querySelector('#contrast-value');
-    
+
     if (contrastSlider) {
       contrastSlider.value = settings.contrast;
       contrastInput.value = settings.contrast;
@@ -274,7 +357,7 @@ class VideoControls {
     const saturationSlider = container.querySelector('#saturation-slider');
     const saturationInput = container.querySelector('#saturation-input');
     const saturationValue = container.querySelector('#saturation-value');
-    
+
     if (saturationSlider) {
       saturationSlider.value = settings.saturation;
       saturationInput.value = settings.saturation;
@@ -285,7 +368,7 @@ class VideoControls {
     const gammaSlider = container.querySelector('#gamma-slider');
     const gammaInput = container.querySelector('#gamma-input');
     const gammaValue = container.querySelector('#gamma-value');
-    
+
     if (gammaSlider) {
       gammaSlider.value = settings.gamma;
       gammaInput.value = settings.gamma.toFixed(2);
@@ -296,11 +379,11 @@ class VideoControls {
     const colorTempSlider = container.querySelector('#colortemp-slider');
     const colorTempInput = container.querySelector('#colortemp-input');
     const colorTempValue = container.querySelector('#colortemp-value');
-    
+
     if (colorTempSlider) {
       colorTempSlider.value = settings.colorTemp;
       colorTempInput.value = settings.colorTemp;
-      
+
       let tempText = 'Neutral';
       if (settings.colorTemp < -75) tempText = 'Very Cold';
       else if (settings.colorTemp < -40) tempText = 'Cold';
@@ -310,7 +393,7 @@ class VideoControls {
       else if (settings.colorTemp > 40) tempText = 'Warm';
       else if (settings.colorTemp > 15) tempText = 'Cozy';
       else if (settings.colorTemp > 5) tempText = 'Slightly Warm';
-      
+
       colorTempValue.textContent = tempText;
     }
 
@@ -318,11 +401,22 @@ class VideoControls {
     const sharpnessSlider = container.querySelector('#sharpness-slider');
     const sharpnessInput = container.querySelector('#sharpness-input');
     const sharpnessValue = container.querySelector('#sharpness-value');
-    
+
     if (sharpnessSlider) {
       sharpnessSlider.value = settings.sharpness;
       sharpnessInput.value = settings.sharpness;
       sharpnessValue.textContent = `${settings.sharpness}%`;
+    }
+
+    // Update speed
+    const speedSlider = container.querySelector('#speed-slider');
+    const speedInput = container.querySelector('#speed-input');
+    const speedValue = container.querySelector('#speed-value');
+
+    if (speedSlider) {
+      speedSlider.value = settings.speed || 1.0;
+      speedInput.value = (settings.speed || 1.0).toFixed(2);
+      speedValue.textContent = `${(settings.speed || 1.0).toFixed(2)}x`;
     }
   }
 }
