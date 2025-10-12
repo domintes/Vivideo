@@ -1,14 +1,10 @@
-# Vivideo - Real-time Video Enhancement
+# 🎬 Vivideo - Real-time Video Enhancement
 
-## Privacy Policy
+## 📜 Privacy Policy
 
 Vivideo does not collect, store, or transmit any personally identifiable user data.  
 All settings and enhancement profiles are stored locally in the user's browser.  
 No data is shared with third parties.
-
-## Description
-
-A Chromium-based browser extension that allows real-time adjustment of brightness, contrast, saturation, color temperature, and gamma for all videos played in the browser.
 
 ## ✨ Features
 
