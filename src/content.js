@@ -32,7 +32,9 @@ if (window !== window.top) {
         colorTemp: 0,
         sharpness: 0,
         speed: 1.0,
+        previousSpeed: 1.0,
         speedStep: 0.25, // Configurable speed increment/decrement
+        autoApplyPreviousSpeed: false,
         autoActivate: true,
         workOnImagesActivate: true,
         activeProfile: null,
@@ -79,6 +81,7 @@ if (window !== window.top) {
       this.themeManager = null;
       this.filterEngine = null;
       this.settingsManager = null;
+      this.speedController = null;
 
       // Set global reference
       window.vivideoController = this;
@@ -236,6 +239,11 @@ if (window !== window.top) {
         this.profileManager.showUserProfiles(this.container);
       }
 
+      // Initialize speed controller
+      if (this.speedController) {
+        this.speedController.init();
+      }
+
       this.isInitialized = true;
       console.log('Vivideo: Initialization complete');
 
@@ -263,6 +271,10 @@ if (window !== window.top) {
         console.error('VideoFilterEngine class not available');
         return false;
       }
+      if (typeof SpeedController === 'undefined') {
+        console.error('SpeedController class not available');
+        return false;
+      }
 
       // Create component instances
       this.videoControls = new VideoControls(this);
@@ -270,6 +282,7 @@ if (window !== window.top) {
       this.themeManager = new ThemeManager(this);
       this.filterEngine = new VideoFilterEngine(this);
       this.settingsManager = new SettingsManager(this);
+      this.speedController = new SpeedController(this);
 
       // (removed legacy displayDefaultProfiles behaviour) - profile list is simplified
 
@@ -397,6 +410,11 @@ if (window !== window.top) {
       this.videoControls.bindEvents(this.container);
       this.profileManager.bindEvents(this.container);
       this.settingsManager.bindEvents(this.container);
+      
+      // Bind speed controller events
+      if (this.speedController) {
+        this.speedController.bindSpeedControlEvents(this.container);
+      }
 
       // Only bind theme events if themes panel is enabled
       if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
@@ -506,7 +524,11 @@ if (window !== window.top) {
 
       // Special handling for speed control
       if (control === 'speed') {
-        this.updateVideoSpeed(value);
+        if (this.speedController) {
+          this.speedController.setSpeed(value);
+        } else {
+          this.updateVideoSpeed(value);
+        }
       }
 
       // Clear any pending auto-detection timeout to prevent rapid updates
@@ -583,6 +605,11 @@ if (window !== window.top) {
       UIHelper.updateCheckboxes(this.container, this.settings);
       this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
       this.themeManager.updateActiveThemeDisplay(this.container, this.currentTheme);
+      
+      // Update speed controller UI
+      if (this.speedController) {
+        this.speedController.updateUI(this.container);
+      }
     }
 
     applyFilters() {
@@ -630,7 +657,34 @@ if (window !== window.top) {
         return;
       }
       this.filterEngine.observeVideos(() => {
-        if (this.settings.autoActivate || this.isVisible) {
+        console.log('Vivideo: New video detected, autoActivate:', this.settings.autoActivate, 'isVisible:', this.isVisible);
+        
+        // Always apply filters and speed if autoActivate is enabled
+        if (this.settings.autoActivate) {
+          // Apply filters
+          this.applyFilters();
+          
+          // Apply speed through speed controller
+          if (this.speedController) {
+            setTimeout(() => {
+              const videos = this.filterEngine.findVideos();
+              videos.forEach(video => {
+                if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
+                  this.speedController.applySpeedToVideo(video, this.speedController.getPreviousSpeed());
+                } else {
+                  this.speedController.applySpeedToVideo(video, this.speedController.getSpeed());
+                }
+              });
+            }, 100);
+          }
+          
+          // Attach play listeners
+          if (this.filterEngine && typeof this.filterEngine.attachPlayListeners === 'function') {
+            this.filterEngine.attachPlayListeners();
+          }
+        }
+        // If panel is visible but autoActivate is off, still apply current settings
+        else if (this.isVisible) {
           this.applyFilters();
           if (this.filterEngine && typeof this.filterEngine.attachPlayListeners === 'function') {
             this.filterEngine.attachPlayListeners();
@@ -647,6 +701,7 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        speed: 1.0,
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
         extendedLimits: this.settings.extendedLimits,
@@ -654,6 +709,13 @@ if (window !== window.top) {
       };
 
       this.filterEngine.removeFilters();
+      
+      // Sync speed controller with reset settings
+      if (this.speedController) {
+        this.speedController.currentSpeed = 1.0; // Default speed
+        this.speedController.applySpeedToAllVideos(1.0);
+      }
+      
       this.updateUI();
       this.applyFilters();
       this.saveSettings();
@@ -684,6 +746,12 @@ if (window !== window.top) {
         extendedLimits: this.settings.extendedLimits,
         activeProfile: 'DEFAULT'
       };
+
+      // Sync speed controller with default settings
+      if (this.speedController) {
+        this.speedController.currentSpeed = 1.0; // Default speed
+        this.speedController.applySpeedToAllVideos(1.0);
+      }
 
       this.updateUI();
       this.applyFilters();
@@ -884,6 +952,12 @@ if (window !== window.top) {
           'Vivideo: Profile settings loaded, active profile:',
           this.settings.activeProfile
         );
+
+        // Sync speed controller with loaded profile settings
+        if (this.speedController && this.settings.speed !== undefined) {
+          this.speedController.currentSpeed = this.settings.speed;
+          this.speedController.applySpeedToAllVideos(this.settings.speed);
+        }
 
         // Force immediate UI update
         this.updateUI();
@@ -1112,6 +1186,11 @@ if (window !== window.top) {
       // Clean up filters and SVG
       if (this.filterEngine) {
         this.filterEngine.removeFilters();
+      }
+
+      // Clean up speed controller
+      if (this.speedController) {
+        this.speedController.cleanup();
       }
 
       // Remove dynamic theme styles

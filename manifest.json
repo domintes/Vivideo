@@ -27,6 +27,7 @@
         "src/components/themeManager.js",
         "src/components/settingsManager.js",
         "src/components/videoFilterEngine.js",
+        "src/components/speedController.js",
         "src/content.js"
       ],
       "css": ["styles.css"],

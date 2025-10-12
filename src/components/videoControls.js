@@ -117,21 +117,7 @@ class VideoControls {
         </div>
       </div>
 
-      <div class="vivideo-control">
-        <div class="vivideo-label">
-          <span>Playback Speed</span>
-          <span class="vivideo-value" id="speed-value">1.00x</span>
-        </div>
-        <div class="vivideo-slider-container">
-          <span>◄</span>
-          <input type="range" class="vivideo-slider" id="speed-slider" 
-                 min="0.25" max="4.0" value="1.0" step="0.05">
-          <span>►</span>
-          <input type="text" class="vivideo-input" id="speed-input" 
-                 placeholder="1.00" maxlength="4">
-          <button class="vivideo-reset-single" data-control="speed" title="Reset speed">↺</button>
-        </div>
-      </div>
+      ${this.controller.speedController ? this.controller.speedController.createSpeedControlHTML() : ''}
 
       <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
       </div>
@@ -162,8 +148,7 @@ class VideoControls {
       'saturation',
       'gamma',
       'colortemp',
-      'sharpness',
-      'speed'
+      'sharpness'
     ];
 
     controls.forEach((control) => {
@@ -226,65 +211,6 @@ class VideoControls {
         input.addEventListener('click', (e) => {
           cursorPosition = e.target.selectionStart;
           // Dostosuj pozycję kursora aby ominąć przecinek
-          if (cursorPosition === 2) {
-            cursorPosition = 1;
-            setTimeout(() => {
-              input.setSelectionRange(cursorPosition, cursorPosition);
-            }, 10);
-          }
-        });
-      } else if (control === 'speed') {
-        // Special handling for speed input with better navigation
-        let cursorPosition = 0;
-
-        input.addEventListener('focus', (e) => {
-          // Save cursor position on focus
-          setTimeout(() => {
-            cursorPosition = e.target.selectionStart;
-          }, 10);
-        });
-
-        input.addEventListener('keydown', (e) => {
-          if (e.key >= '0' && e.key <= '9') {
-            e.preventDefault();
-            const currentValue = input.value;
-            const newValue = this.insertDigitAtPosition(currentValue, e.key, cursorPosition);
-            const numValue = parseFloat(newValue);
-
-            if (!isNaN(numValue) && numValue >= 0.25 && numValue <= 4.0) {
-              input.value = newValue;
-              this.controller.updateControl(control, numValue);
-              // Move cursor right after decimal
-              if (cursorPosition === 1) cursorPosition = 3;
-              else if (cursorPosition < 4) cursorPosition++;
-              setTimeout(() => {
-                input.setSelectionRange(cursorPosition, cursorPosition);
-              }, 10);
-            }
-          } else if (e.key === 'ArrowLeft' && cursorPosition > 0) {
-            cursorPosition = cursorPosition === 3 ? 1 : cursorPosition - 1;
-            setTimeout(() => {
-              input.setSelectionRange(cursorPosition, cursorPosition);
-            }, 10);
-          } else if (e.key === 'ArrowRight' && cursorPosition < 4) {
-            cursorPosition = cursorPosition === 1 ? 3 : cursorPosition + 1;
-            setTimeout(() => {
-              input.setSelectionRange(cursorPosition, cursorPosition);
-            }, 10);
-          } else if (e.key === 'Backspace') {
-            e.preventDefault();
-            if (cursorPosition > 0) {
-              cursorPosition = cursorPosition === 3 ? 1 : cursorPosition - 1;
-              setTimeout(() => {
-                input.setSelectionRange(cursorPosition, cursorPosition);
-              }, 10);
-            }
-          }
-        });
-
-        input.addEventListener('click', (e) => {
-          cursorPosition = e.target.selectionStart;
-          // Adjust cursor position to skip decimal
           if (cursorPosition === 2) {
             cursorPosition = 1;
             setTimeout(() => {
