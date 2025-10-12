@@ -26,7 +26,7 @@ A Chromium-based browser extension that allows real-time adjustment of brightnes
 
 ## 📋 Usage
 
-### Basic Controls:
+### Basic Controls
 
 - **Click the extension icon** - Opens the info page and the button to launch the control panel
 - **Alt + V** - Toggles the visibility of the control panel
@@ -35,7 +35,7 @@ A Chromium-based browser extension that allows real-time adjustment of brightnes
 - **Click outside the panel** - Automatically hides the panel
 - **ⓘ Button** - Shows/hides information in the panel
 
-### Parameter Adjustment:
+### Parameter Adjustment
 
 - **Sliders** - Drag to change the value
 - **Text fields** - Enter an exact value
@@ -81,6 +81,3 @@ Open `test.html` in your browser to test all extension features.
 - **Automatic video detection** - Extension automatically finds all video elements on the page
 - **Shadow DOM support** - Works with advanced web components
 - **Settings memory** - Settings are preserved between sessions
-
-## 📁 File Structure
-
