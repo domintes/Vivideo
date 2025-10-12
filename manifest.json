@@ -3,6 +3,7 @@
   "description": "Real-time video enhancement with brightness, contrast, saturation, gamma, and color temperature controls",
   "version": "1.0.0",
   "manifest_version": 3,
+  "author": "domintes",
   "icons": {
     "16": "src/assets/icon/icon_16.png",
     "32": "src/assets/icon/icon_32.png",
@@ -34,32 +35,33 @@
     }
   ],
   "action": {
-    "default_title": "Vivideo Controls"
+    "default_title": "Vivideo Controls",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "src/assets/icon/icon_16.png",
+      "32": "src/assets/icon/icon_32.png",
+      "48": "src/assets/icon/icon_48.png",
+      "128": "src/assets/icon/icon_128.png"
+    }
   },
   "commands": {
     "toggle-vivideo": {
       "suggested_key": {
-        "default": "Alt+Shift+V"
+        "default": "Alt+V"
       },
       "description": "Toggle Vivideo controls"
     },
-    "next-theme": {
+    "next-profile": {
       "suggested_key": {
-        "default": "Alt+Shift+N"
+        "default": "Alt+B"
       },
-      "description": "Switch to next theme"
+      "description": "Switch to next profile"
     },
-    "previous-theme": {
+    "prev-profile": {
       "suggested_key": {
-        "default": "Alt+Shift+P"
+        "default": "Alt+C"
       },
-      "description": "Switch to previous theme"
-    },
-    "default-profile": {
-      "suggested_key": {
-        "default": "Alt+Shift+M"
-      },
-      "description": "Toggle default profile"
+      "description": "Switch to previous profile"
     }
   }
 }

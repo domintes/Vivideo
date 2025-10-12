@@ -37,13 +37,12 @@ class ProfileManager {
     return /*html*/ `
       <!-- Profiles Section -->
       <div class="vivideo-bottom-controls">
-        <div class="profiles-button-section button-section">
-          <button class="vivideo-control-btn compact active" id="profiles-btn" title="Video Profiles">Profiles</button>
-          <button class="vivideo-control-btn compact" id="themes-btn" title="Themes">Themes</button>
-          <button class="vivideo-control-btn compact" id="settings-btn" title="Import/Export settings">⚙️</button>
-          <div class="active-item-status active-profile-status" id="active-profile-display">
-            DEFAULT
-          </div>
+        <div class="control-buttons">
+          <button class="vivideo-control-btn themes-btn" id="themes-btn" title="Themes">Themes</button>
+          <button class="vivideo-control-btn settings-btn" id="settings-btn" title="Import/Export settings">⚙️</button>
+        </div>
+        <div class="active-item-status active-profile-status" id="active-profile-display">
+          DEFAULT
         </div>
       </div>
 
@@ -81,12 +80,7 @@ class ProfileManager {
           </label>
         </div>
 
-        <div class="vivideo-setting-item">
-          <label for="speed-step-input" class="vivideo-setting-label">Speed Change Step (Alt+[/]):</label>
-          <input type="number" id="speed-step-input" class="vivideo-setting-input" 
-                 min="0.05" max="1.0" step="0.05" value="0.25">
-          <span class="vivideo-setting-unit">x</span>
-        </div>
+
       </div>
 
       <!-- Compare Mode Section -->
@@ -123,11 +117,6 @@ class ProfileManager {
   }
 
   bindEvents(container) {
-    // Profiles button
-    container.querySelector('#profiles-btn').addEventListener('click', () => {
-      this.showProfiles(container);
-    });
-
     // Themes button
     container.querySelector('#themes-btn').addEventListener('click', () => {
       this.showThemes(container);
@@ -204,55 +193,17 @@ class ProfileManager {
     );
   }
 
-  // Show profiles panel
-  showProfiles(container) {
-    this.showingProfiles = true;
-
-    // Update button states
-    const profilesBtn = container.querySelector('#profiles-btn');
-    const themesBtn = container.querySelector('#themes-btn');
-
-    if (profilesBtn && themesBtn) {
-      profilesBtn.classList.add('active');
-      themesBtn.classList.remove('active');
-
-      // Show profiles panel, hide themes
-      const profilesPanel = container.querySelector('#profiles-panel');
-      if (profilesPanel) {
-        profilesPanel.style.display = 'block';
-      }
-
-      // Hide themes panel if it exists
-      this.controller.themesVisible = false;
-      this.controller.updateActiveStates();
-
-      // Update profile list
-      this.updateProfilesList(container);
-
-      console.log('Vivideo: Switched to Profiles view');
-    }
-  }
-
   // Show themes panel
   showThemes(container) {
     this.showingProfiles = false;
 
     // Update button states
-    const profilesBtn = container.querySelector('#profiles-btn');
     const themesBtn = container.querySelector('#themes-btn');
-
-    if (profilesBtn && themesBtn) {
-      profilesBtn.classList.remove('active');
+    if (themesBtn) {
       themesBtn.classList.add('active');
 
-      // Hide profiles panel
-      const profilesPanel = container.querySelector('#profiles-panel');
-      if (profilesPanel) {
-        profilesPanel.style.display = 'none';
-      }
-
       // Show themes panel
-      this.controller.showThemes();
+      this.controller.toggleThemes();
 
       console.log('Vivideo: Switched to Themes view');
     }
@@ -265,11 +216,59 @@ class ProfileManager {
 
     profileList.innerHTML = '';
 
+    // Add User Profiles Section
+    if (this.controller.profiles.length > 0) {
+      const userSection = document.createElement('div');
+      userSection.className = 'profile-section';
+      userSection.innerHTML = '<div class="profile-section-header">👤 User Profiles</div>';
+      profileList.appendChild(userSection);
+
+      // Add user profiles
+      this.controller.profiles.forEach((profile, index) => {
+        const profileItem = document.createElement('div');
+        profileItem.className = 'vivideo-profile-item user-profile';
+        profileItem.setAttribute('data-index', index);
+        const isActive = this.controller.settings.activeProfile === profile.name;
+        if (isActive) profileItem.classList.add('vivideo-profile-active');
+
+        const displayName = profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
+
+        profileItem.innerHTML = `
+          <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
+          <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
+        `;
+
+        // Click loads profile immediately
+        profileItem.addEventListener('click', (e) => {
+          if (e.target.classList.contains('vivideo-profile-delete')) return;
+          e.preventDefault();
+          e.stopPropagation();
+          container.querySelectorAll('.vivideo-profile-item').forEach((item) => item.classList.remove('vivideo-profile-active'));
+          profileItem.classList.add('vivideo-profile-active');
+          this.controller.loadProfile(profile);
+        });
+
+        // Delete
+        profileItem.querySelector('.vivideo-profile-delete').addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+          this.controller.deleteProfile(idx);
+        });
+
+        profileList.appendChild(profileItem);
+      });
+    }
+
+    // Add Default Built-in Section
+    const defaultSection = document.createElement('div');
+    defaultSection.className = 'profile-section';
+    defaultSection.innerHTML = '<div class="profile-section-header">🛠️ Default Built-in</div>';
+    profileList.appendChild(defaultSection);
+
     // Add DEFAULT profile
     const defaultProfileItem = document.createElement('div');
-    defaultProfileItem.className = 'vivideo-profile-item';
-    const isDefaultActive =
-      !this.controller.settings.activeProfile && this.isDefaultProfile(this.controller.settings);
+    defaultProfileItem.className = 'vivideo-profile-item default-builtin';
+    const isDefaultActive = !this.controller.settings.activeProfile || this.controller.settings.activeProfile === 'DEFAULT';
     if (isDefaultActive) {
       defaultProfileItem.classList.add('vivideo-profile-active');
     }
@@ -279,100 +278,16 @@ class ProfileManager {
       <span class="vivideo-profile-badge">Built-in</span>
     `;
 
-    // Default profile cannot be edited, removed or reordered. Click always loads it.
+    // Default profile click loads immediately
     defaultProfileItem.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      // Visual active state
-      container
-        .querySelectorAll('.vivideo-profile-item')
-        .forEach((item) => item.classList.remove('vivideo-profile-active'));
+      container.querySelectorAll('.vivideo-profile-item').forEach((item) => item.classList.remove('vivideo-profile-active'));
       defaultProfileItem.classList.add('vivideo-profile-active');
-      // Load immediately without race conditions
       this.controller.loadProfile(this.controller.defaultProfile);
     });
 
     profileList.appendChild(defaultProfileItem);
-
-    // Add default profile if displayDefaultProfiles is true
-    // (legacy built-in default profiles removed) - only single DEFAULT above
-
-    // Add user profiles with delete buttons
-    // Add user profiles with drag handle and delete button
-    this.controller.profiles.forEach((profile, index) => {
-      const profileItem = document.createElement('div');
-      profileItem.className = 'vivideo-profile-item user-profile';
-      profileItem.setAttribute('data-index', index);
-      const isActive = this.controller.settings.activeProfile === profile.name;
-      if (isActive) profileItem.classList.add('vivideo-profile-active');
-
-      const displayName =
-        profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
-
-      profileItem.innerHTML = `
-        <span class="vivideo-drag-handle" title="Drag to reorder">\u2630</span>
-        <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
-        <div class="vivideo-profile-actions">
-          <button class="vivideo-profile-edit" data-index="${index}" title="Edit profile">✎</button>
-          <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
-        </div>
-      `;
-
-      // Click loads profile reliably
-      profileItem.querySelector('.vivideo-profile-name').addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        container
-          .querySelectorAll('.vivideo-profile-item')
-          .forEach((item) => item.classList.remove('vivideo-profile-active'));
-        profileItem.classList.add('vivideo-profile-active');
-        // ensure immediate load
-        this.controller.loadProfile(profile);
-      });
-
-      // Edit
-      profileItem.querySelector('.vivideo-profile-edit').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-        this.editProfile(idx);
-      });
-
-      // Delete
-      profileItem.querySelector('.vivideo-profile-delete').addEventListener('click', (e) => {
-        e.stopPropagation();
-        const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-        this.controller.deleteProfile(idx);
-      });
-
-      // Drag & drop reordering
-      const handle = profileItem.querySelector('.vivideo-drag-handle');
-      handle.setAttribute('draggable', 'true');
-      handle.addEventListener('dragstart', (ev) => {
-        ev.dataTransfer.setData('text/plain', String(index));
-        profileItem.classList.add('dragging');
-      });
-      handle.addEventListener('dragend', (ev) => {
-        profileItem.classList.remove('dragging');
-      });
-
-      profileItem.addEventListener('dragover', (ev) => {
-        ev.preventDefault();
-      });
-
-      profileItem.addEventListener('drop', (ev) => {
-        ev.preventDefault();
-        const fromIndex = parseInt(ev.dataTransfer.getData('text/plain'));
-        const toIndex = parseInt(profileItem.getAttribute('data-index'));
-        if (!isNaN(fromIndex) && !isNaN(toIndex) && fromIndex !== toIndex) {
-          const moved = this.controller.profiles.splice(fromIndex, 1)[0];
-          this.controller.profiles.splice(toIndex, 0, moved);
-          this.controller.saveProfiles();
-          this.updateProfilesList(container);
-        }
-      });
-
-      profileList.appendChild(profileItem);
-    });
 
     // Update placeholder for new profile name
     const profileNameInput = container.querySelector('#profile-name');
@@ -704,35 +619,25 @@ class ProfileManager {
   nextProfile() {
     console.log('Vivideo: Next profile shortcut (Alt+B)');
 
-    let targetProfiles;
-    let currentIndex = -1;
+    // Build target profiles list: user profiles + one default built-in profile
+    let targetProfiles = [...this.controller.profiles]; // User profiles first
+    targetProfiles.push({ name: 'DEFAULT', settings: { ...this.controller.defaultSettings } }); // Add default built-in at end
 
-    // Build target profiles list
-    targetProfiles = [this.controller.defaultProfile];
-
-    // Add default profile if displayDefaultProfiles is true
-    if (this.displayDefaultProfiles) {
-      const defaultProfiles = this.createDefaultProfiles();
-      // Skip the neutral "Default" as it's already added
-      targetProfiles.push(...defaultProfiles.filter((p) => p.name !== 'Default'));
-    }
-
-    // Add user profiles
-    targetProfiles.push(...this.controller.profiles);
-
-    console.log('Vivideo: Cycling through all available profiles');
+    console.log('Vivideo: Cycling through user profiles + default built-in');
 
     // Find current profile index
-    if (!this.controller.settings.activeProfile) {
-      // Currently on DEFAULT (neutral)
-      currentIndex = 0;
+    let currentIndex = -1;
+    if (!this.controller.settings.activeProfile || this.controller.settings.activeProfile === 'DEFAULT') {
+      // Currently on DEFAULT built-in - find it at the end
+      currentIndex = targetProfiles.length - 1;
     } else {
+      // Find current user profile
       currentIndex = targetProfiles.findIndex(
         (p) => p.name === this.controller.settings.activeProfile
       );
     }
 
-    // If no profiles in the target category, do nothing
+    // If no profiles available, do nothing
     if (targetProfiles.length === 0) {
       console.log('Vivideo: No profiles to cycle through');
       return;
@@ -756,44 +661,32 @@ class ProfileManager {
 
     // Show notification if enabled
     if (this.showProfileAfterChange) {
-      this.showProfileNotification(
-        targetProfile.name === 'Default' ? 'DEFAULT' : targetProfile.name
-      );
+      this.showProfileNotification(targetProfile.name);
     }
   }
 
   previousProfile() {
     console.log('Vivideo: Previous profile shortcut (Alt+C)');
 
-    let targetProfiles;
-    let currentIndex = -1;
+    // Build target profiles list: user profiles + one default built-in profile
+    let targetProfiles = [...this.controller.profiles]; // User profiles first
+    targetProfiles.push({ name: 'DEFAULT', settings: { ...this.controller.defaultSettings } }); // Add default built-in at end
 
-    // Build target profiles list
-    targetProfiles = [this.controller.defaultProfile];
-
-    // Add default profile if displayDefaultProfiles is true
-    if (this.displayDefaultProfiles) {
-      const defaultProfiles = this.createDefaultProfiles();
-      // Skip the neutral "Default" as it's already added
-      targetProfiles.push(...defaultProfiles.filter((p) => p.name !== 'Default'));
-    }
-
-    // Add user profiles
-    targetProfiles.push(...this.controller.profiles);
-
-    console.log('Vivideo: Cycling through all available profiles');
+    console.log('Vivideo: Cycling through user profiles + default built-in');
 
     // Find current profile index
-    if (!this.controller.settings.activeProfile) {
-      // Currently on DEFAULT (neutral)
-      currentIndex = 0;
+    let currentIndex = -1;
+    if (!this.controller.settings.activeProfile || this.controller.settings.activeProfile === 'DEFAULT') {
+      // Currently on DEFAULT built-in - find it at the end
+      currentIndex = targetProfiles.length - 1;
     } else {
+      // Find current user profile
       currentIndex = targetProfiles.findIndex(
         (p) => p.name === this.controller.settings.activeProfile
       );
     }
 
-    // If no profiles in the target category, do nothing
+    // If no profiles available, do nothing
     if (targetProfiles.length === 0) {
       console.log('Vivideo: No profiles to cycle through');
       return;
@@ -817,9 +710,7 @@ class ProfileManager {
 
     // Show notification if enabled
     if (this.showProfileAfterChange) {
-      this.showProfileNotification(
-        targetProfile.name === 'Default' ? 'DEFAULT' : targetProfile.name
-      );
+      this.showProfileNotification(targetProfile.name);
     }
   }
 

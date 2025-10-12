@@ -34,9 +34,10 @@ if (window !== window.top) {
         speed: 1.0,
         speedStep: 0.25, // Configurable speed increment/decrement
         autoActivate: true,
-        workOnImagesActivate: false,
+        workOnImagesActivate: true,
         activeProfile: null,
-        extendedLimits: false,
+        extendedLimits: true,
+        toggleWithoutAlt: false,
         compareMode: false,
         compareProfile: null
       };
@@ -826,16 +827,14 @@ if (window !== window.top) {
     }
 
     updateActiveStates() {
-      const profilesBtn = this.container.querySelector('#profiles-btn');
       const themesBtn = this.container.querySelector('#themes-btn');
       const infoBtn = this.container.querySelector('.vivideo-info');
       const settingsBtn = this.container.querySelector('#settings-btn');
 
-      [profilesBtn, themesBtn, infoBtn, settingsBtn].forEach((btn) => {
+      [themesBtn, infoBtn, settingsBtn].forEach((btn) => {
         if (btn) btn.classList.remove('vivideo-active');
       });
 
-      if (this.profilesVisible && profilesBtn) profilesBtn.classList.add('vivideo-active');
       if (this.themesVisible && themesBtn) themesBtn.classList.add('vivideo-active');
       if (this.infoVisible && infoBtn) infoBtn.classList.add('vivideo-active');
       if (this.settingsManagementVisible && settingsBtn)
@@ -996,15 +995,25 @@ if (window !== window.top) {
       this.container.classList.add('vivideo-visible');
       this.container.className = `vivideo-container vivideo-theme-${this.currentTheme} vivideo-visible`;
       this.isVisible = true;
-      this.profilesVisible = false;
+      this.profilesVisible = true; // Default to profiles visible
       this.themesVisible = false;
       this.infoVisible = false;
 
-      // Hide all panels
-      ['profiles-panel', 'themes-panel', 'info-panel'].forEach((panelId) => {
+      // Hide all panels except profiles
+      ['themes-panel', 'info-panel'].forEach((panelId) => {
         const panel = this.container.querySelector(`#${panelId}`);
         if (panel) panel.style.display = 'none';
       });
+
+      // Show profiles panel by default
+      const profilesPanel = this.container.querySelector('#profiles-panel');
+      if (profilesPanel) {
+        profilesPanel.style.display = 'block';
+        profilesPanel.classList.add('panel-opening');
+        setTimeout(() => {
+          profilesPanel.classList.remove('panel-opening');
+        }, 300);
+      }
 
       // Check if we're in fullscreen and need to reposition panel
       const fullscreenElement =
@@ -1018,6 +1027,7 @@ if (window !== window.top) {
       }
 
       this.updateActiveStates();
+      this.updateProfilesList(); // Update profiles list when showing panel
       this.applyFilters();
     }
 
@@ -1199,6 +1209,26 @@ if (window !== window.top) {
       sendResponse({ success: true });
     }
 
+    if (request.action === 'next-profile') {
+      if (window.vivideoController && window.vivideoController.profileManager) {
+        console.log('Vivideo: Alt+B shortcut - Next profile');
+        window.vivideoController.profileManager.nextProfile();
+      } else {
+        console.warn('Vivideo: Controller not available for next-profile');
+      }
+      sendResponse({ success: true });
+    }
+
+    if (request.action === 'prev-profile') {
+      if (window.vivideoController && window.vivideoController.profileManager) {
+        console.log('Vivideo: Alt+C shortcut - Previous profile');
+        window.vivideoController.profileManager.previousProfile();
+      } else {
+        console.warn('Vivideo: Controller not available for prev-profile');
+      }
+      sendResponse({ success: true });
+    }
+
     return true;
   });
 
@@ -1215,76 +1245,86 @@ if (window !== window.top) {
     }
   });
 
-  // Keyboard shortcuts - ALL with Alt key to avoid typing conflicts
+  // Keyboard shortcuts - dynamic based on toggleWithoutAlt setting
   document.addEventListener('keydown', (e) => {
-    // Only handle ALT-based shortcuts to avoid conflicts with typing
-    if (!e.altKey || e.ctrlKey || e.shiftKey) return;
+    const controller = window.vivideoController;
+    const toggleWithoutAlt = controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
 
-    // Alt+V: Toggle Vivideo panel
+    // Handle V key for panel toggle
     if (shouldHandleKeyboardShortcuts && e.key === 'v') {
-      e.preventDefault();
-      e.stopPropagation();
-      console.log('Vivideo: Alt+V keyboard shortcut detected (direct handling)');
-      if (window.vivideoController) {
-        window.vivideoController.toggle();
-      } else {
-        initializeVivideo();
-        setTimeout(() => {
-          if (window.vivideoController) {
-            window.vivideoController.show();
-          }
-        }, 100);
+      // Check if we should handle V without Alt or Alt+V
+      const shouldToggle = toggleWithoutAlt ? 
+        (!e.altKey && !e.ctrlKey && !e.shiftKey) : 
+        (e.altKey && !e.ctrlKey && !e.shiftKey);
+
+      if (shouldToggle) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log(`Vivideo: ${toggleWithoutAlt ? 'V' : 'Alt+V'} keyboard shortcut detected`);
+        if (controller) {
+          controller.toggle();
+        } else {
+          initializeVivideo();
+          setTimeout(() => {
+            if (window.vivideoController) {
+              window.vivideoController.show();
+            }
+          }, 100);
+        }
+        return;
       }
-      return;
     }
 
-    // Speed and theme control shortcuts - ALL WITH Alt key
+    // Only handle other shortcuts with Alt key to avoid conflicts with typing
+    if (!e.altKey || e.ctrlKey || e.shiftKey) return;
+
+    // Profile control shortcuts - Alt+B/C only
     if (window.vivideoController) {
       const controller = window.vivideoController;
 
-      // Alt + [: Increase speed by configurable step
-      if (e.key === '[') {
-        e.preventDefault();
-        const currentSpeed = controller.settings.speed || 1.0;
-        const speedStep = controller.settings.speedStep || 0.25;
-        const newSpeed = Math.min(currentSpeed + speedStep, 4.0);
-        controller.updateControl('speed', newSpeed);
-        console.log(`Vivideo: Speed increased to ${newSpeed.toFixed(2)}x`);
-      }
-
-      // Alt + ]: Decrease speed by configurable step
-      else if (e.key === ']') {
-        e.preventDefault();
-        const currentSpeed = controller.settings.speed || 1.0;
-        const speedStep = controller.settings.speedStep || 0.25;
-        const newSpeed = Math.max(currentSpeed - speedStep, 0.25);
-        controller.updateControl('speed', newSpeed);
-        console.log(`Vivideo: Speed decreased to ${newSpeed.toFixed(2)}x`);
-      }
-
-      // Alt + \: Reset speed to 1.00
-      else if (e.key === '\\') {
-        e.preventDefault();
-        controller.updateControl('speed', 1.0);
-        console.log('Vivideo: Speed reset to 1.00x');
-      }
-
-      // Alt + -: Previous Profile
-      else if (e.key === '-') {
+      // Alt + C: Previous Profile
+      if (e.key === 'c') {
         e.preventDefault();
         if (controller.profileManager) {
           controller.profileManager.previousProfile();
-          console.log('Vivideo: Previous profile selected');
+          console.log('Vivideo: Previous profile selected (Alt+C)');
         }
       }
 
-      // Alt + =: Next Profile
-      else if (e.key === '=') {
+      // Alt + B: Next Profile
+      else if (e.key === 'b') {
         e.preventDefault();
         if (controller.profileManager) {
           controller.profileManager.nextProfile();
-          console.log('Vivideo: Next profile selected');
+          console.log('Vivideo: Next profile selected (Alt+B)');
         }
+      }
+    }
+
+    // Handle B and C keys for profile switching when toggleWithoutAlt is enabled
+    if (controller && controller.settings && controller.settings.toggleWithoutAlt && 
+        !e.altKey && !e.ctrlKey && !e.shiftKey) {
+      
+      // C: Previous Profile (without Alt)
+      if (e.key === 'c') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (controller.profileManager) {
+          controller.profileManager.previousProfile();
+          console.log('Vivideo: Previous profile selected (C)');
+        }
+        return;
+      }
+
+      // B: Next Profile (without Alt)
+      else if (e.key === 'b') {
+        e.preventDefault();
+        e.stopPropagation();
+        if (controller.profileManager) {
+          controller.profileManager.nextProfile();
+          console.log('Vivideo: Next profile selected (B)');
+        }
+        return;
       }
     }
   });

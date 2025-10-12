@@ -20,13 +20,9 @@ class UIHelper {
           </ul>
           <h5>Keyboard shortcuts:</h5>
           <ul>
-            <li><code>Alt + V</code> - Toggle panel</li>
-            <li><code>Alt + M</code> - Reset to DEFAULT profile</li>
-            <li><code>Alt + [</code> - Increase speed</li>
-            <li><code>Alt + ]</code> - Decrease speed</li>
-            <li><code>Alt + \\</code> - Reset speed to 1.00x</li>
-            <li><code>Alt + -</code> - Previous theme</li>
-            <li><code>Alt + =</code> - Next theme</li>
+            <li><code>Alt + V</code> or <code>V</code> (if enabled) - Toggle panel</li>
+            <li><code>Alt + C</code> or <code>C</code> (if enabled) - Previous profile</li>
+            <li><code>Alt + B</code> or <code>B</code> (if enabled) - Next profile</li>
             <li>Drag header - Move panel</li>
             <li>Click outside panel - Hide panel</li>
           </ul>
@@ -60,13 +56,21 @@ class UIHelper {
           <span class="vivideo-checkbox-label">Extended limits (max technical range)</span>
         </label>
       </div>
+
+      <div class="vivideo-toggle-without-alt checkbox-section">
+        <label class="vivideo-checkbox-container">
+          <input type="checkbox" id="toggle-without-alt-checkbox" ${settings.toggleWithoutAlt ? 'checked' : ''}>
+          <span class="vivideo-checkmark"></span>
+          <span class="vivideo-checkbox-label">Toggle without 'Alt' button</span>
+        </label>
+      </div>
     `;
   }
 
   static createShortcutsHTML() {
     return /*html*/ `
       <div class="vivideo-shortcuts">
-        Press <code>Alt + V</code> to toggle • <code>Alt + N/B</code> to switch profiles • Drag header to move
+        Press <code>Alt + V</code> or <code>V</code> to toggle • <code>Alt + C/B</code> or <code>C/B</code> to switch profiles • Drag header to move
       </div>
     `;
   }
@@ -142,6 +146,14 @@ class UIHelper {
       controller.updateSliderLimits();
       controller.updateUI();
     });
+
+    // Toggle without Alt checkbox
+    container.querySelector('#toggle-without-alt-checkbox').addEventListener('change', (e) => {
+      controller.settings.toggleWithoutAlt = e.target.checked;
+      controller.saveSettings();
+      controller.saveAppState();
+      console.log('Vivideo: Toggle without Alt setting changed to:', e.target.checked);
+    });
   }
 
   static updateCheckboxes(container, settings) {
@@ -158,6 +170,11 @@ class UIHelper {
     const extendedLimitsCheckbox = container.querySelector('#extended-limits-checkbox');
     if (extendedLimitsCheckbox) {
       extendedLimitsCheckbox.checked = settings.extendedLimits;
+    }
+
+    const toggleWithoutAltCheckbox = container.querySelector('#toggle-without-alt-checkbox');
+    if (toggleWithoutAltCheckbox) {
+      toggleWithoutAltCheckbox.checked = settings.toggleWithoutAlt;
     }
   }
 
