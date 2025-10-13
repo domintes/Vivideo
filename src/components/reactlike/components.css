@@ -1,811 +1,811 @@
 /* Vivideo React-like Components CSS */
 /* Modern, clean styling for the component-based architecture */
-
 /* Base Component Styles */
+/* eslint-disable no-important */
 .vivideo-main-panel {
-  position: fixed !important;
-  z-index: 999999 !important;
+  position: fixed ;
+  z-index: 999999 ;
   font-family:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  background: rgba(10, 10, 35, 0.95) !important;
-  border: 1px solid rgba(0, 191, 255, 0.3) !important;
-  border-radius: 12px !important;
-  backdrop-filter: blur(10px) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
-  min-width: 320px !important;
-  max-width: 400px !important;
-  color: #ffffff !important;
-  user-select: none !important;
-  transition: all 0.3s ease !important;
-  overflow: hidden !important;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif ;
+  font-size: 14px ;
+  line-height: 1.4 ;
+  background: rgba(10, 10, 35, 0.95) ;
+  border: 1px solid rgba(0, 191, 255, 0.3) ;
+  border-radius: 12px ;
+  backdrop-filter: blur(10px) ;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) ;
+  min-width: 320px ;
+  max-width: 400px ;
+  color: #ffffff ;
+  user-select: none ;
+  transition: all 0.3s ease ;
+  overflow: hidden ;
 }
 
 .vivideo-main-panel.dragging {
-  transform: rotate(1deg) !important;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+  transform: rotate(1deg) ;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) ;
 }
 
 /* Theme Variations */
 .vivideo-main-panel[data-theme='cybernetic'] {
-  border-color: rgba(0, 255, 0, 0.3) !important;
-  background: rgba(5, 20, 5, 0.95) !important;
+  border-color: rgba(0, 255, 0, 0.3) ;
+  background: rgba(5, 20, 5, 0.95) ;
 }
 
 .vivideo-main-panel[data-theme='cybernetic'] .vivideo-header {
-  background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.1)) !important;
-  border-bottom-color: rgba(0, 255, 0, 0.3) !important;
+  background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.1)) ;
+  border-bottom-color: rgba(0, 255, 0, 0.3) ;
 }
 
 .vivideo-main-panel[data-theme='casual'] {
-  border-color: rgba(0, 191, 255, 0.3) !important;
-  background: rgba(10, 10, 35, 0.95) !important;
+  border-color: rgba(0, 191, 255, 0.3) ;
+  background: rgba(10, 10, 35, 0.95) ;
 }
 
 .vivideo-main-panel[data-theme='casual'] .vivideo-header {
-  background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(0, 150, 255, 0.1)) !important;
-  border-bottom-color: rgba(0, 191, 255, 0.3) !important;
+  background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(0, 150, 255, 0.1)) ;
+  border-bottom-color: rgba(0, 191, 255, 0.3) ;
 }
 
 /* Header Section */
 .vivideo-header {
-  background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(0, 150, 255, 0.1)) !important;
-  border-bottom: 1px solid rgba(0, 191, 255, 0.3) !important;
-  padding: 12px 16px !important;
-  cursor: move !important;
-  border-radius: 12px 12px 0 0 !important;
+  background: linear-gradient(135deg, rgba(0, 191, 255, 0.2), rgba(0, 150, 255, 0.1)) ;
+  border-bottom: 1px solid rgba(0, 191, 255, 0.3) ;
+  padding: 12px 16px ;
+  cursor: move ;
+  border-radius: 12px 12px 0 0 ;
 }
 
 .vivideo-header-content {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
+  display: flex ;
+  justify-content: space-between ;
+  align-items: center ;
 }
 
 .vivideo-header-title {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  display: flex ;
+  align-items: center ;
+  gap: 8px ;
 }
 
 .vivideo-title {
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  color: #00bfff !important;
-  margin: 0 !important;
+  font-size: 18px ;
+  font-weight: 600 ;
+  color: #00bfff ;
+  margin: 0 ;
 }
 
 .vivideo-version {
-  font-size: 12px !important;
-  color: rgba(255, 255, 255, 0.6) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
+  font-size: 12px ;
+  color: rgba(255, 255, 255, 0.6) ;
+  background: rgba(255, 255, 255, 0.1) ;
+  padding: 2px 6px ;
+  border-radius: 4px ;
 }
 
 .vivideo-header-controls {
-  display: flex !important;
-  gap: 8px !important;
+  display: flex ;
+  gap: 8px ;
 }
 
 .vivideo-header-controls button {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-  padding: 6px 8px !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  transition: all 0.2s ease !important;
-  min-width: 24px !important;
-  height: 24px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  color: #ffffff ;
+  padding: 6px 8px ;
+  border-radius: 6px ;
+  cursor: pointer ;
+  font-size: 12px ;
+  transition: all 0.2s ease ;
+  min-width: 24px ;
+  height: 24px ;
+  display: flex ;
+  align-items: center ;
+  justify-content: center ;
 }
 
 .vivideo-header-controls button:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.2) ;
+  transform: translateY(-1px) ;
 }
 
 .vivideo-drag-hint {
-  font-size: 10px !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  text-align: center !important;
-  margin-top: 4px !important;
+  font-size: 10px ;
+  color: rgba(255, 255, 255, 0.5) ;
+  text-align: center ;
+  margin-top: 4px ;
 }
 
 /* Collapse Section */
 .vivideo-collapse-section {
-  transition: max-height 0.3s ease !important;
-  overflow: hidden !important;
+  transition: max-height 0.3s ease ;
+  overflow: hidden ;
 }
 
 .vivideo-collapse-section.collapsed {
-  max-height: 0 !important;
+  max-height: 0 ;
 }
 
 .vivideo-collapse-section.expanded {
-  max-height: 1000px !important;
+  max-height: 1000px ;
 }
 
 .vivideo-collapse-content {
-  padding: 16px !important;
+  padding: 16px ;
 }
 
 /* Controls Section */
 .vivideo-controls-section {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 16px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 16px ;
 }
 
 .vivideo-control {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 8px ;
 }
 
 .vivideo-label {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  font-weight: 500 !important;
-  color: #ffffff !important;
+  display: flex ;
+  justify-content: space-between ;
+  align-items: center ;
+  font-weight: 500 ;
+  color: #ffffff ;
 }
 
 .vivideo-value {
-  font-family: 'Consolas', 'Monaco', monospace !important;
-  color: #00bfff !important;
-  font-size: 12px !important;
-  background: rgba(0, 191, 255, 0.1) !important;
-  padding: 2px 6px !important;
-  border-radius: 4px !important;
+  font-family: 'Consolas', 'Monaco', monospace ;
+  color: #00bfff ;
+  font-size: 12px ;
+  background: rgba(0, 191, 255, 0.1) ;
+  padding: 2px 6px ;
+  border-radius: 4px ;
 }
 
 .vivideo-slider-container {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  display: flex ;
+  align-items: center ;
+  gap: 8px ;
 }
 
 .vivideo-slider {
-  flex: 1 !important;
-  height: 6px !important;
-  border-radius: 3px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  outline: none !important;
-  -webkit-appearance: none !important;
-  appearance: none !important;
+  flex: 1 ;
+  height: 6px ;
+  border-radius: 3px ;
+  background: rgba(255, 255, 255, 0.1) ;
+  outline: none ;
+  -webkit-appearance: none ;
+  appearance: none ;
 }
 
 .vivideo-slider::-webkit-slider-thumb {
-  -webkit-appearance: none !important;
-  appearance: none !important;
-  width: 16px !important;
-  height: 16px !important;
-  border-radius: 50% !important;
-  background: #00bfff !important;
-  cursor: pointer !important;
-  border: 2px solid #ffffff !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  -webkit-appearance: none ;
+  appearance: none ;
+  width: 16px ;
+  height: 16px ;
+  border-radius: 50% ;
+  background: #00bfff ;
+  cursor: pointer ;
+  border: 2px solid #ffffff ;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) ;
 }
 
 .vivideo-slider::-moz-range-thumb {
-  width: 16px !important;
-  height: 16px !important;
-  border-radius: 50% !important;
-  background: #00bfff !important;
-  cursor: pointer !important;
-  border: 2px solid #ffffff !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+  width: 16px ;
+  height: 16px ;
+  border-radius: 50% ;
+  background: #00bfff ;
+  cursor: pointer ;
+  border: 2px solid #ffffff ;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) ;
 }
 
 .vivideo-input {
-  width: 50px !important;
-  padding: 4px 6px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 4px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-  font-size: 12px !important;
-  text-align: center !important;
+  width: 50px ;
+  padding: 4px 6px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 4px ;
+  background: rgba(255, 255, 255, 0.1) ;
+  color: #ffffff ;
+  font-size: 12px ;
+  text-align: center ;
 }
 
 .vivideo-reset-single {
-  width: 24px !important;
-  height: 24px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 4px !important;
-  background: rgba(255, 0, 0, 0.2) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.2s ease !important;
+  width: 24px ;
+  height: 24px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 4px ;
+  background: rgba(255, 0, 0, 0.2) ;
+  color: #ffffff ;
+  cursor: pointer ;
+  font-size: 12px ;
+  display: flex ;
+  align-items: center ;
+  justify-content: center ;
+  transition: all 0.2s ease ;
 }
 
 .vivideo-reset-single:hover {
-  background: rgba(255, 0, 0, 0.3) !important;
-  transform: scale(1.05) !important;
+  background: rgba(255, 0, 0, 0.3) ;
+  transform: scale(1.05) ;
 }
 
 /* Speed Controller Section */
 .vivideo-speed-section {
-  padding: 16px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 16px ;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) ;
 }
 
 .vivideo-speed-header {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  margin-bottom: 12px !important;
+  display: flex ;
+  justify-content: space-between ;
+  align-items: center ;
+  margin-bottom: 12px ;
 }
 
 .vivideo-speed-header h4 {
-  margin: 0 !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: #ffffff !important;
+  margin: 0 ;
+  font-size: 14px ;
+  font-weight: 600 ;
+  color: #ffffff ;
 }
 
 .speed-value {
-  font-family: 'Consolas', 'Monaco', monospace !important;
-  color: #00bfff !important;
-  font-size: 14px !important;
-  font-weight: bold !important;
-  background: rgba(0, 191, 255, 0.1) !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
+  font-family: 'Consolas', 'Monaco', monospace ;
+  color: #00bfff ;
+  font-size: 14px ;
+  font-weight: bold ;
+  background: rgba(0, 191, 255, 0.1) ;
+  padding: 4px 8px ;
+  border-radius: 4px ;
 }
 
 .vivideo-speed-controls {
-  margin-bottom: 12px !important;
+  margin-bottom: 12px ;
 }
 
 .vivideo-speed-slider-container {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
+  display: flex ;
+  align-items: center ;
+  gap: 8px ;
 }
 
 .speed-decrease,
 .speed-increase,
 .speed-reset {
-  width: 28px !important;
-  height: 28px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 6px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  font-size: 14px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.2s ease !important;
+  width: 28px ;
+  height: 28px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 6px ;
+  background: rgba(255, 255, 255, 0.1) ;
+  color: #ffffff ;
+  cursor: pointer ;
+  font-size: 14px ;
+  display: flex ;
+  align-items: center ;
+  justify-content: center ;
+  transition: all 0.2s ease ;
 }
 
 .speed-decrease:hover,
 .speed-increase:hover,
 .speed-reset:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.2) ;
+  transform: translateY(-1px) ;
 }
 
 .vivideo-speed-presets {
-  margin-bottom: 8px !important;
+  margin-bottom: 8px ;
 }
 
 .speed-presets-label {
-  font-size: 12px !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  margin-bottom: 8px !important;
+  font-size: 12px ;
+  color: rgba(255, 255, 255, 0.7) ;
+  margin-bottom: 8px ;
 }
 
 .speed-presets-grid {
-  display: grid !important;
-  grid-template-columns: repeat(4, 1fr) !important;
-  gap: 4px !important;
+  display: grid ;
+  grid-template-columns: repeat(4, 1fr) ;
+  gap: 4px ;
 }
 
 .speed-preset-btn {
-  padding: 6px 4px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 4px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  font-size: 11px !important;
-  transition: all 0.2s ease !important;
-  text-align: center !important;
+  padding: 6px 4px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 4px ;
+  background: rgba(255, 255, 255, 0.1) ;
+  color: #ffffff ;
+  cursor: pointer ;
+  font-size: 11px ;
+  transition: all 0.2s ease ;
+  text-align: center ;
 }
 
 .speed-preset-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.2) ;
 }
 
 .speed-preset-btn.active {
-  background: rgba(0, 191, 255, 0.3) !important;
-  border-color: rgba(0, 191, 255, 0.5) !important;
-  color: #00bfff !important;
+  background: rgba(0, 191, 255, 0.3) ;
+  border-color: rgba(0, 191, 255, 0.5) ;
+  color: #00bfff ;
 }
 
 .vivideo-speed-shortcuts {
-  margin-top: 8px !important;
+  margin-top: 8px ;
 }
 
 .vivideo-speed-shortcuts small {
-  font-size: 10px !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  line-height: 1.2 !important;
+  font-size: 10px ;
+  color: rgba(255, 255, 255, 0.5) ;
+  line-height: 1.2 ;
 }
 
 /* Options Section */
 .vivideo-options-section {
-  padding: 16px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 16px ;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) ;
 }
 
 .vivideo-options-header {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  margin-bottom: 12px !important;
+  display: flex ;
+  justify-content: space-between ;
+  align-items: center ;
+  margin-bottom: 12px ;
 }
 
 .vivideo-options-header h4 {
-  margin: 0 !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
-  color: #ffffff !important;
+  margin: 0 ;
+  font-size: 14px ;
+  font-weight: 600 ;
+  color: #ffffff ;
 }
 
 .toggle-advanced-btn {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
-  padding: 4px 8px !important;
-  border-radius: 4px !important;
-  cursor: pointer !important;
-  font-size: 11px !important;
-  transition: all 0.2s ease !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  color: #ffffff ;
+  padding: 4px 8px ;
+  border-radius: 4px ;
+  cursor: pointer ;
+  font-size: 11px ;
+  transition: all 0.2s ease ;
 }
 
 .toggle-advanced-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
+  background: rgba(255, 255, 255, 0.2) ;
 }
 
 .vivideo-options-basic,
 .vivideo-options-advanced {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 12px ;
 }
 
 .vivideo-options-advanced {
   transition:
     max-height 0.3s ease,
-    opacity 0.3s ease !important;
-  overflow: hidden !important;
+    opacity 0.3s ease ;
+  overflow: hidden ;
 }
 
 .vivideo-options-advanced.collapsed {
-  max-height: 0 !important;
-  opacity: 0 !important;
+  max-height: 0 ;
+  opacity: 0 ;
 }
 
 .vivideo-options-advanced.expanded {
-  max-height: 200px !important;
-  opacity: 1 !important;
-  margin-top: 12px !important;
-  padding-top: 12px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  max-height: 200px ;
+  opacity: 1 ;
+  margin-top: 12px ;
+  padding-top: 12px ;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) ;
 }
 
 .vivideo-option {
-  display: flex !important;
-  align-items: flex-start !important;
+  display: flex ;
+  align-items: flex-start ;
 }
 
 .vivideo-checkbox-label {
-  display: flex !important;
-  align-items: flex-start !important;
-  gap: 10px !important;
-  cursor: pointer !important;
-  width: 100% !important;
+  display: flex ;
+  align-items: flex-start ;
+  gap: 10px ;
+  cursor: pointer ;
+  width: 100% ;
 }
 
 .vivideo-checkbox-label input[type='checkbox'] {
-  position: absolute !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+  position: absolute ;
+  opacity: 0 ;
+  pointer-events: none ;
 }
 
 .vivideo-checkbox-custom {
-  width: 16px !important;
-  height: 16px !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  border-radius: 3px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  position: relative !important;
-  transition: all 0.2s ease !important;
-  flex-shrink: 0 !important;
-  margin-top: 2px !important;
+  width: 16px ;
+  height: 16px ;
+  border: 2px solid rgba(255, 255, 255, 0.3) ;
+  border-radius: 3px ;
+  background: rgba(255, 255, 255, 0.1) ;
+  position: relative ;
+  transition: all 0.2s ease ;
+  flex-shrink: 0 ;
+  margin-top: 2px ;
 }
 
 .vivideo-checkbox-label input[type='checkbox']:checked + .vivideo-checkbox-custom {
-  background: #00bfff !important;
-  border-color: #00bfff !important;
+  background: #00bfff ;
+  border-color: #00bfff ;
 }
 
 .vivideo-checkbox-label input[type='checkbox']:checked + .vivideo-checkbox-custom::after {
-  content: '✓' !important;
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  color: #ffffff !important;
-  font-size: 10px !important;
-  font-weight: bold !important;
+  content: '✓' ;
+  position: absolute ;
+  top: 50% ;
+  left: 50% ;
+  transform: translate(-50%, -50%) ;
+  color: #ffffff ;
+  font-size: 10px ;
+  font-weight: bold ;
 }
 
 .vivideo-option-text {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 2px ;
 }
 
 .vivideo-option-text strong {
-  color: #ffffff !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
+  color: #ffffff ;
+  font-size: 13px ;
+  font-weight: 500 ;
 }
 
 .vivideo-option-text small {
-  color: rgba(255, 255, 255, 0.6) !important;
-  font-size: 11px !important;
-  line-height: 1.3 !important;
+  color: rgba(255, 255, 255, 0.6) ;
+  font-size: 11px ;
+  line-height: 1.3 ;
 }
 
 .vivideo-option-actions {
-  margin-top: 8px !important;
-  padding-top: 8px !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  margin-top: 8px ;
+  padding-top: 8px ;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) ;
 }
 
 .reset-all-btn {
-  width: 100% !important;
-  padding: 8px 12px !important;
-  border: 1px solid rgba(255, 0, 0, 0.3) !important;
-  border-radius: 6px !important;
-  background: rgba(255, 0, 0, 0.1) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
+  width: 100% ;
+  padding: 8px 12px ;
+  border: 1px solid rgba(255, 0, 0, 0.3) ;
+  border-radius: 6px ;
+  background: rgba(255, 0, 0, 0.1) ;
+  color: #ffffff ;
+  cursor: pointer ;
+  font-size: 12px ;
+  font-weight: 500 ;
+  transition: all 0.2s ease ;
 }
 
 .reset-all-btn:hover {
-  background: rgba(255, 0, 0, 0.2) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 0, 0, 0.2) ;
+  transform: translateY(-1px) ;
 }
 
 /* Footer Section */
 .vivideo-footer-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) ;
 }
 
 .footer-tabs {
-  display: flex !important;
-  position: relative !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  display: flex ;
+  position: relative ;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) ;
 }
 
 .footer-tab-btn {
-  flex: 1 !important;
-  padding: 10px 12px !important;
-  border: none !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
-  border-bottom: 2px solid transparent !important;
+  flex: 1 ;
+  padding: 10px 12px ;
+  border: none ;
+  background: rgba(255, 255, 255, 0.05) ;
+  color: rgba(255, 255, 255, 0.7) ;
+  cursor: pointer ;
+  font-size: 12px ;
+  font-weight: 500 ;
+  transition: all 0.2s ease ;
+  border-bottom: 2px solid transparent ;
 }
 
 .footer-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  color: #ffffff ;
 }
 
 .footer-tab-btn.active {
-  background: rgba(0, 191, 255, 0.1) !important;
-  color: #00bfff !important;
-  border-bottom-color: #00bfff !important;
+  background: rgba(0, 191, 255, 0.1) ;
+  color: #00bfff ;
+  border-bottom-color: #00bfff ;
 }
 
 .active-profile-indicator {
-  position: absolute !important;
-  right: 8px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  font-size: 10px !important;
-  color: rgba(255, 255, 255, 0.5) !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  padding: 2px 6px !important;
-  border-radius: 3px !important;
-  pointer-events: none !important;
+  position: absolute ;
+  right: 8px ;
+  top: 50% ;
+  transform: translateY(-50%) ;
+  font-size: 10px ;
+  color: rgba(255, 255, 255, 0.5) ;
+  background: rgba(255, 255, 255, 0.1) ;
+  padding: 2px 6px ;
+  border-radius: 3px ;
+  pointer-events: none ;
 }
 
 .footer-content {
-  padding: 12px !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
+  padding: 12px ;
+  max-height: 200px ;
+  overflow-y: auto ;
 }
 
 /* Profile Content */
 .profiles-content {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 12px ;
 }
 
 .profiles-list {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 6px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 6px ;
 }
 
 .profile-item {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 8px 10px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 6px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  display: flex ;
+  justify-content: space-between ;
+  align-items: center ;
+  padding: 8px 10px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 6px ;
+  background: rgba(255, 255, 255, 0.05) ;
+  cursor: pointer ;
+  transition: all 0.2s ease ;
 }
 
 .profile-item:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  transform: translateY(-1px) ;
 }
 
 .profile-item.active {
-  border-color: #00bfff !important;
-  background: rgba(0, 191, 255, 0.1) !important;
+  border-color: #00bfff ;
+  background: rgba(0, 191, 255, 0.1) ;
 }
 
 .profile-info {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 2px ;
 }
 
 .profile-name {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: #ffffff !important;
+  font-size: 13px ;
+  font-weight: 500 ;
+  color: #ffffff ;
 }
 
 .profile-description {
-  font-size: 11px !important;
-  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 11px ;
+  color: rgba(255, 255, 255, 0.6) ;
 }
 
 .delete-profile-btn {
-  width: 20px !important;
-  height: 20px !important;
-  border: 1px solid rgba(255, 0, 0, 0.3) !important;
-  border-radius: 4px !important;
-  background: rgba(255, 0, 0, 0.1) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  font-size: 10px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transition: all 0.2s ease !important;
+  width: 20px ;
+  height: 20px ;
+  border: 1px solid rgba(255, 0, 0, 0.3) ;
+  border-radius: 4px ;
+  background: rgba(255, 0, 0, 0.1) ;
+  color: #ffffff ;
+  cursor: pointer ;
+  font-size: 10px ;
+  display: flex ;
+  align-items: center ;
+  justify-content: center ;
+  transition: all 0.2s ease ;
 }
 
 .delete-profile-btn:hover {
-  background: rgba(255, 0, 0, 0.2) !important;
+  background: rgba(255, 0, 0, 0.2) ;
 }
 
 .profiles-actions {
-  display: flex !important;
-  justify-content: center !important;
+  display: flex ;
+  justify-content: center ;
 }
 
 .create-profile-btn {
-  padding: 8px 16px !important;
-  border: 1px solid rgba(0, 191, 255, 0.3) !important;
-  border-radius: 6px !important;
-  background: rgba(0, 191, 255, 0.1) !important;
-  color: #00bfff !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
+  padding: 8px 16px ;
+  border: 1px solid rgba(0, 191, 255, 0.3) ;
+  border-radius: 6px ;
+  background: rgba(0, 191, 255, 0.1) ;
+  color: #00bfff ;
+  cursor: pointer ;
+  font-size: 12px ;
+  font-weight: 500 ;
+  transition: all 0.2s ease ;
 }
 
 .create-profile-btn:hover {
-  background: rgba(0, 191, 255, 0.2) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(0, 191, 255, 0.2) ;
+  transform: translateY(-1px) ;
 }
 
 /* Theme Content */
 .themes-content {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 8px ;
 }
 
 .themes-list {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 8px ;
 }
 
 .theme-item {
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-  padding: 10px 12px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 6px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
+  display: flex ;
+  align-items: center ;
+  gap: 12px ;
+  padding: 10px 12px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 6px ;
+  background: rgba(255, 255, 255, 0.05) ;
+  cursor: pointer ;
+  transition: all 0.2s ease ;
 }
 
 .theme-item:hover {
-  background: rgba(255, 255, 255, 0.1) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  transform: translateY(-1px) ;
 }
 
 .theme-item.active {
-  border-color: #00bfff !important;
-  background: rgba(0, 191, 255, 0.1) !important;
+  border-color: #00bfff ;
+  background: rgba(0, 191, 255, 0.1) ;
 }
 
 .theme-preview {
-  width: 24px !important;
-  height: 24px !important;
-  border-radius: 4px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  width: 24px ;
+  height: 24px ;
+  border-radius: 4px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
 }
 
 .theme-info {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 2px ;
 }
 
 .theme-name {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: #ffffff !important;
+  font-size: 13px ;
+  font-weight: 500 ;
+  color: #ffffff ;
 }
 
 .theme-description {
-  font-size: 11px !important;
-  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 11px ;
+  color: rgba(255, 255, 255, 0.6) ;
 }
 
 /* Settings Content */
 .settings-content {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 16px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 16px ;
 }
 
 .settings-section {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
+  display: flex ;
+  flex-direction: column ;
+  gap: 8px ;
 }
 
 .settings-section h5 {
-  margin: 0 !important;
-  font-size: 13px !important;
-  font-weight: 600 !important;
-  color: #ffffff !important;
+  margin: 0 ;
+  font-size: 13px ;
+  font-weight: 600 ;
+  color: #ffffff ;
 }
 
 .settings-actions {
-  display: flex !important;
-  gap: 8px !important;
+  display: flex ;
+  gap: 8px ;
 }
 
 .import-settings-btn,
 .export-settings-btn {
-  flex: 1 !important;
-  padding: 8px 12px !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 6px !important;
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: #ffffff !important;
-  cursor: pointer !important;
-  font-size: 11px !important;
-  font-weight: 500 !important;
-  transition: all 0.2s ease !important;
+  flex: 1 ;
+  padding: 8px 12px ;
+  border: 1px solid rgba(255, 255, 255, 0.2) ;
+  border-radius: 6px ;
+  background: rgba(255, 255, 255, 0.1) ;
+  color: #ffffff ;
+  cursor: pointer ;
+  font-size: 11px ;
+  font-weight: 500 ;
+  transition: all 0.2s ease ;
 }
 
 .import-settings-btn:hover,
 .export-settings-btn:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-1px) !important;
+  background: rgba(255, 255, 255, 0.2) ;
+  transform: translateY(-1px) ;
 }
 
 .about-info {
-  font-size: 11px !important;
-  line-height: 1.4 !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 11px ;
+  line-height: 1.4 ;
+  color: rgba(255, 255, 255, 0.7) ;
 }
 
 .about-info p {
-  margin: 4px 0 !important;
+  margin: 4px 0 ;
 }
 
 /* Utility Classes */
 .vivideo-btn-primary {
-  background: rgba(0, 191, 255, 0.2) !important;
-  border-color: rgba(0, 191, 255, 0.4) !important;
-  color: #00bfff !important;
+  background: rgba(0, 191, 255, 0.2) ;
+  border-color: rgba(0, 191, 255, 0.4) ;
+  color: #00bfff ;
 }
 
 .vivideo-btn-secondary {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-color: rgba(255, 255, 255, 0.2) !important;
-  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  border-color: rgba(255, 255, 255, 0.2) ;
+  color: #ffffff ;
 }
 
 .vivideo-btn-danger {
-  background: rgba(255, 0, 0, 0.1) !important;
-  border-color: rgba(255, 0, 0, 0.3) !important;
-  color: #ff6b6b !important;
+  background: rgba(255, 0, 0, 0.1) ;
+  border-color: rgba(255, 0, 0, 0.3) ;
+  color: #ff6b6b ;
 }
 
 /* Responsive Design */
 @media (max-width: 480px) {
   .vivideo-main-panel {
-    min-width: 280px !important;
-    max-width: 320px !important;
+    min-width: 280px ;
+    max-width: 320px ;
   }
 
   .speed-presets-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
+    grid-template-columns: repeat(3, 1fr) ;
   }
 }
 
 /* Scrollbar Styling */
 .footer-content::-webkit-scrollbar {
-  width: 6px !important;
+  width: 6px ;
 }
 
 .footer-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1) !important;
-  border-radius: 3px !important;
+  background: rgba(255, 255, 255, 0.1) ;
+  border-radius: 3px ;
 }
 
 .footer-content::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3) !important;
-  border-radius: 3px !important;
+  background: rgba(255, 255, 255, 0.3) ;
+  border-radius: 3px ;
 }
 
 .footer-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5) !important;
+  background: rgba(255, 255, 255, 0.5) ;
 }
 
 /* Animation for smooth transitions */
@@ -821,13 +821,13 @@
 }
 
 .vivideo-main-panel {
-  animation: slideIn 0.3s ease-out !important;
+  animation: slideIn 0.3s ease-out ;
 }
 
 /* Focus styles for accessibility */
 .vivideo-slider:focus,
 .vivideo-input:focus,
 button:focus {
-  outline: 2px solid rgba(0, 191, 255, 0.5) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid rgba(0, 191, 255, 0.5) ;
+  outline-offset: 2px ;
 }

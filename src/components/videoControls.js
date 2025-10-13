@@ -117,19 +117,12 @@ class VideoControls {
         </div>
       </div>
 
-      ${this.controller.speedController ? this.controller.speedController.createSpeedControlHTML() : ''}
 
-      <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
       </div>
     `;
   }
 
   bindEvents(container) {
-    // Reset all button
-    container.querySelector('#reset-button').addEventListener('click', () => {
-      this.controller.resetAll();
-    });
-
     // Single reset buttons
     container.querySelectorAll('.vivideo-reset-single').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -262,9 +255,11 @@ class VideoControls {
     const brightnessInput = container.querySelector('#brightness-input');
     const brightnessValue = container.querySelector('#brightness-value');
 
-    if (brightnessSlider) {
+    if (brightnessSlider && brightnessInput && brightnessValue) {
       brightnessSlider.value = settings.brightness;
       brightnessInput.value = settings.brightness;
+      brightnessInput.style.color = ''; // Remove gray placeholder color
+      brightnessInput.removeAttribute('placeholder');
       brightnessValue.textContent = `${settings.brightness}%`;
     }
 
@@ -273,9 +268,11 @@ class VideoControls {
     const contrastInput = container.querySelector('#contrast-input');
     const contrastValue = container.querySelector('#contrast-value');
 
-    if (contrastSlider) {
+    if (contrastSlider && contrastInput && contrastValue) {
       contrastSlider.value = settings.contrast;
       contrastInput.value = settings.contrast;
+      contrastInput.style.color = '';
+      contrastInput.removeAttribute('placeholder');
       contrastValue.textContent = `${settings.contrast}%`;
     }
 
@@ -284,9 +281,11 @@ class VideoControls {
     const saturationInput = container.querySelector('#saturation-input');
     const saturationValue = container.querySelector('#saturation-value');
 
-    if (saturationSlider) {
+    if (saturationSlider && saturationInput && saturationValue) {
       saturationSlider.value = settings.saturation;
       saturationInput.value = settings.saturation;
+      saturationInput.style.color = '';
+      saturationInput.removeAttribute('placeholder');
       saturationValue.textContent = `${settings.saturation}%`;
     }
 
@@ -295,9 +294,11 @@ class VideoControls {
     const gammaInput = container.querySelector('#gamma-input');
     const gammaValue = container.querySelector('#gamma-value');
 
-    if (gammaSlider) {
+    if (gammaSlider && gammaInput && gammaValue) {
       gammaSlider.value = settings.gamma;
       gammaInput.value = settings.gamma.toFixed(2);
+      gammaInput.style.color = '';
+      gammaInput.removeAttribute('placeholder');
       gammaValue.textContent = settings.gamma.toFixed(2);
     }
 
@@ -306,9 +307,11 @@ class VideoControls {
     const colorTempInput = container.querySelector('#colortemp-input');
     const colorTempValue = container.querySelector('#colortemp-value');
 
-    if (colorTempSlider) {
+    if (colorTempSlider && colorTempInput && colorTempValue) {
       colorTempSlider.value = settings.colorTemp;
       colorTempInput.value = settings.colorTemp;
+      colorTempInput.style.color = '';
+      colorTempInput.removeAttribute('placeholder');
 
       let tempText = 'Neutral';
       if (settings.colorTemp < -75) tempText = 'Very Cold';
@@ -328,9 +331,11 @@ class VideoControls {
     const sharpnessInput = container.querySelector('#sharpness-input');
     const sharpnessValue = container.querySelector('#sharpness-value');
 
-    if (sharpnessSlider) {
+    if (sharpnessSlider && sharpnessInput && sharpnessValue) {
       sharpnessSlider.value = settings.sharpness;
       sharpnessInput.value = settings.sharpness;
+      sharpnessInput.style.color = '';
+      sharpnessInput.removeAttribute('placeholder');
       sharpnessValue.textContent = `${settings.sharpness}%`;
     }
 

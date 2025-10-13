@@ -326,21 +326,51 @@ if (window !== window.top) {
         this.container.classList.add('extended-limits');
       }
 
-      // Build HTML conditionally based on config
-      let htmlContent = UIHelper.createHeaderHTML();
+      // New layout structure
+      let htmlContent = `
+        <!-- Fixed Header -->
+        <div class="vivideo-header-fixed">
+          ${UIHelper.createHeaderHTML()}
+        </div>
 
-      // Only add themes section if testMode is enabled
+        <!-- Main Content Grid -->
+        <div class="vivideo-main-grid">
+          <!-- Left Section: Profiles -->
+          <div class="vivideo-profile-section">
+            ${this.profileManager.createProfilesHTML()}
+            ${this.settingsManager.createImportExportHTML()}
+            ${UIHelper.createCheckboxesHTML(this.settings)}
+            ${UIHelper.createInfoHTML()}
+          </div>
+
+          <!-- Right Section: Core Controls -->
+          <div class="vivideo-core-section">
+            ${this.videoControls.createControlsHTML()}
+            ${this.speedController ? this.speedController.createSpeedControlHTML() : ''}
+            <div class="vivideo-reset-section">
+              <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
+            </div>
+            ${UIHelper.createShortcutsHTML()}
+          </div>
+        </div>
+      `;
+
+      // Only add themes section if testMode is enabled (in profile section)
       if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
-        htmlContent += this.themeManager.createThemesHTML();
+        // Insert themes into profile section
+        const profileSectionContent = `
+          ${this.profileManager.createProfilesHTML()}
+          ${this.themeManager.createThemesHTML()}
+          ${this.settingsManager.createImportExportHTML()}
+          ${UIHelper.createCheckboxesHTML(this.settings)}
+          ${UIHelper.createInfoHTML()}
+        `;
+        
+        htmlContent = htmlContent.replace(
+          /(<div class="vivideo-profile-section">)([\s\S]*?)(<\/div>)/,
+          `$1${profileSectionContent}$3`
+        );
       }
-
-      htmlContent +=
-        this.profileManager.createProfilesHTML() +
-        this.settingsManager.createImportExportHTML() +
-        UIHelper.createCheckboxesHTML(this.settings) +
-        UIHelper.createInfoHTML() +
-        this.videoControls.createControlsHTML() +
-        UIHelper.createShortcutsHTML();
 
       this.container.innerHTML = htmlContent;
 
@@ -414,6 +444,14 @@ if (window !== window.top) {
       // Bind speed controller events
       if (this.speedController) {
         this.speedController.bindSpeedControlEvents(this.container);
+      }
+
+      // Bind reset button
+      const resetButton = this.container.querySelector('#reset-button');
+      if (resetButton) {
+        resetButton.addEventListener('click', () => {
+          this.resetAll();
+        });
       }
 
       // Only bind theme events if themes panel is enabled
@@ -656,8 +694,10 @@ if (window !== window.top) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
+
+      // Main observer for DOM changes
       this.filterEngine.observeVideos(() => {
-        console.log('Vivideo: New video detected, autoActivate:', this.settings.autoActivate, 'isVisible:', this.isVisible);
+        console.log('Vivideo: New media detected, autoActivate:', this.settings.autoActivate, 'isVisible:', this.isVisible);
         
         // Always apply filters and speed if autoActivate is enabled
         if (this.settings.autoActivate) {
@@ -691,6 +731,43 @@ if (window !== window.top) {
           }
         }
       });
+
+      // Additional periodic check for dynamically loaded content
+      this.startPeriodicMediaCheck();
+    }
+
+    startPeriodicMediaCheck() {
+      // Check every 3 seconds for new media elements that might have been missed
+      this.periodicCheckInterval = setInterval(() => {
+        if (this.settings.autoActivate) {
+          const videos = this.filterEngine.findVideos();
+          const images = this.filterEngine.findImages();
+          
+          // Check if any videos don't have filters applied
+          let needsReapply = false;
+          videos.forEach(video => {
+            if (!video.style.filter || video.style.filter === 'none' || video.style.filter === '') {
+              needsReapply = true;
+            }
+          });
+
+          if (needsReapply) {
+            console.log('Vivideo: Periodic check found unprocessed media, reapplying filters');
+            this.applyFilters();
+            
+            // Apply speed
+            if (this.speedController) {
+              videos.forEach(video => {
+                if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
+                  this.speedController.applySpeedToVideo(video, this.speedController.getPreviousSpeed());
+                } else {
+                  this.speedController.applySpeedToVideo(video, this.speedController.getSpeed());
+                }
+              });
+            }
+          }
+        }
+      }, 3000);
     }
 
     resetAll() {
@@ -959,9 +1036,15 @@ if (window !== window.top) {
           this.speedController.applySpeedToAllVideos(this.settings.speed);
         }
 
-        // Force immediate UI update
-        this.updateUI();
-        this.applyFilters();
+        // Force immediate UI update with delay to ensure DOM is ready
+        setTimeout(() => {
+          this.updateUI();
+          // Force update controls specifically
+          if (this.videoControls && this.container) {
+            this.videoControls.updateUI(this.settings, this.container);
+          }
+          this.applyFilters();
+        }, 50);
 
         // Save settings with slight delay to ensure consistency
         this.profileLoadTimeout = setTimeout(() => {
@@ -1166,6 +1249,11 @@ if (window !== window.top) {
         this.autoDetectionTimeout = null;
       }
 
+      if (this.periodicCheckInterval) {
+        clearInterval(this.periodicCheckInterval);
+        this.periodicCheckInterval = null;
+      }
+
       if (this.container && this.container.parentNode) {
         this.container.parentNode.removeChild(this.container);
       }
@@ -1327,19 +1415,36 @@ if (window !== window.top) {
   // Keyboard shortcuts - dynamic based on toggleWithoutAlt setting
   document.addEventListener('keydown', (e) => {
     const controller = window.vivideoController;
+    // Always get fresh toggleWithoutAlt setting
     const toggleWithoutAlt = controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
 
     // Handle V key for panel toggle
-    if (shouldHandleKeyboardShortcuts && e.key === 'v') {
+    if (shouldHandleKeyboardShortcuts && e.key.toLowerCase() === 'v') {
       // Check if we should handle V without Alt or Alt+V
       const shouldToggle = toggleWithoutAlt ? 
-        (!e.altKey && !e.ctrlKey && !e.shiftKey) : 
-        (e.altKey && !e.ctrlKey && !e.shiftKey);
+        (!e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey) : 
+        (e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey);
 
       if (shouldToggle) {
+        // Additional check to avoid conflicts with input fields
+        const activeElement = document.activeElement;
+        const isInputField = activeElement && (
+          activeElement.tagName === 'INPUT' || 
+          activeElement.tagName === 'TEXTAREA' || 
+          activeElement.contentEditable === 'true' ||
+          activeElement.isContentEditable
+        );
+
+        // If toggle without Alt is enabled, be extra careful about input fields
+        if (toggleWithoutAlt && isInputField) {
+          console.log('Vivideo: Skipping V key in input field');
+          return;
+        }
+
         e.preventDefault();
         e.stopPropagation();
         console.log(`Vivideo: ${toggleWithoutAlt ? 'V' : 'Alt+V'} keyboard shortcut detected`);
+        
         if (controller) {
           controller.toggle();
         } else {

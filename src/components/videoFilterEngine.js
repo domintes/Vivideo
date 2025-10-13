@@ -182,24 +182,65 @@ class VideoFilterEngine {
   observeVideos(callback) {
     const observer = new MutationObserver((mutations) => {
       let hasNewVideos = false;
+      let hasNewImages = false;
+      
       mutations.forEach((mutation) => {
+        // Check added nodes
         mutation.addedNodes.forEach((node) => {
           if (node.nodeType === Node.ELEMENT_NODE) {
+            // Check for videos
             if (node.tagName === 'VIDEO' || node.querySelector('video')) {
               hasNewVideos = true;
+              console.log('Vivideo: New video element detected:', node);
+            }
+            // Check for images
+            if (node.tagName === 'IMG' || node.querySelector('img')) {
+              hasNewImages = true;
+              console.log('Vivideo: New image element detected:', node);
+            }
+            // Check for shadow DOM elements that might contain video/images
+            if (node.shadowRoot) {
+              const shadowVideos = node.shadowRoot.querySelectorAll('video');
+              const shadowImages = node.shadowRoot.querySelectorAll('img');
+              if (shadowVideos.length > 0) {
+                hasNewVideos = true;
+                console.log('Vivideo: Video in shadow DOM detected');
+              }
+              if (shadowImages.length > 0) {
+                hasNewImages = true;
+                console.log('Vivideo: Images in shadow DOM detected');
+              }
             }
           }
         });
+
+        // Check modified nodes for attribute changes that might affect media elements
+        if (mutation.type === 'attributes' && mutation.target.nodeType === Node.ELEMENT_NODE) {
+          const target = mutation.target;
+          if (target.tagName === 'VIDEO' || target.tagName === 'IMG') {
+            // Video/Image attributes changed, might need reprocessing
+            if (mutation.attributeName === 'src' || mutation.attributeName === 'srcset') {
+              hasNewVideos = hasNewVideos || target.tagName === 'VIDEO';
+              hasNewImages = hasNewImages || target.tagName === 'IMG';
+              console.log('Vivideo: Media src changed:', target);
+            }
+          }
+        }
       });
 
-      if (hasNewVideos && callback) {
-        callback();
+      if ((hasNewVideos || hasNewImages) && callback) {
+        // Small delay to ensure elements are fully loaded
+        setTimeout(() => {
+          callback();
+        }, 100);
       }
     });
 
     observer.observe(document.body, {
       childList: true,
-      subtree: true
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['src', 'srcset', 'poster']
     });
 
     return observer;

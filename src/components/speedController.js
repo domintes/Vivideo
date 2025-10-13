@@ -15,6 +15,15 @@ class SpeedController {
   init() {
     this.loadSpeedSettings();
     this.attachSpeedListeners();
+    this.startSpeedSyncInterval();
+  }
+
+  // Start periodic sync with video speeds
+  startSpeedSyncInterval() {
+    // Sync every 2 seconds to detect external speed changes
+    this.syncInterval = setInterval(() => {
+      this.syncWithVideoSpeeds();
+    }, 2000);
   }
 
   // Load speed settings from storage
@@ -45,6 +54,38 @@ class SpeedController {
     }
   }
 
+  // Detect current speed from video element
+  detectCurrentSpeed(video) {
+    if (!video) return 1.0;
+    
+    try {
+      return video.playbackRate || 1.0;
+    } catch (error) {
+      return 1.0;
+    }
+  }
+
+  // Sync controller with actual video speeds
+  syncWithVideoSpeeds() {
+    const videos = this.controller.filterEngine.findVideos();
+    if (videos.length === 0) return;
+
+    // Get speed from first video as reference
+    const currentVideoSpeed = this.detectCurrentSpeed(videos[0]);
+    
+    // Only update if there's a significant difference
+    if (Math.abs(currentVideoSpeed - this.currentSpeed) > 0.01) {
+      console.log(`Vivideo SpeedController: Syncing with detected speed ${currentVideoSpeed}x`);
+      this.currentSpeed = currentVideoSpeed;
+      
+      // Update controller settings without triggering save
+      this.controller.settings.speed = currentVideoSpeed;
+      
+      // Update UI
+      this.controller.updateUI();
+    }
+  }
+
   // Apply speed to a specific video element
   applySpeedToVideo(video, speed) {
     if (!video || typeof speed !== 'number' || speed <= 0) return;
@@ -53,8 +94,17 @@ class SpeedController {
     const clampedSpeed = Math.max(0.05, Math.min(25, speed));
     
     try {
+      // Force set playback rate to override website controls
       video.playbackRate = clampedSpeed;
       this.videoSpeedMap.set(video, clampedSpeed);
+      
+      // Set a small delay to ensure it sticks
+      setTimeout(() => {
+        if (video.playbackRate !== clampedSpeed) {
+          video.playbackRate = clampedSpeed;
+        }
+      }, 50);
+      
       console.log(`Vivideo SpeedController: Applied speed ${clampedSpeed}x to video`);
     } catch (error) {
       console.error('Vivideo SpeedController: Error applying speed to video:', error);
@@ -67,15 +117,49 @@ class SpeedController {
     videos.forEach(video => {
       this.applySpeedToVideo(video, speed);
     });
+    
+    // Force override any website speed controls with multiple attempts
+    this.forceSpeedOverride(speed);
+  }
+
+  // Aggressively force speed override
+  forceSpeedOverride(speed) {
+    const clampedSpeed = Math.max(0.05, Math.min(25, speed));
+    
+    // Multiple attempts to ensure override
+    const attempts = [0, 100, 300, 1000]; // Try immediately, then with delays
+    
+    attempts.forEach(delay => {
+      setTimeout(() => {
+        const videos = this.controller.filterEngine.findVideos();
+        videos.forEach(video => {
+          if (video && Math.abs(video.playbackRate - clampedSpeed) > 0.01) {
+            try {
+              video.playbackRate = clampedSpeed;
+              
+              // Also try to override any possible speed controls
+              if (video.defaultPlaybackRate !== undefined) {
+                video.defaultPlaybackRate = clampedSpeed;
+              }
+            } catch (error) {
+              // Silent fail for repeated attempts
+            }
+          }
+        });
+      }, delay);
+    });
   }
 
   // Set new speed and apply it
   setSpeed(newSpeed) {
+    // Clamp speed between 0.05 and 25
+    newSpeed = Math.max(0.05, Math.min(25, newSpeed));
+    
     // Store previous speed before changing
     this.previousSpeed = this.currentSpeed;
     this.currentSpeed = newSpeed;
     
-    // Apply to all current videos
+    // Apply to all current videos with force override
     this.applySpeedToAllVideos(newSpeed);
     
     // Update controller settings
@@ -87,6 +171,8 @@ class SpeedController {
     
     // Trigger UI update
     this.controller.updateUI();
+    
+    console.log(`Vivideo SpeedController: Speed set to ${newSpeed}x`);
   }
 
   // Get current speed
@@ -189,15 +275,30 @@ class SpeedController {
       this.applySpeedToVideo(video, targetSpeed);
     };
 
+    const rateChangeHandler = () => {
+      // Detect when video speed changes externally
+      const videoSpeed = this.detectCurrentSpeed(video);
+      if (Math.abs(videoSpeed - this.currentSpeed) > 0.01) {
+        console.log(`Vivideo SpeedController: External speed change detected: ${videoSpeed}x`);
+        // Update our controller to match
+        this.currentSpeed = videoSpeed;
+        this.controller.settings.speed = videoSpeed;
+        // Update UI without saving (user might be adjusting)
+        this.controller.updateUI();
+      }
+    };
+
     video.addEventListener('play', playHandler);
     video.addEventListener('loadedmetadata', loadedMetadataHandler);
     video.addEventListener('canplay', canPlayHandler);
+    video.addEventListener('ratechange', rateChangeHandler);
 
     // Store handlers for cleanup
     this.speedObservers.set(video, {
       playHandler,
       loadedMetadataHandler,
-      canPlayHandler
+      canPlayHandler,
+      rateChangeHandler
     });
   }
 
@@ -208,12 +309,19 @@ class SpeedController {
       video.removeEventListener('play', observers.playHandler);
       video.removeEventListener('loadedmetadata', observers.loadedMetadataHandler);
       video.removeEventListener('canplay', observers.canPlayHandler);
+      video.removeEventListener('ratechange', observers.rateChangeHandler);
       this.speedObservers.delete(video);
     }
   }
 
   // Clean up all listeners
   cleanup() {
+    // Clear sync interval
+    if (this.syncInterval) {
+      clearInterval(this.syncInterval);
+      this.syncInterval = null;
+    }
+
     // Remove all listeners
     const videos = this.controller.filterEngine.findVideos();
     videos.forEach(video => {
@@ -241,13 +349,12 @@ class SpeedController {
           >
         </div>
         
-        <div class="vivideo-speed-presets">
-          <button class="vivideo-speed-preset" data-speed="0.25">0.25x</button>
-          <button class="vivideo-speed-preset" data-speed="0.5">0.5x</button>
-          <button class="vivideo-speed-preset" data-speed="1.0">1x</button>
-          <button class="vivideo-speed-preset" data-speed="1.25">1.25x</button>
-          <button class="vivideo-speed-preset" data-speed="1.5">1.5x</button>
-          <button class="vivideo-speed-preset" data-speed="2.0">2x</button>
+        <div class="vivideo-speed-buttons-block">
+          <button class="vivideo-speed-button speed-decrease" data-change="-0.5">-0.50x</button>
+          <button class="vivideo-speed-button speed-decrease" data-change="-0.25">-0.25x</button>
+          <button class="vivideo-speed-button speed-reset" data-reset="1.0">Reset</button>
+          <button class="vivideo-speed-button speed-increase" data-change="+0.25">+0.25x</button>
+          <button class="vivideo-speed-button speed-increase" data-change="+0.5">+0.50x</button>
         </div>
         
         <div class="vivideo-speed-options">
@@ -268,7 +375,7 @@ class SpeedController {
   bindSpeedControlEvents(container) {
     const slider = container.querySelector('.vivideo-speed-slider');
     const valueDisplay = container.querySelector('.vivideo-speed-value');
-    const presetButtons = container.querySelectorAll('.vivideo-speed-preset');
+    const speedButtons = container.querySelectorAll('.vivideo-speed-button');
     const autoSpeedCheckbox = container.querySelector('.vivideo-auto-speed-checkbox');
 
     // Slider events
@@ -282,16 +389,28 @@ class SpeedController {
       });
     }
 
-    // Preset button events
-    presetButtons.forEach(button => {
+    // Speed control button events
+    speedButtons.forEach(button => {
       button.addEventListener('click', (e) => {
-        const speed = parseFloat(e.target.dataset.speed);
-        this.setSpeed(speed);
-        if (slider) {
-          slider.value = speed;
+        let newSpeed;
+        
+        if (e.target.dataset.reset) {
+          // Reset button
+          newSpeed = 1.0;
+        } else if (e.target.dataset.change) {
+          // Increment/Decrement buttons
+          const change = parseFloat(e.target.dataset.change);
+          newSpeed = Math.max(0.05, Math.min(25, this.currentSpeed + change));
         }
-        if (valueDisplay) {
-          valueDisplay.textContent = `${speed.toFixed(2)}x`;
+        
+        if (newSpeed) {
+          this.setSpeed(newSpeed);
+          if (slider) {
+            slider.value = newSpeed;
+          }
+          if (valueDisplay) {
+            valueDisplay.textContent = `${newSpeed.toFixed(2)}x`;
+          }
         }
       });
     });
