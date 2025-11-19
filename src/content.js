@@ -122,54 +122,54 @@ if (window !== window.top) {
               name: 'Vivid Colors',
               description: 'High saturation and contrast for vivid playback',
               settings: {
-                contrast: 27,
-                colorTemp: -72,
-                saturation: 72,
+                contrast: 7,
+                colorTemp: -57,
+                saturation: 57,
                 gamma: 1,
-                sharpness: 0,
+                sharpness: 7,
                 brightness: 0,
                 speed: 1.0
               }
             },
-            {
-              name: 'Black & White',
-              description: 'Desaturate to create a black & white effect',
-              settings: {
-                contrast: 0,
-                colorTemp: 0,
-                saturation: -100,
-                gamma: 1,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            {
-              name: 'High Gamma / Low Contrast',
-              description: 'Brighter midtones with reduced contrast',
-              settings: {
-                contrast: -15,
-                gamma: 1.6,
-                saturation: 0,
-                colorTemp: 0,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            {
-              name: 'Low Gamma / High Contrast',
-              description: 'Deeper tones with stronger contrast',
-              settings: {
-                contrast: 25,
-                gamma: 0.8,
-                saturation: 0,
-                colorTemp: 0,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
+            // {
+            //   name: 'Black & White',
+            //   description: 'Desaturate to create a black & white effect',
+            //   settings: {
+            //     contrast: 0,
+            //     colorTemp: 0,
+            //     saturation: -100,
+            //     gamma: 1,
+            //     sharpness: 0,
+            //     brightness: 0,
+            //     speed: 1.0
+            //   }
+            // },
+            // {
+            //   name: 'High Gamma / Low Contrast',
+            //   description: 'Brighter midtones with reduced contrast',
+            //   settings: {
+            //     contrast: -15,
+            //     gamma: 1.6,
+            //     saturation: 0,
+            //     colorTemp: 0,
+            //     sharpness: 0,
+            //     brightness: 0,
+            //     speed: 1.0
+            //   }
+            // },
+            // {
+            //   name: 'Low Gamma / High Contrast',
+            //   description: 'Deeper tones with stronger contrast',
+            //   settings: {
+            //     contrast: 25,
+            //     gamma: 0.8,
+            //     saturation: 0,
+            //     colorTemp: 0,
+            //     sharpness: 0,
+            //     brightness: 0,
+            //     speed: 1.0
+            //   }
+            // },
             {
               name: 'Matrix (Sharp)',
               description: 'Sharpness boost only (matrix-like)',

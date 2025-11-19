@@ -2317,3 +2317,11 @@ div .vivideo-container,
 .vivideo-theme-cybernetic .vivideo-main-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 255, 65, 0.6);
 }
+
+.vivideo-controls-section {
+  overflow: hidden;
+}
+
+.vivideo-label {
+  margin: 4px;
+}
