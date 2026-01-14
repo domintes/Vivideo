@@ -34,34 +34,32 @@ class UIHelper {
   static createCheckboxesHTML(settings) {
     return /*html*/ `
       <div class="vivideo-auto-activate checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="auto-activate-checkbox" ${settings.autoActivate ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Auto-activate extension</span>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="auto-activate-checkbox" class="vivideo-switch" ${settings.autoActivate ? 'checked' : ''}>
+          <span class="vivideo-switch-label"><span class="vivideo-short-label">Auto-activate</span></span>
+          <span class="vivideo-switch-info" data-info="Automatically apply Vivideo filters when videos are detected.">i</span>
         </label>
       </div>
 
       <div class="vivideo-work-on-images-activate checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="work-on-images-checkbox" ${settings.workOnImagesActivate ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Work on images</span>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="work-on-images-checkbox" class="vivideo-switch" ${settings.workOnImagesActivate ? 'checked' : ''}>
+          <span class="vivideo-switch-label"><span class="vivideo-short-label">Work on images</span></span>
         </label>
       </div>
 
       <div class="vivideo-extended-limits checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="extended-limits-checkbox" ${settings.extendedLimits ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Extended limits (max technical range)</span>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="extended-limits-checkbox" class="vivideo-switch" ${settings.extendedLimits ? 'checked' : ''}>
+          <span class="vivideo-switch-label"><span class="vivideo-short-label">Extended limits</span></span>
+          <span class="vivideo-switch-info" data-info="Enables extreme technical range for advanced users.">i</span>
         </label>
       </div>
 
       <div class="vivideo-toggle-without-alt checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="toggle-without-alt-checkbox" ${settings.toggleWithoutAlt ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Toggle without 'Alt' button</span>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="toggle-without-alt-checkbox" class="vivideo-switch" ${settings.toggleWithoutAlt ? 'checked' : ''}>
+          <span class="vivideo-switch-label"><span class="vivideo-short-label">Toggle without Alt</span></span>
         </label>
       </div>
     `;
@@ -98,6 +96,42 @@ class UIHelper {
     });
   }
 
+  // Initialize info tooltip behavior for elements with .vivideo-switch-info
+  static initInfoTooltips(container) {
+    const icons = container.querySelectorAll('.vivideo-switch-info');
+    icons.forEach((icon) => {
+      icon.tabIndex = 0; // make focusable for keyboard users
+      let timeout = null;
+      let tooltipEl = null;
+
+      const showTooltip = () => {
+        const text = icon.getAttribute('data-info');
+        if (!text) return;
+        tooltipEl = document.createElement('div');
+        tooltipEl.className = 'vivideo-info-tooltip';
+        tooltipEl.textContent = text;
+        document.body.appendChild(tooltipEl);
+
+        const rect = icon.getBoundingClientRect();
+        tooltipEl.style.left = (rect.right + 8) + 'px';
+        tooltipEl.style.top = (rect.top - 4) + 'px';
+        tooltipEl.style.display = 'block';
+      };
+
+      const hideTooltip = () => {
+        if (timeout) { clearTimeout(timeout); timeout = null; }
+        if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+      };
+
+      icon.addEventListener('mouseenter', () => {
+        timeout = setTimeout(showTooltip, 500);
+      });
+      icon.addEventListener('mouseleave', hideTooltip);
+      icon.addEventListener('focus', () => { timeout = setTimeout(showTooltip, 500); });
+      icon.addEventListener('blur', hideTooltip);
+    });
+  }
+
   static bindCheckboxEvents(container, controller) {
     // Auto-activate checkbox
     container.querySelector('#auto-activate-checkbox').addEventListener('change', (e) => {
@@ -107,7 +141,27 @@ class UIHelper {
 
       // Apply or remove filters based on checkbox state
       if (controller.settings.autoActivate) {
+        // Enable continuous video observation
+        if (!controller.videoObserverActive) {
+          console.log('Vivideo: Starting continuous video observation');
+          controller.observeVideos();
+          controller.videoObserverActive = true;
+        }
+        
+        // Apply filters to all current videos
         controller.applyFilters();
+        
+        // Apply speed to all videos
+        if (controller.speedController) {
+          const videos = controller.filterEngine.findVideos();
+          videos.forEach(video => {
+            if (controller.speedController.isAutoApplyPreviousSpeedEnabled() && controller.speedController.getPreviousSpeed() !== 1.0) {
+              controller.speedController.applySpeedToVideo(video, controller.speedController.getPreviousSpeed());
+            } else {
+              controller.speedController.applySpeedToVideo(video, controller.speedController.getSpeed());
+            }
+          });
+        }
       } else {
         // Only remove filters if panel is not visible
         if (!controller.isVisible) {

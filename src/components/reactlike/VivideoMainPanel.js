@@ -43,6 +43,7 @@ const VivideoMainPanel = ({
   const [profiles, setProfiles] = useState(initialProfiles);
   const [activeProfile, setActiveProfile] = useState(initialActiveProfile);
   const [activeTab, setActiveTab] = useState('profiles');
+  const [compatibilityMode, setCompatibilityMode] = useState(false);
 
   const panelRef = useRef(null);
   const isDraggingRef = useRef(false);
@@ -258,11 +259,29 @@ const VivideoMainPanel = ({
           autoActivate={settings.autoActivate}
           workOnImages={settings.workOnImages}
           compareMode={settings.compareMode}
+          compatibilityMode={compatibilityMode}
           onExtendedLimitsChange={(enabled) => handleOptionsChange('extendedLimits', enabled)}
           onAutoActivateChange={(enabled) => handleOptionsChange('autoActivate', enabled)}
           onWorkOnImagesChange={(enabled) => handleOptionsChange('workOnImages', enabled)}
           onCompareModeChange={(enabled) => handleOptionsChange('compareMode', enabled)}
-          onResetAll={() => console.log('Reset all')}
+          onCompatibilityModeChange={(enabled) => setCompatibilityMode(enabled)}
+          onResetAll={() => {
+            const defaultSettings = {
+              brightness: 0,
+              contrast: 0,
+              saturation: 0,
+              gamma: 1,
+              colorTemp: 0,
+              sharpness: 0,
+              speed: 1.0,
+              extendedLimits: false,
+              autoActivate: true
+            };
+            setSettings(defaultSettings);
+            if (onSettingsChange) {
+              onSettingsChange(defaultSettings);
+            }
+          }}
         />
 
         {sliderConfigs.map((config) => (
@@ -286,14 +305,73 @@ const VivideoMainPanel = ({
           activeProfile={activeProfile}
           activeTheme={theme}
           profiles={profiles}
-          themes={['cybernetic', 'dark', 'light']} // You can define available themes
+          themes={['cybernetic', 'dark', 'light']}
           onTabChange={setActiveTab}
           onProfileSelect={handleProfileSelect}
           onThemeSelect={handleThemeSelect}
-          onCreateProfile={() => console.log('Create profile')}
-          onDeleteProfile={(profileName) => console.log('Delete profile', profileName)}
-          onImportSettings={() => console.log('Import settings')}
-          onExportSettings={() => console.log('Export settings')}
+          onCreateProfile={(profileName) => {
+            const newProfile = {
+              name: profileName,
+              description: `Created on ${new Date().toLocaleDateString()}`,
+              settings: { ...settings }
+            };
+            const updatedProfiles = [...profiles, newProfile];
+            setProfiles(updatedProfiles);
+            console.log('Profile created:', profileName);
+          }}
+          onDeleteProfile={(profileName) => {
+            if (profileName !== 'DEFAULT') {
+              const updatedProfiles = profiles.filter((p) => p.name !== profileName);
+              setProfiles(updatedProfiles);
+              if (activeProfile === profileName) {
+                handleProfileSelect('DEFAULT');
+              }
+              console.log('Profile deleted:', profileName);
+            }
+          }}
+          onImportSettings={() => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+              const file = e.target.files[0];
+              if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                  try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.profiles) {
+                      setProfiles(data.profiles);
+                    }
+                    if (data.settings) {
+                      setSettings(data.settings);
+                    }
+                    console.log('Settings imported successfully');
+                  } catch (error) {
+                    console.error('Error importing settings:', error);
+                  }
+                };
+                reader.readAsText(file);
+              }
+            };
+            input.click();
+          }}
+          onExportSettings={() => {
+            const dataToExport = {
+              profiles: profiles,
+              settings: settings,
+              exportDate: new Date().toISOString()
+            };
+            const dataStr = JSON.stringify(dataToExport, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `vivideo-profiles-${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+            console.log('Settings exported successfully');
+          }}
         />
       </div>
     </div>

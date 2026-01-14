@@ -8,6 +8,99 @@ document.addEventListener('DOMContentLoaded', function () {
   const importBtn = document.getElementById('import-btn');
   const importFile = document.getElementById('import-file');
   const messageDiv = document.getElementById('message');
+  const profileNameInput = document.getElementById('profile-name-popup');
+  const saveProfileBtn = document.getElementById('save-profile-btn');
+
+  // Helper to get existing profiles
+  function getProfiles() {
+    return new Promise((resolve) => {
+      chrome.storage.sync.get('vivideoProfiles', (res) => {
+        resolve(res.vivideoProfiles || []);
+      });
+    });
+  }
+
+  // Update save button label depending on whether name exists
+  async function updateSaveButtonState() {
+    const name = profileNameInput && profileNameInput.value.trim();
+    if (!name) {
+      saveProfileBtn.textContent = '💾 Save';
+      saveProfileBtn.dataset.overwrite = 'false';
+      return;
+    }
+
+    const profiles = await getProfiles();
+    const exists = profiles.some((p) => p.name === name);
+    if (exists) {
+      saveProfileBtn.textContent = '🔁 Overwrite';
+      saveProfileBtn.dataset.overwrite = 'true';
+    } else {
+      saveProfileBtn.textContent = '💾 Save';
+      saveProfileBtn.dataset.overwrite = 'false';
+    }
+  }
+
+  if (profileNameInput) {
+    profileNameInput.addEventListener('input', updateSaveButtonState);
+  }
+
+  if (saveProfileBtn) {
+    saveProfileBtn.addEventListener('click', async function () {
+      const name = profileNameInput.value.trim();
+      if (!name) {
+        showMessage('Please enter a profile name', 'error');
+        return;
+      }
+
+      // Get current settings to save into profile
+      chrome.storage.sync.get('vivideoSettings', async (res) => {
+        const current = res.vivideoSettings || {
+          brightness: 0,
+          contrast: 0,
+          saturation: 0,
+          gamma: 1,
+          colorTemp: 0,
+          sharpness: 0,
+          speed: 1.0,
+          speedStep: 0.25,
+          autoActivate: true
+        };
+
+        const profiles = await getProfiles();
+        const existingIndex = profiles.findIndex((p) => p.name === name);
+
+        const newProfile = { name: name, settings: current };
+
+        if (existingIndex >= 0) {
+          profiles[existingIndex] = newProfile;
+          chrome.storage.sync.set({ vivideoProfiles: profiles }, () => {
+            showMessage(`Profile "${name}" overwritten successfully`, 'success');
+            profileNameInput.value = '';
+            updateSaveButtonState();
+            // Notify content script to update in-page UI
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+              if (tabs && tabs[0]) {
+                chrome.tabs.sendMessage(tabs[0].id, { action: 'profile-saved', profile: newProfile, overwrite: true });
+              }
+            });
+          });
+        } else {
+          profiles.push(newProfile);
+          chrome.storage.sync.set({ vivideoProfiles: profiles }, () => {
+            showMessage(`Profile "${name}" saved`, 'success');
+            profileNameInput.value = '';
+            updateSaveButtonState();
+            // Notify content script to update in-page UI
+            chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+              if (tabs && tabs[0]) {
+                chrome.tabs.sendMessage(tabs[0].id, { action: 'profile-saved', profile: newProfile, overwrite: false });
+              }
+            });
+          });
+        }
+      });
+    });
+  }
 
   // Get current tab
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -20,11 +113,11 @@ document.addEventListener('DOMContentLoaded', function () {
       currentTab.url.startsWith('moz-extension://') ||
       currentTab.url.startsWith('edge://')
     ) {
-      videoCountDiv.textContent = 'Nie można uzyskać dostępu do tej strony';
-      enhancementStatusDiv.textContent = 'Enhancement: Niedostępny';
+      videoCountDiv.textContent = 'Cannot access this page';
+      enhancementStatusDiv.textContent = 'Enhancement: Unavailable';
       statusDiv.className = 'status status-inactive';
       openPanelBtn.disabled = true;
-      openPanelBtn.textContent = '❌ Panel niedostępny';
+      openPanelBtn.textContent = '❌ Panel unavailable';
       return;
     }
 
@@ -37,14 +130,14 @@ document.addEventListener('DOMContentLoaded', function () {
       (results) => {
         if (results && results[0]) {
           const videoCount = results[0].result;
-          videoCountDiv.textContent = `${videoCount} ${videoCount === 1 ? 'film znaleziony' : 'filmów znalezionych'}`;
+          videoCountDiv.textContent = `${videoCount} ${videoCount === 1 ? 'video found' : 'videos found'}`;
 
           if (videoCount > 0) {
             statusDiv.className = 'status status-active';
-            enhancementStatusDiv.textContent = 'Enhancement: Aktywny';
+            enhancementStatusDiv.textContent = 'Enhancement: Active';
           } else {
             statusDiv.className = 'status status-inactive';
-            enhancementStatusDiv.textContent = 'Enhancement: Brak filmów';
+            enhancementStatusDiv.textContent = 'Enhancement: No videos';
           }
         }
       }
@@ -61,7 +154,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Export settings
   exportBtn.addEventListener('click', async function () {
-    showMessage('Eksportowanie ustawień...', 'info');
+    showMessage('Exporting settings...', 'info');
 
     try {
       const allData = await getAllSettings();
@@ -89,12 +182,12 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         (_downloadId) => {
           URL.revokeObjectURL(url);
-          showMessage('Ustawienia zostały wyeksportowane pomyślnie!', 'success');
+          showMessage('Settings exported successfully!', 'success');
         }
       );
     } catch (error) {
       console.error('Export error:', error);
-      showMessage('Błąd podczas eksportu: ' + error.message, 'error');
+      showMessage('Error during export: ' + error.message, 'error');
     }
   });
 
@@ -107,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const file = e.target.files[0];
     if (!file) return;
 
-    showMessage('Importowanie ustawień...', 'info');
+    showMessage('Importing settings...', 'info');
 
     try {
       const fileText = await readFile(file);
@@ -115,7 +208,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Validate data
       if (!validateImportData(importData)) {
-        throw new Error('Nieprawidłowy format pliku ustawień');
+        throw new Error('Invalid settings file format');
       }
 
       // Import settings
@@ -123,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       const profilesCount = importData.profiles ? importData.profiles.length : 0;
       showMessage(
-        `Ustawienia zostały zaimportowane pomyślnie! Zaimportowano ${profilesCount} profili.`,
+        `Settings imported successfully! Imported ${profilesCount} profiles.`,
         'success'
       );
 
@@ -131,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function () {
       importFile.value = '';
     } catch (error) {
       console.error('Import error:', error);
-      showMessage('Błąd podczas importu: ' + error.message, 'error');
+      showMessage('Error during import: ' + error.message, 'error');
       importFile.value = '';
     }
   });
@@ -148,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
         settings.colorTemp !== 0;
 
       if (hasChanges) {
-        enhancementStatusDiv.textContent = 'Enhancement: Zmodyfikowany';
+        enhancementStatusDiv.textContent = 'Enhancement: Modified';
       }
     }
   });
@@ -185,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = () => reject(new Error('Błąd podczas odczytu pliku'));
+      reader.onerror = () => reject(new Error('Error reading file'));
       reader.readAsText(file);
     });
   }

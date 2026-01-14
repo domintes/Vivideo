@@ -57,26 +57,27 @@ class ProfileManager {
   <div class="vivideo-profile-save-section">
           <div class="vivideo-profile-form">
             <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
-            <button class="vivideo-profile-save" id="save-profile">Save Current Settings</button>
+            <button class="vivideo-profile-save" id="save-profile">Save</button>
+            <button class="vivideo-profile-overwrite" id="overwrite-profile" style="display:none">Overwrite</button>
           </div>
         </div>
       </div>
 
       <!-- Profile Settings Section -->
       <div class="vivideo-profile-settings-section">
-        <div class="vivideo-checkbox-container">
-          <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-checkbox" checked>
-          <label for="show-profile-after-change-checkbox" class="vivideo-checkbox-label">
-            <span class="vivideo-checkbox-text">Show current profile after change</span>
-            <span class="vivideo-checkbox-description">Display profile name for 3 seconds after switching</span>
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-switch" checked>
+            <span class="vivideo-switch-label"><span class="vivideo-short-label">Show profile after change</span></span>
+            <span class="vivideo-switch-info" data-info="Display profile name for a short time after switching">i</span>
           </label>
         </div>
-        
-        <div class="vivideo-checkbox-container">
-          <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-checkbox">
-          <label for="work-on-all-sites-checkbox" class="vivideo-checkbox-label">
-            <span class="vivideo-checkbox-text">Work on all websites</span>
-            <span class="vivideo-checkbox-description">Apply video filters to all websites, not just YouTube</span>
+
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-switch">
+            <span class="vivideo-switch-label"><span class="vivideo-short-label">Work on all sites</span></span>
+            <span class="vivideo-switch-info" data-info="Apply filters to all websites, not only YouTube">i</span>
           </label>
         </div>
 
@@ -86,11 +87,11 @@ class ProfileManager {
       <!-- Compare Mode Section -->
       <div class="vivideo-compare-section">
         <div class="vivideo-compare-header">
-          <div class="vivideo-checkbox-container">
-            <input type="checkbox" id="compare-mode-checkbox" class="vivideo-checkbox">
-            <label for="compare-mode-checkbox" class="vivideo-checkbox-label">
-              <span class="vivideo-checkbox-text">Compare Mode</span>
-              <span class="vivideo-checkbox-description">Split-screen profile comparison</span>
+          <div class="vivideo-switch-row">
+            <label class="vivideo-switch-container">
+              <input type="checkbox" id="compare-mode-checkbox" class="vivideo-switch">
+              <span class="vivideo-switch-label"><span class="vivideo-short-label">Compare Mode</span></span>
+              <span class="vivideo-switch-info" data-info="Split-screen profile comparison">i</span>
             </label>
           </div>
         </div>
@@ -118,71 +119,119 @@ class ProfileManager {
 
   bindEvents(container) {
     // Themes button
-    container.querySelector('#themes-btn').addEventListener('click', () => {
-      this.showThemes(container);
-    });
+    const themesBtn = container.querySelector('#themes-btn');
+    if (themesBtn) {
+      themesBtn.addEventListener('click', () => {
+        this.showThemes(container);
+      });
+    }
 
     // Settings management button
-    container.querySelector('#settings-btn').addEventListener('click', () => {
-      this.controller.toggleSettingsManagement();
-    });
+    const settingsBtn = container.querySelector('#settings-btn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        this.controller.toggleSettingsManagement();
+      });
+    }
 
-    container.querySelector('#save-profile').addEventListener('click', () => {
-      this.saveCurrentProfile(container);
-    });
+    const saveProfileBtn = container.querySelector('#save-profile');
+    if (saveProfileBtn) {
+      saveProfileBtn.addEventListener('click', () => {
+        this.saveCurrentProfile(container);
+      });
+    }
+
+    // Overwrite button (hidden until needed)
+    const overwriteProfileBtn = container.querySelector('#overwrite-profile');
+    if (overwriteProfileBtn) {
+      overwriteProfileBtn.addEventListener('click', () => {
+        this.overwriteCurrentProfile(container);
+      });
+    }
+
+    // Profile name input - toggles between Save and Overwrite when name exists
+    const nameInput = container.querySelector('#profile-name');
+    if (nameInput) {
+      nameInput.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        const overwriteBtn = container.querySelector('#overwrite-profile');
+        const saveBtn = container.querySelector('#save-profile');
+        const exists = this.controller.profiles.find((p) => p.name === val);
+        if (exists && val.length > 0) {
+          if (overwriteBtn) overwriteBtn.style.display = 'inline-block';
+          if (saveBtn) saveBtn.style.display = 'none';
+        } else {
+          if (overwriteBtn) overwriteBtn.style.display = 'none';
+          if (saveBtn) saveBtn.style.display = 'inline-block';
+        }
+      });
+    }
 
     // Display default profiles checkbox
     // (display-default-profiles removed)
 
     // Show profile after change checkbox
-    container
-      .querySelector('#show-profile-after-change-checkbox')
-      .addEventListener('change', (e) => {
+    const showProfileAfterChangeCheckbox = container.querySelector('#show-profile-after-change-checkbox');
+    if (showProfileAfterChangeCheckbox) {
+      showProfileAfterChangeCheckbox.addEventListener('change', (e) => {
         this.showProfileAfterChange = e.target.checked;
         console.log('Vivideo: Show profile after change:', this.showProfileAfterChange);
 
         // Save setting
         this.controller.saveAppState();
       });
+    }
 
     // Work on all sites checkbox
-    container.querySelector('#work-on-all-sites-checkbox').addEventListener('change', (e) => {
-      this.workOnAllSites = e.target.checked;
-      console.log('Vivideo: Work on all sites:', this.workOnAllSites);
+    const workOnAllSitesCheckbox = container.querySelector('#work-on-all-sites-checkbox');
+    if (workOnAllSitesCheckbox) {
+      workOnAllSitesCheckbox.addEventListener('change', (e) => {
+        this.workOnAllSites = e.target.checked;
+        console.log('Vivideo: Work on all sites:', this.workOnAllSites);
 
-      // Save setting
-      this.controller.saveAppState();
+        // Save setting
+        this.controller.saveAppState();
 
-      // Apply or remove filters based on new setting
-      if (this.workOnAllSites) {
-        // Apply filters to current site if not YouTube
-        this.controller.applyFilters();
-      } else {
-        // Remove filters from non-YouTube sites
-        if (!this.isYouTubeSite()) {
-          this.controller.removeFilters();
+        // Apply or remove filters based on new setting
+        if (this.workOnAllSites) {
+          // Apply filters to current site if not YouTube
+          this.controller.applyFilters();
+        } else {
+          // Remove filters from non-YouTube sites
+          if (!this.isYouTubeSite()) {
+            this.controller.removeFilters();
+          }
         }
-      }
-    });
+      });
+    }
 
     // Speed step input
-    container.querySelector('#speed-step-input').addEventListener('input', (e) => {
-      const value = parseFloat(e.target.value);
-      if (!isNaN(value) && value >= 0.05 && value <= 1.0) {
-        this.controller.settings.speedStep = value;
-        this.controller.saveSettings();
-        console.log(`Vivideo: Speed step changed to ${value}x`);
-      }
-    });
+    const speedStepInput = container.querySelector('#speed-step-input');
+    if (speedStepInput) {
+      speedStepInput.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        if (!isNaN(value) && value >= 0.05 && value <= 1.0) {
+          this.controller.settings.speedStep = value;
+          this.controller.saveSettings();
+          console.log(`Vivideo: Speed step changed to ${value}x`);
+        }
+      });
+    }
 
     // Compare Mode controls
-    container.querySelector('#compare-mode-checkbox').addEventListener('change', (e) => {
-      this.toggleCompareMode(container, e.target.checked);
-    });
+    const compareModeCheckbox = container.querySelector('#compare-mode-checkbox');
+    if (compareModeCheckbox) {
+      compareModeCheckbox.addEventListener('change', (e) => {
+        this.toggleCompareMode(container, e.target.checked);
+      });
+    }
 
-    container.querySelector('#compare-profile-select').addEventListener('change', (e) => {
-      this.selectCompareProfile(container, e.target.value);
-    });
+    const compareProfileSelect = container.querySelector('#compare-profile-select');
+    if (compareProfileSelect) {
+      compareProfileSelect.addEventListener('change', (e) => {
+        this.selectCompareProfile(container, e.target.value);
+      });
+    }
   }
 
   // Check if current site is YouTube
@@ -191,6 +240,40 @@ class ProfileManager {
       window.location.hostname.includes('youtube.com') ||
       window.location.hostname.includes('youtu.be')
     );
+  }
+
+  // Auto-save currently active profile if that feature is enabled
+  autoSaveActiveProfile() {
+    if (!this.controller.settings.autoSaveProfiles) return;
+    const activeName = this.controller.settings.activeProfile;
+    if (!activeName) return;
+
+    // Do not auto-save the built-in DEFAULT profile
+    if (activeName === 'DEFAULT') return;
+
+    const currentSettings = {
+      brightness: this.controller.settings.brightness,
+      contrast: this.controller.settings.contrast,
+      saturation: this.controller.settings.saturation,
+      gamma: this.controller.settings.gamma,
+      colorTemp: this.controller.settings.colorTemp,
+      sharpness: this.controller.settings.sharpness
+    };
+
+    const idx = this.controller.profiles.findIndex((p) => p.name === activeName);
+    if (idx >= 0) {
+      this.controller.profiles[idx].settings = {
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      };
+      console.log('Vivideo: Auto-saved profile:', activeName);
+    } else {
+      // If active profile doesn't exist in users list, create it
+      this.controller.profiles.push({ name: activeName, settings: { ...currentSettings, autoActivate: this.controller.settings.autoActivate } });
+      console.log('Vivideo: Auto-saved new profile:', activeName);
+    }
+
+    this.controller.saveProfiles();
   }
 
   // Show themes panel
@@ -346,12 +429,22 @@ class ProfileManager {
     // Check if profile name already exists
     const existingProfile = this.controller.profiles.find((p) => p.name === profileName);
     if (existingProfile) {
-      // Update existing profile
-      existingProfile.settings = {
-        ...currentSettings,
-        autoActivate: this.controller.settings.autoActivate
-      };
-      console.log('Vivideo: Profile updated:', profileName);
+      // Do not overwrite implicitly: prompt user to use the Overwrite button
+      const originalPlaceholder = nameInput.placeholder;
+      nameInput.placeholder = `Name exists: ${existingProfile.name}`;
+      nameInput.style.color = '#ff6b6b';
+      setTimeout(() => {
+        nameInput.placeholder = originalPlaceholder;
+        nameInput.style.color = '';
+      }, 2500);
+
+      // Show overwrite button explicitly
+      const overwriteBtn = container.querySelector('#overwrite-profile');
+      const saveBtn = container.querySelector('#save-profile');
+      if (overwriteBtn) overwriteBtn.style.display = 'inline-block';
+      if (saveBtn) saveBtn.style.display = 'none';
+
+      return; // Do not proceed with implicit overwrite
     } else {
       // Create new profile
       const profile = {
@@ -374,6 +467,48 @@ class ProfileManager {
     this.updateProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
     nameInput.value = '';
+  }
+
+  // Overwrite an existing profile explicitly
+  overwriteCurrentProfile(container) {
+    const nameInput = container.querySelector('#profile-name');
+    const profileName = nameInput.value.trim();
+    if (!profileName) return;
+
+    const currentSettings = {
+      brightness: this.controller.settings.brightness,
+      contrast: this.controller.settings.contrast,
+      saturation: this.controller.settings.saturation,
+      gamma: this.controller.settings.gamma,
+      colorTemp: this.controller.settings.colorTemp,
+      sharpness: this.controller.settings.sharpness
+    };
+
+    const existingProfile = this.controller.profiles.find((p) => p.name === profileName);
+    if (existingProfile) {
+      existingProfile.settings = {
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      };
+      console.log('Vivideo: Profile overwritten:', profileName);
+
+      this.controller.saveProfiles();
+      this.controller.saveSettings();
+      this.controller.saveAppState();
+
+      // Reset UI
+      nameInput.value = '';
+      const overwriteBtn = container.querySelector('#overwrite-profile');
+      const saveBtn = container.querySelector('#save-profile');
+      if (overwriteBtn) overwriteBtn.style.display = 'none';
+      if (saveBtn) saveBtn.style.display = 'inline-block';
+
+      // Update lists
+      this.updateProfilesList(container);
+      this.updateActiveProfileDisplay(container, this.controller.settings);
+    }
+  }
+
   }
 
   editProfile(index) {

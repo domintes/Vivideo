@@ -544,50 +544,8 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.vivideo-checkbox-container {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  font-size: 14px;
-  user-select: none;
-}
-
-.vivideo-checkbox-container input {
-  display: none;
-}
-
-.vivideo-checkmark {
-  width: 18px;
-  height: 18px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
-  margin-right: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.vivideo-checkbox-container:hover .vivideo-checkmark {
-  border-color: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
-}
-
-.vivideo-checkbox-container input:checked ~ .vivideo-checkmark {
-  background: currentColor;
-  border-color: currentColor;
-}
-
-.vivideo-checkbox-container input:checked ~ .vivideo-checkmark::after {
-  content: '✓';
-  color: black;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.vivideo-checkbox-label {
-  flex: 1;
-}
+/* Legacy checkbox styles removed in favor of compact switch styles to avoid duplicates and inconsistent UI. */
+/* See .vivideo-switch-* classes for new switch appearance and behaviors. */
 
 /* Active states for buttons */
 .vivideo-info.vivideo-active,
@@ -665,7 +623,7 @@
 }
 
 .vivideo-control {
-  margin-bottom: 20px;
+  margin-bottom: 10px; /* more compact */
 }
 
 .vivideo-control:last-child {
@@ -676,36 +634,36 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
-  font-size: 14px;
+  margin-bottom: 6px;
+  font-size: 13px;
   font-weight: 600;
   font-family: 'Rajdhani', monospace;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
 }
 
 .vivideo-label span:first-child {
   color: inherit;
-  text-shadow: 0 0 8px currentColor;
+  text-shadow: 0 0 6px currentColor;
 }
 
 .vivideo-value {
-  padding: 3px 10px;
+  padding: 2px 8px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  min-width: 50px;
+  min-width: 46px;
   text-align: center;
   font-family: 'Orbitron', monospace;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
 }
 
 .vivideo-slider-container {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
+  gap: 6px;
+  font-size: 15px;
   font-family: 'Rajdhani', monospace;
   font-weight: 600;
 }
@@ -897,27 +855,27 @@
 }
 
 .vivideo-expandable-content {
-  padding: 16px;
+  padding: 12px;
 }
 
 .vivideo-profile-form {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .vivideo-profile-input {
   flex: 1;
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
   font-size: 12px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .vivideo-profile-input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
 }
 
 .vivideo-profile-input::placeholder {
@@ -925,21 +883,36 @@
 }
 
 .vivideo-profile-save {
-  padding: 8px 12px;
+  padding: 6px 10px;
   border-radius: 4px;
-  font-size: 16px;
+  font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.18s ease;
 }
 
 .vivideo-profile-save:hover {
-  transform: scale(1.05);
+  transform: scale(1.03);
+}
+
+.vivideo-profile-overwrite {
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  background: rgba(255, 75, 75, 0.95);
+  color: white;
+  border: none;
+  transition: all 0.18s ease;
+}
+
+.vivideo-profile-overwrite:hover {
+  transform: scale(1.03);
 }
 
 .vivideo-profile-list {
   overflow-y: auto;
   overflow-x: hidden;
-  height: 100%;
+  max-height: 220px; /* show scrollbar when content exceeds */
   padding: 0;
   margin: 0;
 }
@@ -1757,61 +1730,96 @@ button.vivideo-close {
 
 /* Compare Mode Styles */
 .vivideo-compare-section {
-  margin-top: 15px;
-  padding: 12px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 12px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .vivideo-compare-header {
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
-.vivideo-checkbox-container {
+/* Switch component (compact) */
+.vivideo-switch-container {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 6px 0;
 }
 
-.vivideo-checkbox-container.inline {
-  display: inline-flex;
+.vivideo-switch-container .vivideo-switch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 20px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.12);
+  position: relative;
+  flex: 0 0 auto;
+  margin-right: 8px;
+  outline: none;
+  transition: background 0.18s ease;
+}
+
+.vivideo-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+}
+
+.vivideo-switch:checked {
+  background: currentColor;
+}
+
+.vivideo-switch:checked::after {
+  transform: translateX(20px);
+}
+
+.vivideo-switch-label {
+  display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-}
-
-.vivideo-checkbox-container.inline .vivideo-checkbox-text {
-  font-size: 12px;
-  font-weight: 400;
-}
-
-.vivideo-checkbox {
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  cursor: pointer;
-}
-
-.vivideo-checkbox-label {
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  flex: 1;
-}
-
-.vivideo-checkbox-text {
   font-size: 13px;
   font-weight: 500;
-  color: white;
 }
 
-.vivideo-checkbox-description {
+.vivideo-switch-info {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.9);
   font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.vivideo-info-tooltip {
+  position: absolute;
+  min-width: 160px;
+  max-width: 320px;
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  z-index: 99999999;
+  display: none;
 }
 
 .vivideo-compare-controls {
-  margin-top: 12px;
+  margin-top: 10px;
 }
 
 .vivideo-compare-info {
@@ -2084,30 +2092,35 @@ button.vivideo-close {
 }
 
 .vivideo-speed-options {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(0, 191, 255, 0.2);
-}
-
-.vivideo-checkbox-container {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(0, 191, 255, 0.08);
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  cursor: pointer;
-  user-select: none;
 }
 
-.vivideo-auto-speed-checkbox {
-  width: 16px;
-  height: 16px;
-  accent-color: #00bfff;
-  cursor: pointer;
+/* Make switches more compact in speed options */
+.vivideo-speed-options .vivideo-switch-container {
+  padding: 4px 0;
 }
 
-.vivideo-checkbox-label {
-  font-size: 13px;
-  color: inherit;
-  cursor: pointer;
+.vivideo-speed-options .vivideo-switch {
+  width: 36px;
+  height: 18px;
+}
+
+.vivideo-speed-options .vivideo-switch:checked {
+  color: #00bfff;
+}
+
+.vivideo-switch-label .vivideo-short-label {
+  font-weight: 600;
+}
+
+.vivideo-switch-label .vivideo-compact-desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
 }
 
 /* Theme variations for speed controller */
@@ -2324,4 +2337,122 @@ div .vivideo-container,
 
 .vivideo-label {
   margin: 4px;
+}
+
+/* Scrollbars for panel content */
+.vivideo-main-panel {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.vivideo-panel-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 200px);
+  padding-right: 8px;
+}
+
+.vivideo-panel-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.vivideo-panel-content::-webkit-scrollbar-track {
+  background: rgba(0, 191, 255, 0.05);
+  border-radius: 4px;
+}
+
+.vivideo-panel-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 191, 255, 0.3);
+  border-radius: 4px;
+}
+
+.vivideo-panel-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 191, 255, 0.5);
+}
+
+/* Profile input section styles */
+.vivideo-profile-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(0, 191, 255, 0.05);
+  border: 1px solid rgba(0, 191, 255, 0.2);
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.vivideo-profile-input-section label {
+  color: #00bfff;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.vivideo-profile-input {
+  padding: 8px 12px;
+  background: rgba(0, 191, 255, 0.1);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  color: #00bfff;
+  border-radius: 4px;
+  font-family: 'Rajdhani', monospace;
+  font-size: 13px;
+}
+
+.vivideo-profile-input::placeholder {
+  color: rgba(0, 191, 255, 0.5);
+}
+
+.vivideo-profile-input:focus {
+  outline: none;
+  background: rgba(0, 191, 255, 0.15);
+  border-color: #00bfff;
+  box-shadow: 0 0 10px rgba(0, 191, 255, 0.3);
+}
+
+.vivideo-profile-input-section button {
+  padding: 8px 12px;
+  background: rgba(0, 191, 255, 0.15);
+  border: 1px solid rgba(0, 191, 255, 0.3);
+  color: #00bfff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Rajdhani', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+
+.vivideo-profile-input-section button:hover {
+  background: rgba(0, 191, 255, 0.25);
+  box-shadow: 0 0 12px rgba(0, 191, 255, 0.4);
+  border-color: #00bfff;
+}
+
+.vivideo-profile-save {
+  background: rgba(0, 200, 100, 0.15);
+  border-color: rgba(0, 200, 100, 0.3);
+  color: #00c864;
+}
+
+.vivideo-profile-save:hover {
+  background: rgba(0, 200, 100, 0.25);
+  box-shadow: 0 0 12px rgba(0, 200, 100, 0.4);
+  border-color: #00c864;
+}
+
+.vivideo-profile-cancel {
+  background: rgba(255, 71, 87, 0.15);
+  border-color: rgba(255, 71, 87, 0.3);
+  color: #ff4757;
+}
+
+.vivideo-profile-cancel:hover {
+  background: rgba(255, 71, 87, 0.25);
+  box-shadow: 0 0 12px rgba(255, 71, 87, 0.4);
+  border-color: #ff4757;
 }

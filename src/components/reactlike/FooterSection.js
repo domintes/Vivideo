@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const FooterSection = ({
   activeTab = 'profiles',
@@ -14,6 +14,17 @@ const FooterSection = ({
   onImportSettings,
   onExportSettings
 }) => {
+  const [newProfileName, setNewProfileName] = useState('');
+  const [showProfileInput, setShowProfileInput] = useState(false);
+
+  const handleSaveNewProfile = () => {
+    if (newProfileName.trim()) {
+      onCreateProfile && onCreateProfile(newProfileName);
+      setNewProfileName('');
+      setShowProfileInput(false);
+    }
+  };
+
   return (
     <div className="vivideo-footer-section">
       <div className="vivideo-tabs">
@@ -43,9 +54,27 @@ const FooterSection = ({
             </option>
           ))}
         </select>
-        <button onClick={onCreateProfile}>+</button>
+        <button onClick={() => setShowProfileInput(true)}>+</button>
         <button onClick={() => onDeleteProfile && onDeleteProfile(activeProfile)}>-</button>
       </div>
+
+      {showProfileInput && (
+        <div className="vivideo-profile-input-section">
+          <label>Profile Name</label>
+          <input
+            type="text"
+            value={newProfileName}
+            onChange={(e) => setNewProfileName(e.target.value)}
+            placeholder="Enter profile name"
+            className="vivideo-profile-input"
+          />
+          <button onClick={handleSaveNewProfile} className="vivideo-profile-save">Save</button>
+          <button onClick={() => {
+            setShowProfileInput(false);
+            setNewProfileName('');
+          }} className="vivideo-profile-cancel">Cancel</button>
+        </div>
+      )}
 
       <div className="vivideo-theme-selector">
         <select

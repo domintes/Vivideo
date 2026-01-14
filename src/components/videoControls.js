@@ -87,7 +87,7 @@ class VideoControls {
 
       <div class="vivideo-control">
         <div class="vivideo-label">
-          <span>Color Temp.</span>
+          <span>Temperature</span>
           <span class="vivideo-value" id="colortemp-value">Neutral</span>
         </div>
         <div class="vivideo-slider-container">
@@ -98,6 +98,14 @@ class VideoControls {
           <input type="text" class="vivideo-input" id="colortemp-input" 
                  placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="colortemp" title="Reset color temperature">↺</button>
+        </div>
+
+        <div class="vivideo-control compact">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="auto-save-profiles-switch" class="vivideo-switch" ${this.controller.settings.autoSaveProfiles ? 'checked' : ''}>
+            <span class="vivideo-switch-label"><span class="vivideo-short-label">Auto-save</span></span>
+            <span class="vivideo-switch-info" data-info="When enabled, changes to the active profile are saved automatically.">i</span>
+          </label>
         </div>
       </div>
 
@@ -219,6 +227,15 @@ class VideoControls {
             this.controller.updateControl(control, value);
           }
         });
+
+    // Auto-save profiles switch
+    const autoSaveSwitch = container.querySelector('#auto-save-profiles-switch');
+    if (autoSaveSwitch) {
+      autoSaveSwitch.addEventListener('change', (e) => {
+        this.controller.settings.autoSaveProfiles = e.target.checked;
+        this.controller.saveSettings();
+      });
+    }
       }
 
       input.addEventListener('keypress', (e) => {
@@ -318,6 +335,10 @@ class VideoControls {
       else if (settings.colorTemp < -40) tempText = 'Cold';
       else if (settings.colorTemp < -15) tempText = 'Cool';
       else if (settings.colorTemp < -5) tempText = 'Slightly Cool';
+
+      // Update Auto-save profiles switch state
+      const autoSaveSwitch = container.querySelector('#auto-save-profiles-switch');
+      if (autoSaveSwitch) autoSaveSwitch.checked = this.controller.settings.autoSaveProfiles;
       else if (settings.colorTemp > 75) tempText = 'Very Warm';
       else if (settings.colorTemp > 40) tempText = 'Warm';
       else if (settings.colorTemp > 15) tempText = 'Cozy';

@@ -5,10 +5,12 @@ const OptionsSection = ({
   autoActivate = true,
   workOnImages = false,
   compareMode = false,
+  compatibilityMode = false,
   onExtendedLimitsChange,
   onAutoActivateChange,
   onWorkOnImagesChange,
   onCompareModeChange,
+  onCompatibilityModeChange,
   onResetAll
 }) => {
   return (
@@ -51,6 +53,16 @@ const OptionsSection = ({
             onChange={(e) => onCompareModeChange && onCompareModeChange(e.target.checked)}
           />
           Compare Mode
+        </label>
+      </div>
+      <div className="vivideo-option">
+        <label>
+          <input
+            type="checkbox"
+            checked={compatibilityMode}
+            onChange={(e) => onCompatibilityModeChange && onCompatibilityModeChange(e.target.checked)}
+          />
+          Compatibility Mode (Inline)
         </label>
       </div>
       <button onClick={onResetAll}>Reset All</button>

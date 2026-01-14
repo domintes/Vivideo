@@ -53,10 +53,10 @@ class SettingsManager {
         URL.revokeObjectURL(url);
       }
 
-      return { success: true, message: 'Ustawienia zostały wyeksportowane pomyślnie!' };
+      return { success: true, message: 'Settings exported successfully!' };
     } catch (error) {
       console.error('Export error:', error);
-      return { success: false, message: 'Błąd podczas eksportu: ' + error.message };
+      return { success: false, message: 'Error during export: ' + error.message };
     }
   }
 
@@ -64,7 +64,7 @@ class SettingsManager {
   async importSettings(file) {
     return new Promise((resolve, reject) => {
       if (!file) {
-        reject(new Error('Nie wybrano pliku'));
+        reject(new Error('No file selected'));
         return;
       }
 
@@ -75,7 +75,7 @@ class SettingsManager {
 
           // Validate import data structure
           if (!this.validateImportData(importData)) {
-            reject(new Error('Nieprawidłowy format pliku ustawień'));
+            reject(new Error('Invalid settings file format'));
             return;
           }
 
@@ -97,17 +97,17 @@ class SettingsManager {
 
           resolve({
             success: true,
-            message: 'Ustawienia zostały zaimportowane pomyślnie!',
+            message: 'Settings imported successfully!',
             profilesCount: importData.profiles ? importData.profiles.length : 0
           });
         } catch (error) {
           console.error('Import error:', error);
-          reject(new Error('Błąd podczas importu: ' + error.message));
+          reject(new Error('Error during import: ' + error.message));
         }
       };
 
       reader.onerror = () => {
-        reject(new Error('Błąd podczas odczytu pliku'));
+        reject(new Error('Error reading file'));
       };
 
       reader.readAsText(file);
@@ -201,28 +201,28 @@ class SettingsManager {
     return /*html*/ `
       <div class="vivideo-settings-management" style="display: none;" id="settings-management">
         <div class="vivideo-settings-section">
-          <h3>⚙️ Zarządzanie ustawieniami</h3>
+          <h3>⚙️ Settings Management</h3>
           
           <div class="settings-actions">
-            <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Eksportuj wszystkie ustawienia i profile">
-              📤 Eksportuj ustawienia
+            <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Export all settings and profiles">
+              📤 Export settings
             </button>
             
             <div class="import-section">
               <input type="file" id="import-settings-file" accept=".json" style="display: none;">
-              <button class="vivideo-control-btn import-btn" id="import-settings-btn" title="Importuj ustawienia z pliku">
-                📥 Importuj ustawienia
+              <button class="vivideo-control-btn import-btn" id="import-settings-btn" title="Import settings from file">
+                📥 Import settings
               </button>
             </div>
           </div>
           
           <div class="settings-info">
-            <p>📝 Eksport obejmuje:</p>
+            <p>📝 Export includes:</p>
             <ul>
-              <li>✅ Wszystkie ustawienia filtrów</li>
-              <li>✅ Zapisane profile użytkownika</li>
-              <li>✅ Ustawienia motywu</li>
-              <li>✅ Kolory motywów</li>
+              <li>✅ All filter settings</li>
+              <li>✅ Saved user profiles</li>
+              <li>✅ Theme settings</li>
+              <li>✅ Theme colors</li>
             </ul>
           </div>
           
@@ -241,7 +241,7 @@ class SettingsManager {
 
     if (exportBtn) {
       exportBtn.addEventListener('click', async () => {
-        this.showMessage(messageDiv, 'Eksportowanie ustawień...', 'info');
+        this.showMessage(messageDiv, 'Exporting settings...', 'info');
         const result = await this.exportSettings();
         this.showMessage(messageDiv, result.message, result.success ? 'success' : 'error');
       });
@@ -255,14 +255,14 @@ class SettingsManager {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
-          this.showMessage(messageDiv, 'Importowanie ustawień...', 'info');
+            this.showMessage(messageDiv, 'Importing settings...', 'info');
           try {
             const result = await this.importSettings(file);
-            this.showMessage(
-              messageDiv,
-              `${result.message} Zaimportowano ${result.profilesCount} profili.`,
-              'success'
-            );
+              this.showMessage(
+                messageDiv,
+                `${result.message} Imported ${result.profilesCount} profiles.`,
+                'success'
+              );
             // Clear file input
             fileInput.value = '';
           } catch (error) {
@@ -295,7 +295,7 @@ class SettingsManager {
     try {
       const backupData = sessionStorage.getItem('vivideoBackup');
       if (!backupData) {
-        return { success: false, message: 'Brak kopii zapasowej do przywrócenia' };
+        return { success: false, message: 'No backup available to restore' };
       }
 
       const backup = JSON.parse(backupData);
@@ -304,10 +304,10 @@ class SettingsManager {
       // Clear backup after successful restore
       sessionStorage.removeItem('vivideoBackup');
 
-      return { success: true, message: 'Przywrócono poprzednie ustawienia' };
+      return { success: true, message: 'Previous settings restored' };
     } catch (error) {
       console.error('Restore error:', error);
-      return { success: false, message: 'Błąd podczas przywracania: ' + error.message };
+      return { success: false, message: 'Error during restore: ' + error.message };
     }
   }
 }

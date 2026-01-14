@@ -35,6 +35,8 @@ if (window !== window.top) {
         previousSpeed: 1.0,
         speedStep: 0.25, // Configurable speed increment/decrement
         autoApplyPreviousSpeed: false,
+        overwritePlayerSpeed: true, // New: when enabled Vivideo will overwrite website player speed when user changes speed here
+        autoSaveProfiles: false,     // New: autosave active profile when settings change
         autoActivate: true,
         workOnImagesActivate: true,
         activeProfile: null,
@@ -122,9 +124,9 @@ if (window !== window.top) {
               name: 'Vivid Colors',
               description: 'High saturation and contrast for vivid playback',
               settings: {
-                contrast: 7,
-                colorTemp: -57,
-                saturation: 57,
+                contrast: 27,
+                colorTemp: 0,
+                saturation: 27,
                 gamma: 1,
                 sharpness: 7,
                 brightness: 0,
@@ -226,6 +228,12 @@ if (window !== window.top) {
 
       this.createUI();
       this.bindEvents();
+      
+      // Initialize speed controller BEFORE observing videos
+      if (this.speedController) {
+        this.speedController.init();
+      }
+      
       this.observeVideos();
 
       if (this.themeManager) {
@@ -237,11 +245,6 @@ if (window !== window.top) {
       // Initialize default profile button state (User profiles active by default)
       if (this.profileManager && this.container) {
         this.profileManager.showUserProfiles(this.container);
-      }
-
-      // Initialize speed controller
-      if (this.speedController) {
-        this.speedController.init();
       }
 
       this.isInitialized = true;
@@ -375,6 +378,10 @@ if (window !== window.top) {
       this.container.innerHTML = htmlContent;
 
       document.body.appendChild(this.container);
+
+      // Initialize small behaviors (tooltips for switch info icons)
+      UIHelper.initInfoTooltips(this.container);
+
       this.updateProfilesList();
 
       // Initialize checkbox and button states based on showDefaultProfiles setting
@@ -695,13 +702,15 @@ if (window !== window.top) {
         return;
       }
 
+      console.log('Vivideo: Starting video observation, autoActivate:', this.settings.autoActivate);
+
       // Main observer for DOM changes
       this.filterEngine.observeVideos(() => {
         console.log('Vivideo: New media detected, autoActivate:', this.settings.autoActivate, 'isVisible:', this.isVisible);
         
         // Always apply filters and speed if autoActivate is enabled
         if (this.settings.autoActivate) {
-          // Apply filters
+          // Apply filters immediately
           this.applyFilters();
           
           // Apply speed through speed controller
@@ -732,12 +741,18 @@ if (window !== window.top) {
         }
       });
 
-      // Additional periodic check for dynamically loaded content
+      // Additional periodic check for dynamically loaded content (more aggressive)
       this.startPeriodicMediaCheck();
+      
+      // Mark that observer is active
+      this.videoObserverActive = true;
     }
 
     startPeriodicMediaCheck() {
-      // Check every 3 seconds for new media elements that might have been missed
+      // Use faster interval when autoActivate is enabled (1 second instead of 3)
+      const checkInterval = this.settings.autoActivate ? 1000 : 3000;
+      
+      // Check periodically for new media elements that might have been missed
       this.periodicCheckInterval = setInterval(() => {
         if (this.settings.autoActivate) {
           const videos = this.filterEngine.findVideos();
@@ -745,17 +760,20 @@ if (window !== window.top) {
           
           // Check if any videos don't have filters applied
           let needsReapply = false;
+          let unprocessedCount = 0;
+          
           videos.forEach(video => {
             if (!video.style.filter || video.style.filter === 'none' || video.style.filter === '') {
               needsReapply = true;
+              unprocessedCount++;
             }
           });
 
           if (needsReapply) {
-            console.log('Vivideo: Periodic check found unprocessed media, reapplying filters');
+            console.log(`Vivideo: Periodic check found ${unprocessedCount} unprocessed video(s), reapplying filters`);
             this.applyFilters();
             
-            // Apply speed
+            // Apply speed to all videos
             if (this.speedController) {
               videos.forEach(video => {
                 if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
@@ -765,9 +783,14 @@ if (window !== window.top) {
                 }
               });
             }
+            
+            // Attach play listeners to new videos
+            if (this.filterEngine && typeof this.filterEngine.attachPlayListeners === 'function') {
+              this.filterEngine.attachPlayListeners();
+            }
           }
         }
-      }, 3000);
+      }, checkInterval);
     }
 
     resetAll() {
@@ -1101,7 +1124,7 @@ if (window !== window.top) {
       this.saveTheme();
       this.saveThemeColors();
 
-      // Przywróć widoczność po przeładowaniu stylów
+      // Restore visibility after reloading styles
       if (wasVisible) {
         setTimeout(() => {
           this.container.style.opacity = '1';
@@ -1212,6 +1235,11 @@ if (window !== window.top) {
     // Storage methods
     async saveSettings() {
       await StorageUtils.saveSettings(this.settings);
+
+      // If auto-save profiles is enabled, update active profile automatically
+      if (this.profileManager && this.settings.autoSaveProfiles) {
+        this.profileManager.autoSaveActiveProfile();
+      }
     }
 
     async saveProfiles() {
@@ -1394,6 +1422,49 @@ if (window !== window.top) {
         console.warn('Vivideo: Controller not available for prev-profile');
       }
       sendResponse({ success: true });
+    }
+
+    // Profile saved from popup - update controller and storage
+    if (request.action === 'profile-saved' && request.profile) {
+      try {
+        const profile = request.profile;
+        const overwrite = !!request.overwrite;
+
+        if (window.vivideoController) {
+          // Update or add profile in controller.profiles
+          const existingIndex = window.vivideoController.profiles.findIndex((p) => p.name === profile.name);
+          if (existingIndex >= 0) {
+            window.vivideoController.profiles[existingIndex] = profile;
+          } else {
+            window.vivideoController.profiles.push(profile);
+          }
+
+          // Persist profiles via StorageUtils
+          if (window.StorageUtils && window.StorageUtils.saveProfiles) {
+            window.StorageUtils.saveProfiles(window.vivideoController.profiles).catch((e) => {
+              console.warn('Vivideo: Failed to save profiles from popup', e);
+            });
+          } else {
+            // Fallback to direct chrome.storage
+            try {
+              chrome.storage.sync.set({ vivideoProfiles: window.vivideoController.profiles });
+            } catch (e) {
+              console.warn('Vivideo: chrome.storage not available to persist profiles', e);
+            }
+          }
+
+          // Update UI
+          if (window.vivideoController.container) {
+            window.vivideoController.updateProfilesList();
+            window.vivideoController.updateActiveProfileDisplay(window.vivideoController.settings);
+          }
+        }
+
+        sendResponse({ success: true });
+      } catch (err) {
+        console.error('Vivideo: Error handling profile-saved message', err);
+        sendResponse({ success: false, error: err && err.message });
+      }
     }
 
     return true;

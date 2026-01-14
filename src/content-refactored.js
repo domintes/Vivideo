@@ -5,10 +5,10 @@
 if (window !== window.top) {
   console.log('Vivideo: Skipping initialization in iframe/frame');
 } else {
-  // Clean up any existing instance
+  // If an instance already exists, skip initialization to avoid multiple UIs
   if (window.vivideoController) {
-    window.vivideoController.destroy();
-    window.vivideoController = null;
+    console.log('Vivideo: Existing controller detected - skipping refactored initialization to avoid duplicate UIs.');
+    return;
   }
 
   class VivideoController {

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pl">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -127,46 +127,56 @@
       <h1>🎥 Vivideo</h1>
       <p>Real-time Video Enhancement</p>
     </div>
+
     <div class="main-action">
-      <button class="open-panel-btn" id="open-panel-btn">🎚️ Otwórz panel kontrolny</button>
-      <div style="font-size: 12px; opacity: 0.7">
-        lub naciśnij <span class="shortcut">Alt + \\</span>
-      </div>
+      <button class="open-panel-btn" id="open-panel-btn">🎚️ Open Control Panel</button>
+      <div style="font-size: 12px; opacity: 0.7">or press <span class="shortcut">Alt + \</span></div>
     </div>
+
     <div class="settings-management">
-      <h3>⚙️ Zarządzanie ustawieniami</h3>
+      <h3>⚙️ Settings Management</h3>
       <div class="controls">
-        <button class="btn" id="export-btn">📤 Eksportuj</button>
-        <button class="btn" id="import-btn">📥 Importuj</button>
+        <button class="btn" id="export-btn">📤 Export</button>
+        <button class="btn" id="import-btn">📥 Import</button>
       </div>
-      <input type="file" id="import-file" accept=".json" style="display: none" />
-      <div id="message" class="message" style="display: none"></div>
+      <input type="file" id="import-file" accept=".json" style="display:none" />
+      <div id="message" class="message" style="display:none"></div>
+
+      <!-- Profile save from popup -->
+      <div class="profile-save-popup" style="margin-top:12px;">
+        <label for="profile-name-popup" style="display:block; font-size:12px; margin-bottom:6px; color:#00bfff;">Profile name</label>
+        <div style="display:flex; gap:8px;">
+          <input id="profile-name-popup" type="text" placeholder="Profile_1" style="flex:1; padding:8px; border-radius:6px; border:1px solid rgba(0,191,255,0.12); background:rgba(0,0,0,0.12); color:#00bfff;" />
+          <button id="save-profile-btn" class="btn">💾 Save</button>
+        </div>
+      </div>
     </div>
+
     <div class="status" id="status">
-      <div id="video-count">Sprawdzanie filmów...</div>
-      <div id="enhancement-status">Enhancement: Gotowy</div>
+      <div id="video-count">Checking videos...</div>
+      <div id="enhancement-status">Enhancement: Ready</div>
     </div>
+
     <div class="info">
-      <h3>⚡ Szybkie funkcje</h3>
+      <h3>⚡ Quick features</h3>
       <ul>
-        <li><span class="shortcut">Alt + \\</span> - Przełącz panel</li>
-        <li>
-          <span class="shortcut">Alt + [</span> / <span class="shortcut">Alt + ]</span> -
-          Poprzedni/Następny motyw
-        </li>
-        <li>Działanie w czasie rzeczywistym</li>
-        <li>Wszystkie platformy video</li>
-        <li>Tryb pełnoekranowy</li>
+        <li><span class="shortcut">Alt + \</span> - Toggle panel</li>
+        <li><span class="shortcut">Alt + [</span> / <span class="shortcut">Alt + ]</span> - Previous/Next Theme</li>
+        <li>Real-time processing</li>
+        <li>All video platforms</li>
+        <li>Fullscreen mode</li>
       </ul>
-      <h3>🎛️ Kontrole</h3>
+
+      <h3>🎛️ Sliders</h3>
       <ul>
-        <li><strong>Brightness:</strong> -100% do +100%</li>
-        <li><strong>Contrast:</strong> -100% do +100%</li>
-        <li><strong>Saturation:</strong> -90% do +100%</li>
-        <li><strong>Gamma:</strong> 0.1 do 3.0</li>
-        <li><strong>Temperatura:</strong> Zimny ↔ Ciepły</li>
+        <li><strong>Brightness:</strong> -100% to +100%</li>
+        <li><strong>Contrast:</strong> -100% to +100%</li>
+        <li><strong>Saturation:</strong> -90% to +100%</li>
+        <li><strong>Gamma:</strong> 0.1 to 3.0</li>
+        <li><strong>Temperature:</strong> Cold ↔ Hot</li>
       </ul>
     </div>
+
     <script src="popup.js"></script>
   </body>
 </html>
