@@ -1145,6 +1145,23 @@
   transition: all 0.2s ease;
 }
 
+.vivideo-profile-edit {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+  margin-right: 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.vivideo-profile-edit:hover {
+  transform: scale(1.05);
+  background: #0069d9;
+}
+
 /* Theme Options */
 .vivideo-theme-list {
   display: flex;

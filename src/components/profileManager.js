@@ -170,6 +170,16 @@ class ProfileManager {
           this.saveUnsavedProfile(container);
         }
       });
+      // live validation for unsaved input: show message if >16 chars
+      unsavedInput.addEventListener('input', (e) => {
+        const val = e.target.value || '';
+        if (val.length > 16) {
+          this.updateActiveStatus('Nazwa nie może mieć więcej niż 16 znaków', '#ff4d4f');
+        } else {
+          // clear only if not in error state
+          this.updateActiveStatus('EDITING', '');
+        }
+      });
     }
 
     // Toggle Save/Overwrite button based on input name matching existing profiles
@@ -190,6 +200,13 @@ class ProfileManager {
           if (saveText) saveText.textContent = 'Save';
           if (saveIcon) saveIcon.textContent = '💾';
           saveBtn.classList.remove('overwrite');
+        }
+        // Dynamic validation for max length
+        if (e.target.value.length > 16) {
+          this.updateActiveStatus('Nazwa nie może mieć więcej niż 16 znaków', '#ff4d4f');
+        } else {
+          // clear visible validation only if safe
+          this.updateActiveStatus('EDITING', '');
         }
       });
     }
@@ -315,12 +332,18 @@ class ProfileManager {
 
         profileItem.innerHTML = `
           <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
+          <button class="vivideo-profile-edit" data-index="${index}" title="Edit profile">✎</button>
           <button class="vivideo-profile-delete" data-index="${index}" title="Delete profile">✖</button>
         `;
 
-        // Click loads profile immediately
+        // Click loads profile immediately (but ignore clicks on edit/delete buttons)
         profileItem.addEventListener('click', (e) => {
-          if (e.target.classList.contains('vivideo-profile-delete')) return;
+          if (
+            e.target.classList.contains('vivideo-profile-delete') ||
+            e.target.classList.contains('vivideo-profile-edit') ||
+            profileItem.classList.contains('editing')
+          )
+            return;
           e.preventDefault();
           e.stopPropagation();
           container
@@ -329,6 +352,75 @@ class ProfileManager {
           profileItem.classList.add('vivideo-profile-active');
           this.controller.loadProfile(profile);
         });
+
+        // Edit button - open the unified profile form for editing (do NOT auto-save)
+        const editBtn = profileItem.querySelector('.vivideo-profile-edit');
+        if (editBtn) {
+          editBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+
+            // Load profile so user can tweak values while editing
+            // If filterEngine not initialized yet, avoid calling loadProfile (prevents early applyFilters warning)
+            try {
+              if (this.controller && this.controller.filterEngine) {
+                this.controller.loadProfile(this.controller.profiles[idx]);
+              } else if (this.controller) {
+                // Minimal safe apply: copy settings without triggering applyFilters
+                const p = this.controller.profiles[idx];
+                if (p && p.settings) {
+                  Object.keys(p.settings).forEach((key) => {
+                    if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+                      this.controller.settings[key] = p.settings[key];
+                    }
+                  });
+                  if (p.settings.autoActivate !== undefined) {
+                    this.controller.settings.autoActivate = p.settings.autoActivate;
+                  }
+                  // Update UI only (do not call applyFilters)
+                  if (this.controller.videoControls) {
+                    this.controller.videoControls.updateUI(this.controller.settings, this.controller.container);
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn('Vivideo: Safe load profile failed', e);
+            }
+
+            // Show the profile save section (unified form) and populate it for editing
+            const unsavedPanel = container.querySelector('#unsaved-save-panel');
+            const unsavedInput = container.querySelector('#unsaved-profile-name');
+            const unsavedSaveBtn = container.querySelector('#unsaved-save-btn');
+            const mainProfileNameInput = container.querySelector('#profile-name');
+            const mainSaveBtn = container.querySelector('#save-profile');
+
+            // Ensure the correct panel is shown and header updated
+            if (unsavedPanel) {
+              const header = unsavedPanel.querySelector('.profile-panel-header');
+              if (header) header.textContent = '✏️ Edit profile';
+              unsavedPanel.style.display = 'block';
+            }
+
+            // Populate the quick-save input with current profile name
+            if (unsavedInput) {
+              unsavedInput.value = this.controller.profiles[idx].name || '';
+              // attach edit index marker so save handler knows which profile to overwrite
+              if (unsavedSaveBtn) unsavedSaveBtn.dataset.editIndex = String(idx);
+              // focus for convenience
+                setTimeout(() => unsavedInput.focus(), 40);
+            }
+
+            // Also populate main save input for consistency (if visible)
+            if (mainProfileNameInput) mainProfileNameInput.value = this.controller.profiles[idx].name || '';
+            if (mainSaveBtn) mainSaveBtn.dataset.editIndex = String(idx);
+
+            // Mark editing state so auto-detection doesn't hide the edit form
+            this.isEditingProfile = true;
+            this.editingIndex = idx;
+            // Clear status color/message until user attempts to save
+            this.updateActiveStatus('EDITING', '');
+          });
+        }
 
         // Delete
         const deleteBtn = profileItem.querySelector('.vivideo-profile-delete');
@@ -385,6 +477,22 @@ class ProfileManager {
     }
   }
 
+  // Show user profiles panel (compat for controller calls)
+  showUserProfiles(container) {
+    this.showingProfiles = true;
+    if (container) {
+      // Ensure profiles panel is rendered and active
+      try {
+        this.updateProfilesList(container);
+        // ensure unsaved panel hidden unless editing
+        const unsavedPanel = container.querySelector('#unsaved-save-panel');
+        if (unsavedPanel && !this.isEditingProfile) unsavedPanel.style.display = 'none';
+      } catch (e) {
+        console.warn('Vivideo: showUserProfiles failed', e);
+      }
+    }
+  }
+
   saveCurrentProfile(container) {
     const nameInput = container.querySelector('#profile-name');
     let profileName = nameInput.value.trim();
@@ -402,45 +510,33 @@ class ProfileManager {
       sharpness: this.controller.settings.sharpness
     };
 
-    // Check if settings match any existing profile
-    const matchingProfile = this.findMatchingProfile(currentSettings);
+    // Validate settings first (prevent saving if out-of-range)
+    const invalid = this.validateSettings(currentSettings);
+    if (invalid) {
+      // invalid: show orange error
+      this.updateActiveStatus('Wprowadzono niedozwoloną wartość', '#bb531e');
+      return;
+    }
 
-    if (matchingProfile) {
-      // Settings match an existing profile - show warning and don't save
-      console.warn('Vivideo: Cannot save - settings match existing profile:', matchingProfile.name);
-
-      // Show temporary warning message
-      const originalPlaceholder = nameInput.placeholder;
-      nameInput.placeholder = `Already exists: ${matchingProfile.name}`;
-      nameInput.style.color = '#ff6b6b';
-      nameInput.style.backgroundColor = '#2d1b1b';
-
-      setTimeout(() => {
-        nameInput.placeholder = originalPlaceholder;
-        nameInput.style.color = '';
-        nameInput.style.backgroundColor = '';
-      }, 3000);
-
-      // Auto-select the matching profile
-      this.controller.settings.activeProfile = matchingProfile.name;
-      this.controller.saveSettings();
-      this.controller.saveAppState();
-      this.updateProfilesList(container);
-      this.updateActiveProfileDisplay(container, this.controller.settings);
-      nameInput.value = '';
-
+    // Validate name: length and presence
+    const nameValidation = this.validateProfileName(profileName);
+    if (!nameValidation.valid) {
+      // show appropriate error (red)
+      this.updateActiveStatus(nameValidation.msg, '#ff4d4f');
       return;
     }
 
     // Check if profile name already exists
     const existingProfileIndex = this.controller.profiles.findIndex((p) => p.name === profileName);
     if (existingProfileIndex !== -1) {
-      // Update existing profile (overwrite)
+      // Overwrite existing profile
       this.controller.profiles[existingProfileIndex].settings = {
         ...currentSettings,
         autoActivate: this.controller.settings.autoActivate
       };
       console.log('Vivideo: Profile overwritten:', profileName);
+      // Inform user with orange message
+      this.updateActiveStatus(`You will overwrite ${profileName}`, '#bb531e');
     } else {
       // Create new profile
       const profile = {
@@ -452,6 +548,8 @@ class ProfileManager {
       };
       this.controller.profiles.push(profile);
       console.log('Vivideo: Profile saved:', profileName);
+      // Clear any status
+      this.updateActiveStatus(profileName === 'Default' ? 'DEFAULT' : profileName, '');
     }
 
     this.controller.settings.activeProfile = profileName;
@@ -463,6 +561,9 @@ class ProfileManager {
     this.updateProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
     nameInput.value = '';
+    // clear editing state (if save was from edit mode)
+    this.isEditingProfile = false;
+    this.editingIndex = null;
   }
 
   // Save profile from the unsaved quick-save input
@@ -470,9 +571,21 @@ class ProfileManager {
     const input = container.querySelector('#unsaved-profile-name');
     if (!input) return;
     let name = input.value.trim();
+    const editBtn = container.querySelector('#unsaved-save-btn');
+    const editIndex = editBtn && editBtn.dataset && typeof editBtn.dataset.editIndex !== 'undefined'
+      ? parseInt(editBtn.dataset.editIndex)
+      : null;
+
     if (!name) {
-      // fallback placeholder name
-      name = `Profile_${this.controller.profiles.length + 1}`;
+      // show red error only on save attempt
+      this.updateActiveStatus('Nazwa profilu jest wymagana', '#ff4d4f');
+      return;
+    }
+
+    // Trim name if too long
+    if (name.length > 16) {
+      this.updateActiveStatus('Nazwa nie może mieć więcej niż 16 znaków', '#ff4d4f');
+      return;
     }
 
     const currentSettings = {
@@ -485,19 +598,36 @@ class ProfileManager {
       speed: this.controller.settings.speed
     };
 
+    // Validate settings ranges
+    const invalid = this.validateSettings(currentSettings);
+    if (invalid) {
+      this.updateActiveStatus('Wprowadzono niedozwoloną wartość', '#bb531e');
+      return;
+    }
+
+    // Check duplicate name
     const existingIndex = this.controller.profiles.findIndex((p) => p.name === name);
-    if (existingIndex !== -1) {
-      // Overwrite existing profile
+
+    if (existingIndex !== -1 && existingIndex !== editIndex) {
+      // Will overwrite different existing profile - inform user (orange) and overwrite
       this.controller.profiles[existingIndex].settings = currentSettings;
-      console.log('Vivideo: Unsaved profile overwrite:', name);
+      console.log('Vivideo: Unsaved profile overwrite (existing):', name);
+      this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
+      this.controller.settings.activeProfile = name;
+    } else if (editIndex !== null && editIndex >= 0) {
+      // Overwrite the profile we're editing
+      this.controller.profiles[editIndex].name = name;
+      this.controller.profiles[editIndex].settings = currentSettings;
+      console.log('Vivideo: Unsaved profile overwrite (edit):', name);
+      this.controller.settings.activeProfile = name;
     } else {
       // Create new profile
       this.controller.profiles.push({ name, settings: currentSettings });
       console.log('Vivideo: Unsaved profile saved:', name);
+      this.controller.settings.activeProfile = name;
+      this.updateActiveStatus(name, '');
     }
 
-    // Set as active
-    this.controller.settings.activeProfile = name;
     this.controller.saveProfiles();
     this.controller.saveSettings();
     this.controller.saveAppState();
@@ -506,9 +636,13 @@ class ProfileManager {
     this.updateProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
 
-    // Hide quick-save panel
+    // Hide quick-save panel and clear edit marker
     const panel = container.querySelector('#unsaved-save-panel');
     if (panel) panel.style.display = 'none';
+    if (editBtn) delete editBtn.dataset.editIndex;
+    // clear editing state
+    this.isEditingProfile = false;
+    this.editingIndex = null;
   }
 
   editProfile(index) {
@@ -630,6 +764,52 @@ class ProfileManager {
     selectElement.appendChild(defaultGroup);
   }
 
+  // Validate numeric settings; return true if invalid
+  validateSettings(settings) {
+    // reasonable safe limits
+    const absLimit = 100000; // hard cap to prevent insane devtools values
+    if (!settings) return false;
+    const { brightness, contrast, saturation, gamma, colorTemp, sharpness, speed } = settings;
+
+    if (
+      Math.abs(brightness) > absLimit ||
+      Math.abs(contrast) > absLimit ||
+      Math.abs(saturation) > absLimit ||
+      Math.abs(sharpness) > absLimit ||
+      Math.abs(colorTemp) > absLimit
+    ) {
+      return true;
+    }
+
+    // gamma sensible limits
+    if (typeof gamma === 'number' && (gamma <= 0 || gamma > 1000)) return true;
+    if (typeof speed === 'number' && (speed <= 0 || speed > 1000)) return true;
+
+    return false;
+  }
+
+  // Validate profile name; return {valid,msg}
+  validateProfileName(name) {
+    if (!name || name.length === 0) return { valid: false, msg: 'Nazwa profilu jest wymagana' };
+    if (name.length > 16) return { valid: false, msg: 'Nazwa nie może mieć więcej niż 16 znaków' };
+    return { valid: true };
+  }
+
+  // Update active profile status element with message and optional color
+  updateActiveStatus(message, color) {
+    try {
+      const el = this.controller && this.controller.container && this.controller.container.querySelector
+        ? this.controller.container.querySelector('#active-profile-display')
+        : document.querySelector('#active-profile-display');
+      if (!el) return;
+      if (message) el.textContent = message;
+      if (color) el.style.color = color;
+      else el.style.color = '';
+    } catch (e) {
+      // silent
+    }
+  }
+
   isDefaultProfile(settings) {
     return (
       settings.brightness === 0 &&
@@ -736,9 +916,9 @@ class ProfileManager {
         // Update profile list to show correct active state
         this.controller.updateProfilesList();
 
-        // Hide unsaved quick-save panel if visible
+        // Hide unsaved quick-save panel if visible — but respect active edit mode
         const unsavedPanel = container.querySelector('#unsaved-save-panel');
-        if (unsavedPanel) unsavedPanel.style.display = 'none';
+        if (unsavedPanel && !this.isEditingProfile) unsavedPanel.style.display = 'none';
       } else {
         // Settings don't match any existing profile
         profileDisplay.textContent = 'NOT SAVED';
@@ -751,9 +931,9 @@ class ProfileManager {
           this.controller.saveAppState();
         }
 
-        // Show unsaved quick-save panel
+        // Show unsaved quick-save panel (unless user is actively editing another profile)
         const unsavedPanel = container.querySelector('#unsaved-save-panel');
-        if (unsavedPanel) {
+        if (unsavedPanel && !this.isEditingProfile) {
           unsavedPanel.style.display = 'block';
           const input = unsavedPanel.querySelector('#unsaved-profile-name');
           if (input) {

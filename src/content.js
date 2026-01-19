@@ -1286,6 +1286,13 @@ if (window !== window.top) {
         this.themesVisible = false;
         this.infoVisible = false;
         this.updateActiveStates();
+        // Clear any profile edit flags to avoid leaving UI in edit state
+        if (this.profileManager) {
+          try {
+            this.profileManager.isEditingProfile = false;
+            this.profileManager.editingIndex = null;
+          } catch (e) {}
+        }
       }, 300);
     }
 
