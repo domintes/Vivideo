@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Example: How to use the new React-like components
 // This file demonstrates how to work with the refactored architecture
 

@@ -41,9 +41,21 @@ class ProfileManager {
           <button class="vivideo-control-btn themes-btn" id="themes-btn" title="Themes">Themes</button>
           <button class="vivideo-control-btn settings-btn" id="settings-btn" title="Import/Export settings">⚙️</button>
         </div>
-        <div class="active-item-status active-profile-status" id="active-profile-display">
-          DEFAULT
-        </div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+            <div class="active-item-status active-profile-status" id="active-profile-display">DEFAULT</div>
+
+            <!-- Unsaved quick-save row (shown when settings are not saved) -->
+            <div id="unsaved-save-panel" style="display: none; width:100%;">
+              <div class="vivideo-profile-form" style="display:flex;gap:6px;align-items:center;">
+                  <div class="profile-panel-header">
+                  🛠️ Create Profile
+            <!-- removed "Display default profiles" option - simplified single default profile model -->
+                    </div>
+                <input type="text" id="unsaved-profile-name" class="vivideo-profile-input" placeholder="New profile" style="flex:1;padding:6px 8px;">
+                <button id="unsaved-save-btn" class="vivideo-profile-save">Save</button>
+              </div>
+            </div>
+          </div>
       </div>
 
       <!-- Profiles Panel -->
@@ -54,29 +66,34 @@ class ProfileManager {
         </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
         <!-- Profile Save Form -->
-  <div class="vivideo-profile-save-section">
+        <div class="vivideo-profile-save-section">
           <div class="vivideo-profile-form">
             <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
-            <button class="vivideo-profile-save" id="save-profile">Save Current Settings</button>
+            <button class="vivideo-profile-save" id="save-profile" data-overwrite="false">
+              <span class="save-icon">💾</span>
+              <span class="save-text">Save</span>
+            </button>
           </div>
         </div>
       </div>
 
       <!-- Profile Settings Section -->
       <div class="vivideo-profile-settings-section">
-        <div class="vivideo-checkbox-container">
-          <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-checkbox" checked>
-          <label for="show-profile-after-change-checkbox" class="vivideo-checkbox-label">
-            <span class="vivideo-checkbox-text">Show current profile after change</span>
-            <span class="vivideo-checkbox-description">Display profile name for 3 seconds after switching</span>
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-switch-input" checked>
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Show profile after change</span>
+            <button class="vivideo-info-icon" data-info="Display profile name for 3 seconds after switching">i</button>
           </label>
         </div>
-        
-        <div class="vivideo-checkbox-container">
-          <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-checkbox">
-          <label for="work-on-all-sites-checkbox" class="vivideo-checkbox-label">
-            <span class="vivideo-checkbox-text">Work on all websites</span>
-            <span class="vivideo-checkbox-description">Apply video filters to all websites, not just YouTube</span>
+
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-switch-input">
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Work on all websites</span>
+            <button class="vivideo-info-icon" data-info="Apply video filters to all websites, not just YouTube">i</button>
           </label>
         </div>
 
@@ -86,13 +103,12 @@ class ProfileManager {
       <!-- Compare Mode Section -->
       <div class="vivideo-compare-section">
         <div class="vivideo-compare-header">
-          <div class="vivideo-checkbox-container">
-            <input type="checkbox" id="compare-mode-checkbox" class="vivideo-checkbox">
-            <label for="compare-mode-checkbox" class="vivideo-checkbox-label">
-              <span class="vivideo-checkbox-text">Compare Mode</span>
-              <span class="vivideo-checkbox-description">Split-screen profile comparison</span>
-            </label>
-          </div>
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="compare-mode-checkbox" class="vivideo-switch-input">
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Compare Mode</span>
+            <button class="vivideo-info-icon" data-info="Split-screen profile comparison">i</button>
+          </label>
         </div>
         
         <!-- Compare Profile Selection (hidden by default) -->
@@ -118,71 +134,134 @@ class ProfileManager {
 
   bindEvents(container) {
     // Themes button
-    container.querySelector('#themes-btn').addEventListener('click', () => {
-      this.showThemes(container);
-    });
+    const themesBtn = UIHelper.safeQuery(container, '#themes-btn');
+    if (themesBtn) {
+      themesBtn.addEventListener('click', () => {
+        this.showThemes(container);
+      });
+    }
 
     // Settings management button
-    container.querySelector('#settings-btn').addEventListener('click', () => {
-      this.controller.toggleSettingsManagement();
-    });
+    const settingsBtn = UIHelper.safeQuery(container, '#settings-btn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', () => {
+        this.controller.toggleSettingsManagement();
+      });
+    }
 
-    container.querySelector('#save-profile').addEventListener('click', () => {
-      this.saveCurrentProfile(container);
-    });
+    const saveProfileBtn = UIHelper.safeQuery(container, '#save-profile');
+    if (saveProfileBtn) {
+      saveProfileBtn.addEventListener('click', () => {
+        this.saveCurrentProfile(container);
+      });
+    }
+
+    // Unsaved quick-save handlers
+    const unsavedSaveBtn = UIHelper.safeQuery(container, '#unsaved-save-btn');
+    const unsavedInput = UIHelper.safeQuery(container, '#unsaved-profile-name');
+    if (unsavedSaveBtn && unsavedInput) {
+      unsavedSaveBtn.addEventListener('click', () => {
+        this.saveUnsavedProfile(container);
+      });
+
+      unsavedInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          this.saveUnsavedProfile(container);
+        }
+      });
+    }
+
+    // Toggle Save/Overwrite button based on input name matching existing profiles
+    const profileNameInput = UIHelper.safeQuery(container, '#profile-name');
+    const saveBtn = UIHelper.safeQuery(container, '#save-profile');
+    if (profileNameInput && saveBtn) {
+      profileNameInput.addEventListener('input', (e) => {
+        const name = e.target.value.trim();
+        const exists = this.controller.profiles.some((p) => p.name === name);
+        saveBtn.dataset.overwrite = exists ? 'true' : 'false';
+        const saveText = saveBtn.querySelector('.save-text');
+        const saveIcon = saveBtn.querySelector('.save-icon');
+        if (exists) {
+          if (saveText) saveText.textContent = 'Overwrite';
+          if (saveIcon) saveIcon.textContent = '🔁';
+          saveBtn.classList.add('overwrite');
+        } else {
+          if (saveText) saveText.textContent = 'Save';
+          if (saveIcon) saveIcon.textContent = '💾';
+          saveBtn.classList.remove('overwrite');
+        }
+      });
+    }
 
     // Display default profiles checkbox
     // (display-default-profiles removed)
 
     // Show profile after change checkbox
-    container
-      .querySelector('#show-profile-after-change-checkbox')
-      .addEventListener('change', (e) => {
+    const showProfileCheckbox = UIHelper.safeQuery(
+      container,
+      '#show-profile-after-change-checkbox'
+    );
+    if (showProfileCheckbox) {
+      showProfileCheckbox.addEventListener('change', (e) => {
         this.showProfileAfterChange = e.target.checked;
         console.log('Vivideo: Show profile after change:', this.showProfileAfterChange);
 
         // Save setting
         this.controller.saveAppState();
       });
+    }
 
     // Work on all sites checkbox
-    container.querySelector('#work-on-all-sites-checkbox').addEventListener('change', (e) => {
-      this.workOnAllSites = e.target.checked;
-      console.log('Vivideo: Work on all sites:', this.workOnAllSites);
+    const workOnAllSitesCheckbox = UIHelper.safeQuery(container, '#work-on-all-sites-checkbox');
+    if (workOnAllSitesCheckbox) {
+      workOnAllSitesCheckbox.addEventListener('change', (e) => {
+        this.workOnAllSites = e.target.checked;
+        console.log('Vivideo: Work on all sites:', this.workOnAllSites);
 
-      // Save setting
-      this.controller.saveAppState();
+        // Save setting
+        this.controller.saveAppState();
 
-      // Apply or remove filters based on new setting
-      if (this.workOnAllSites) {
-        // Apply filters to current site if not YouTube
-        this.controller.applyFilters();
-      } else {
-        // Remove filters from non-YouTube sites
-        if (!this.isYouTubeSite()) {
-          this.controller.removeFilters();
+        // Apply or remove filters based on new setting
+        if (this.workOnAllSites) {
+          // Apply filters to current site if not YouTube
+          this.controller.applyFilters();
+        } else {
+          // Remove filters from non-YouTube sites
+          if (!this.isYouTubeSite()) {
+            this.controller.removeFilters();
+          }
         }
-      }
-    });
+      });
+    }
 
     // Speed step input
-    container.querySelector('#speed-step-input').addEventListener('input', (e) => {
-      const value = parseFloat(e.target.value);
-      if (!isNaN(value) && value >= 0.05 && value <= 1.0) {
-        this.controller.settings.speedStep = value;
-        this.controller.saveSettings();
-        console.log(`Vivideo: Speed step changed to ${value}x`);
-      }
-    });
+    const speedStepInput = UIHelper.safeQuery(container, '#speed-step-input');
+    if (speedStepInput) {
+      speedStepInput.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        if (!isNaN(value) && value >= 0.05 && value <= 1.0) {
+          this.controller.settings.speedStep = value;
+          this.controller.saveSettings();
+          console.log(`Vivideo: Speed step changed to ${value}x`);
+        }
+      });
+    }
 
     // Compare Mode controls
-    container.querySelector('#compare-mode-checkbox').addEventListener('change', (e) => {
-      this.toggleCompareMode(container, e.target.checked);
-    });
+    const compareModeCheckbox = UIHelper.safeQuery(container, '#compare-mode-checkbox');
+    if (compareModeCheckbox) {
+      compareModeCheckbox.addEventListener('change', (e) => {
+        this.toggleCompareMode(container, e.target.checked);
+      });
+    }
 
-    container.querySelector('#compare-profile-select').addEventListener('change', (e) => {
-      this.selectCompareProfile(container, e.target.value);
-    });
+    const compareProfileSelect = UIHelper.safeQuery(container, '#compare-profile-select');
+    if (compareProfileSelect) {
+      compareProfileSelect.addEventListener('change', (e) => {
+        this.selectCompareProfile(container, e.target.value);
+      });
+    }
   }
 
   // Check if current site is YouTube
@@ -231,7 +310,8 @@ class ProfileManager {
         const isActive = this.controller.settings.activeProfile === profile.name;
         if (isActive) profileItem.classList.add('vivideo-profile-active');
 
-        const displayName = profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
+        const displayName =
+          profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
 
         profileItem.innerHTML = `
           <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
@@ -243,17 +323,22 @@ class ProfileManager {
           if (e.target.classList.contains('vivideo-profile-delete')) return;
           e.preventDefault();
           e.stopPropagation();
-          container.querySelectorAll('.vivideo-profile-item').forEach((item) => item.classList.remove('vivideo-profile-active'));
+          container
+            .querySelectorAll('.vivideo-profile-item')
+            .forEach((item) => item.classList.remove('vivideo-profile-active'));
           profileItem.classList.add('vivideo-profile-active');
           this.controller.loadProfile(profile);
         });
 
         // Delete
-        profileItem.querySelector('.vivideo-profile-delete').addEventListener('click', (e) => {
-          e.stopPropagation();
-          const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-          this.controller.deleteProfile(idx);
-        });
+        const deleteBtn = profileItem.querySelector('.vivideo-profile-delete');
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const idx = parseInt(e.currentTarget.getAttribute('data-index'));
+            this.controller.deleteProfile(idx);
+          });
+        }
 
         profileList.appendChild(profileItem);
       });
@@ -268,7 +353,9 @@ class ProfileManager {
     // Add DEFAULT profile
     const defaultProfileItem = document.createElement('div');
     defaultProfileItem.className = 'vivideo-profile-item default-builtin';
-    const isDefaultActive = !this.controller.settings.activeProfile || this.controller.settings.activeProfile === 'DEFAULT';
+    const isDefaultActive =
+      !this.controller.settings.activeProfile ||
+      this.controller.settings.activeProfile === 'DEFAULT';
     if (isDefaultActive) {
       defaultProfileItem.classList.add('vivideo-profile-active');
     }
@@ -282,7 +369,9 @@ class ProfileManager {
     defaultProfileItem.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      container.querySelectorAll('.vivideo-profile-item').forEach((item) => item.classList.remove('vivideo-profile-active'));
+      container
+        .querySelectorAll('.vivideo-profile-item')
+        .forEach((item) => item.classList.remove('vivideo-profile-active'));
       defaultProfileItem.classList.add('vivideo-profile-active');
       this.controller.loadProfile(this.controller.defaultProfile);
     });
@@ -344,14 +433,14 @@ class ProfileManager {
     }
 
     // Check if profile name already exists
-    const existingProfile = this.controller.profiles.find((p) => p.name === profileName);
-    if (existingProfile) {
-      // Update existing profile
-      existingProfile.settings = {
+    const existingProfileIndex = this.controller.profiles.findIndex((p) => p.name === profileName);
+    if (existingProfileIndex !== -1) {
+      // Update existing profile (overwrite)
+      this.controller.profiles[existingProfileIndex].settings = {
         ...currentSettings,
         autoActivate: this.controller.settings.autoActivate
       };
-      console.log('Vivideo: Profile updated:', profileName);
+      console.log('Vivideo: Profile overwritten:', profileName);
     } else {
       // Create new profile
       const profile = {
@@ -374,6 +463,52 @@ class ProfileManager {
     this.updateProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
     nameInput.value = '';
+  }
+
+  // Save profile from the unsaved quick-save input
+  saveUnsavedProfile(container) {
+    const input = container.querySelector('#unsaved-profile-name');
+    if (!input) return;
+    let name = input.value.trim();
+    if (!name) {
+      // fallback placeholder name
+      name = `Profile_${this.controller.profiles.length + 1}`;
+    }
+
+    const currentSettings = {
+      brightness: this.controller.settings.brightness,
+      contrast: this.controller.settings.contrast,
+      saturation: this.controller.settings.saturation,
+      gamma: this.controller.settings.gamma,
+      colorTemp: this.controller.settings.colorTemp,
+      sharpness: this.controller.settings.sharpness,
+      speed: this.controller.settings.speed
+    };
+
+    const existingIndex = this.controller.profiles.findIndex((p) => p.name === name);
+    if (existingIndex !== -1) {
+      // Overwrite existing profile
+      this.controller.profiles[existingIndex].settings = currentSettings;
+      console.log('Vivideo: Unsaved profile overwrite:', name);
+    } else {
+      // Create new profile
+      this.controller.profiles.push({ name, settings: currentSettings });
+      console.log('Vivideo: Unsaved profile saved:', name);
+    }
+
+    // Set as active
+    this.controller.settings.activeProfile = name;
+    this.controller.saveProfiles();
+    this.controller.saveSettings();
+    this.controller.saveAppState();
+
+    // Update UI
+    this.updateProfilesList(container);
+    this.updateActiveProfileDisplay(container, this.controller.settings);
+
+    // Hide quick-save panel
+    const panel = container.querySelector('#unsaved-save-panel');
+    if (panel) panel.style.display = 'none';
   }
 
   editProfile(index) {
@@ -600,6 +735,10 @@ class ProfileManager {
 
         // Update profile list to show correct active state
         this.controller.updateProfilesList();
+
+        // Hide unsaved quick-save panel if visible
+        const unsavedPanel = container.querySelector('#unsaved-save-panel');
+        if (unsavedPanel) unsavedPanel.style.display = 'none';
       } else {
         // Settings don't match any existing profile
         profileDisplay.textContent = 'NOT SAVED';
@@ -610,6 +749,18 @@ class ProfileManager {
           this.controller.settings.activeProfile = null;
           this.controller.saveSettings();
           this.controller.saveAppState();
+        }
+
+        // Show unsaved quick-save panel
+        const unsavedPanel = container.querySelector('#unsaved-save-panel');
+        if (unsavedPanel) {
+          unsavedPanel.style.display = 'block';
+          const input = unsavedPanel.querySelector('#unsaved-profile-name');
+          if (input) {
+            input.value = '';
+            input.placeholder = 'New profile';
+            setTimeout(() => input.focus(), 50);
+          }
         }
       }
     }, 10);
@@ -627,7 +778,10 @@ class ProfileManager {
 
     // Find current profile index
     let currentIndex = -1;
-    if (!this.controller.settings.activeProfile || this.controller.settings.activeProfile === 'DEFAULT') {
+    if (
+      !this.controller.settings.activeProfile ||
+      this.controller.settings.activeProfile === 'DEFAULT'
+    ) {
       // Currently on DEFAULT built-in - find it at the end
       currentIndex = targetProfiles.length - 1;
     } else {
@@ -676,7 +830,10 @@ class ProfileManager {
 
     // Find current profile index
     let currentIndex = -1;
-    if (!this.controller.settings.activeProfile || this.controller.settings.activeProfile === 'DEFAULT') {
+    if (
+      !this.controller.settings.activeProfile ||
+      this.controller.settings.activeProfile === 'DEFAULT'
+    ) {
       // Currently on DEFAULT built-in - find it at the end
       currentIndex = targetProfiles.length - 1;
     } else {

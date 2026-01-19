@@ -8,6 +8,22 @@ chrome.action.onClicked.addListener((tab) => {
   chrome.tabs.sendMessage(tab.id, { action: 'toggle-vivideo' });
 });
 
+// When user switches tabs, notify content script to ensure Vivideo is initialized/applied
+chrome.tabs.onActivated.addListener((activeInfo) => {
+  chrome.tabs.sendMessage(activeInfo.tabId, { action: 'ensure-vivideo' }, (res) => {
+    // ignore errors (tab may not have content script)
+  });
+});
+
+// When a tab finishes loading, ensure Vivideo applies if needed
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') {
+    chrome.tabs.sendMessage(tabId, { action: 'ensure-vivideo' }, (res) => {
+      // ignore errors
+    });
+  }
+});
+
 // Handle keyboard shortcut
 chrome.commands.onCommand.addListener((command) => {
   console.log('Vivideo Background: Command received:', command);

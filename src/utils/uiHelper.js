@@ -1,304 +1,279 @@
-// UI Helper Functions
-// Common UI utilities and helper functions
+// UI Helper Functions - cleaned and minimal version
+// Common UI utilities and helper functions used across the extension.
 
-class UIHelper {
-  static createInfoHTML() {
-    return /*html*/ `
+const UIHelper = {
+  createInfoHTML() {
+    return `
       <div class="vivideo-info-panel" id="info-panel" style="display: none;">
         <div class="vivideo-info-content">
-          <h4>Vivideo - Real-time Video Enhancement</h4>
-          <p>Extension for real-time video parameter adjustment.</p>
-          <h5>Features:</h5>
+          <h4>🎥 Vivideo</h4>
+          <h5>Real-time Video Enhancement</h5>
+
+          <div class="vivideo-info-stats">
+            <div id="vivideo-video-count">0 videos found</div>
+            <div id="vivideo-enhancement-status">Enhancement: None</div>
+          </div>
+
+          <h5>Quick features</h5>
           <ul>
-            <li><strong>Brightness:</strong> -100% to +100% - Brightness adjustment</li>
-            <li><strong>Contrast:</strong> -100% to +100% - Contrast adjustment</li>
-            <li><strong>Saturation:</strong> -90% to +100% - Color saturation</li>
-            <li><strong>Gamma:</strong> 0.1 to 3.0 - Gamma correction</li>
-            <li><strong>Color Temp:</strong> -100% to +100% - Color temperature</li>
-            <li><strong>Sharpness:</strong> 0% to 100% - Image sharpness</li>
-            <li><strong>Playback Speed:</strong> 0.25x to 4.0x - Video playback speed</li>
+            <li>Alt + \\ - Toggle panel</li>
+            <li>Alt + [ / Alt + ] - Previous / Next theme</li>
+            <li>Real-time operation</li>
+            <li>All video platforms supported</li>
+            <li>Fullscreen mode</li>
           </ul>
-          <h5>Keyboard shortcuts:</h5>
+
+          <h5>Controls</h5>
           <ul>
-            <li><code>Alt + V</code> or <code>V</code> (if enabled) - Toggle panel</li>
-            <li><code>Alt + C</code> or <code>C</code> (if enabled) - Previous profile</li>
-            <li><code>Alt + B</code> or <code>B</code> (if enabled) - Next profile</li>
-            <li>Drag header - Move panel</li>
-            <li>Click outside panel - Hide panel</li>
+            <li>Brightness: -100% to +100%</li>
+            <li>Contrast: -100% to +100%</li>
+            <li>Saturation: -90% to +100%</li>
+            <li>Gamma: 0.1 to 3.0</li>
+            <li>Temperature: Cold ↔ Warm</li>
           </ul>
         </div>
       </div>
     `;
-  }
+  },
 
-  static createCheckboxesHTML(settings) {
-    return /*html*/ `
-      <div class="vivideo-auto-activate checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="auto-activate-checkbox" ${settings.autoActivate ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Auto-activate extension</span>
-        </label>
-      </div>
-
-      <div class="vivideo-work-on-images-activate checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="work-on-images-checkbox" ${settings.workOnImagesActivate ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Work on images</span>
-        </label>
-      </div>
-
-      <div class="vivideo-extended-limits checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="extended-limits-checkbox" ${settings.extendedLimits ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Extended limits (max technical range)</span>
-        </label>
-      </div>
-
-      <div class="vivideo-toggle-without-alt checkbox-section">
-        <label class="vivideo-checkbox-container">
-          <input type="checkbox" id="toggle-without-alt-checkbox" ${settings.toggleWithoutAlt ? 'checked' : ''}>
-          <span class="vivideo-checkmark"></span>
-          <span class="vivideo-checkbox-label">Toggle without 'Alt' button</span>
+  createCheckboxesHTML(settings = {}) {
+    return `
+      <div class="vivideo-auto-activate switch-section">
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="auto-activate-checkbox" class="vivideo-switch-input" ${
+            settings.autoActivate ? 'checked' : ''
+          }>
+          <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-label">Auto-activate</span>
         </label>
       </div>
     `;
-  }
+  },
 
-  static createShortcutsHTML() {
-    return /*html*/ `
-      <div class="vivideo-shortcuts">
-        Press <code>Alt + V</code> or <code>V</code> to toggle • <code>Alt + C/B</code> or <code>C/B</code> to switch profiles • Drag header to move
-      </div>
+  createShortcutsHTML() {
+    return `
+      <div class="vivideo-shortcuts">Press Alt+V to toggle</div>
     `;
-  }
+  },
 
-  static createHeaderHTML() {
-    return /*html*/ `
+  // Safe query helpers
+  safeQuery(container, selector) {
+    try {
+      if (!container) return null;
+      if (typeof container.querySelector === 'function') return container.querySelector(selector);
+      return document.querySelector(selector);
+    } catch {
+      return null;
+    }
+  },
+
+  safeQueryAll(container, selector) {
+    try {
+      if (!container) return [];
+      if (typeof container.querySelectorAll === 'function')
+        return container.querySelectorAll(selector);
+      return document.querySelectorAll(selector);
+    } catch {
+      return [];
+    }
+  },
+
+  createHeaderHTML() {
+    return `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
         <button class="vivideo-info" title="Information">𝒾</button>
         <button class="vivideo-close" title="Close (Alt+V)">✕</button>
       </div>
     `;
-  }
+  },
 
-  static bindHeaderEvents(container, controller) {
-    // Close button
-    container.querySelector('.vivideo-close').addEventListener('click', () => {
-      controller.hide();
-    });
+  bindHeaderEvents(container, controller) {
+    const closeBtn = this.safeQuery(container, '.vivideo-close');
+    if (closeBtn) closeBtn.addEventListener('click', () => controller.hide());
 
-    // Info button
-    container.querySelector('.vivideo-info').addEventListener('click', (e) => {
-      e.stopPropagation();
-      controller.toggleInfo();
-    });
-  }
+    const infoBtn = this.safeQuery(container, '.vivideo-info');
+    if (infoBtn)
+      infoBtn.addEventListener('click', (_e) => {
+        _e.stopPropagation();
+        controller.toggleInfo();
+      });
+  },
 
-  static bindCheckboxEvents(container, controller) {
-    // Auto-activate checkbox
-    container.querySelector('#auto-activate-checkbox').addEventListener('change', (e) => {
-      controller.settings.autoActivate = e.target.checked;
-      controller.saveSettings();
-      controller.saveAppState();
-
-      // Apply or remove filters based on checkbox state
-      if (controller.settings.autoActivate) {
-        controller.applyFilters();
-      } else {
-        // Only remove filters if panel is not visible
-        if (!controller.isVisible) {
-          controller.removeFilters();
-        }
-      }
-    });
-
-    // Work on images checkbox
-    container.querySelector('#work-on-images-checkbox').addEventListener('change', (e) => {
-      controller.settings.workOnImagesActivate = e.target.checked;
-      controller.saveSettings();
-
-      // Apply or remove filters based on checkbox state
-      if (controller.settings.workOnImagesActivate) {
-        controller.filterEngine.applyFiltersToImages(controller.settings);
-      } else {
-        controller.filterEngine.removeFiltersFromImages();
-      }
-    });
-
-    // Extended limits checkbox
-    container.querySelector('#extended-limits-checkbox').addEventListener('change', (e) => {
-      controller.settings.extendedLimits = e.target.checked;
-      controller.saveSettings();
-      controller.saveAppState();
-
-      // Toggle CSS class for visual indication
-      if (controller.settings.extendedLimits) {
-        controller.container.classList.add('extended-limits');
-      } else {
-        controller.container.classList.remove('extended-limits');
-      }
-
-      // Update slider limits and current values
-      controller.updateSliderLimits();
-      controller.updateUI();
-    });
-
-    // Toggle without Alt checkbox
-    container.querySelector('#toggle-without-alt-checkbox').addEventListener('change', (e) => {
-      controller.settings.toggleWithoutAlt = e.target.checked;
-      controller.saveSettings();
-      controller.saveAppState();
-      console.log('Vivideo: Toggle without Alt setting changed to:', e.target.checked);
-    });
-  }
-
-  static updateCheckboxes(container, settings) {
-    const autoActivateCheckbox = container.querySelector('#auto-activate-checkbox');
+  bindCheckboxEvents(container, controller) {
+    const autoActivateCheckbox = this.safeQuery(container, '#auto-activate-checkbox');
     if (autoActivateCheckbox) {
-      autoActivateCheckbox.checked = settings.autoActivate;
+      autoActivateCheckbox.addEventListener('change', (e) => {
+        controller.settings.autoActivate = e.target.checked;
+        if (typeof controller.saveSettings === 'function') controller.saveSettings();
+        if (typeof controller.saveAppState === 'function') controller.saveAppState();
+      });
     }
+  },
 
-    const workOnImagesCheckbox = container.querySelector('#work-on-images-checkbox');
-    if (workOnImagesCheckbox) {
-      workOnImagesCheckbox.checked = settings.workOnImagesActivate;
-    }
+  updateCheckboxes(container, settings = {}) {
+    const autoActivateCheckbox = this.safeQuery(container, '#auto-activate-checkbox');
+    if (autoActivateCheckbox) autoActivateCheckbox.checked = !!settings.autoActivate;
+  },
 
-    const extendedLimitsCheckbox = container.querySelector('#extended-limits-checkbox');
-    if (extendedLimitsCheckbox) {
-      extendedLimitsCheckbox.checked = settings.extendedLimits;
-    }
-
-    const toggleWithoutAltCheckbox = container.querySelector('#toggle-without-alt-checkbox');
-    if (toggleWithoutAltCheckbox) {
-      toggleWithoutAltCheckbox.checked = settings.toggleWithoutAlt;
-    }
-  }
-
-  static setupDragging(container, controller) {
-    const header = container.querySelector('.vivideo-header');
-    let mouseDownHandler = null;
-    let mouseMoveHandler = null;
-    let mouseUpHandler = null;
-
-    mouseDownHandler = (e) => {
-      // Only start dragging if clicking on the header area, not buttons
-      if (
-        e.target.classList.contains('vivideo-close') ||
-        e.target.classList.contains('vivideo-info')
-      ) {
-        return;
-      }
-
-      controller.isDragging = true;
-      container.classList.add('vivideo-dragging');
+  setupDragging(container, _controller) {
+    const header = this.safeQuery(container, '.vivideo-header');
+    if (!header) return null;
+    let isDragging = false;
+    let offset = { x: 0, y: 0 };
+    const down = (e) => {
+      if (e.target.closest('.vivideo-close') || e.target.closest('.vivideo-info')) return;
+      isDragging = true;
       const rect = container.getBoundingClientRect();
-      controller.dragOffset.x = e.clientX - rect.left;
-      controller.dragOffset.y = e.clientY - rect.top;
-      e.preventDefault();
+      offset.x = e.clientX - rect.left;
+      offset.y = e.clientY - rect.top;
+      container.classList.add('vivideo-dragging');
     };
-
-    mouseMoveHandler = (e) => {
-      if (!controller.isDragging) return;
-
-      const x = e.clientX - controller.dragOffset.x;
-      const y = e.clientY - controller.dragOffset.y;
-
+    const move = (e) => {
+      if (!isDragging) return;
       container.style.left =
-        Math.max(0, Math.min(x, window.innerWidth - container.offsetWidth)) + 'px';
+        Math.max(0, Math.min(e.clientX - offset.x, window.innerWidth - container.offsetWidth)) +
+        'px';
       container.style.top =
-        Math.max(0, Math.min(y, window.innerHeight - container.offsetHeight)) + 'px';
-      container.style.right = 'auto';
+        Math.max(0, Math.min(e.clientY - offset.y, window.innerHeight - container.offsetHeight)) +
+        'px';
+    };
+    const up = () => {
+      isDragging = false;
+      container.classList.remove('vivideo-dragging');
+    };
+    header.addEventListener('mousedown', down);
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', up);
+    return { down, move, up, header };
+  },
+
+  setupResizing(container) {
+    if (!container) return null;
+
+    // create handles if they don't exist
+    let leftHandle = container.querySelector('.vivideo-resize-left');
+    let topHandle = container.querySelector('.vivideo-resize-top');
+
+    if (!leftHandle) {
+      leftHandle = document.createElement('div');
+      leftHandle.className = 'vivideo-resize-left';
+      container.appendChild(leftHandle);
+    }
+
+    if (!topHandle) {
+      topHandle = document.createElement('div');
+      topHandle.className = 'vivideo-resize-top';
+      container.appendChild(topHandle);
+    }
+
+    let isResizingLeft = false;
+    let isResizingTop = false;
+    let startX = 0;
+    let startY = 0;
+    let startRect = null;
+
+    const onMouseDownLeft = (e) => {
       e.preventDefault();
+      isResizingLeft = true;
+      startX = e.clientX;
+      startRect = container.getBoundingClientRect();
+      container.classList.add('vivideo-resizing');
     };
 
-    mouseUpHandler = () => {
-      if (controller.isDragging) {
-        controller.isDragging = false;
-        container.classList.remove('vivideo-dragging');
+    const onMouseDownTop = (e) => {
+      e.preventDefault();
+      isResizingTop = true;
+      startY = e.clientY;
+      startRect = container.getBoundingClientRect();
+      container.classList.add('vivideo-resizing');
+    };
 
-        // Small delay to prevent immediate hiding when drag ends
-        setTimeout(() => {
-          controller.isDragging = false;
-        }, 10);
+    const onMouseMove = (e) => {
+      if (isResizingLeft && startRect) {
+        // dragging left edge: change width and left position
+        const dx = e.clientX - startX; // positive if moved right
+        // new width = startWidth - dx (because dragging left edge)
+        let newWidth = startRect.width - dx;
+        // enforce minimum width
+        const minWidth = 280;
+        const maxWidth = Math.min(window.innerWidth - 20, 1200);
+        newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+        // compute new left so right edge stays same
+        const newLeft = startRect.right - newWidth;
+        container.style.width = newWidth + 'px';
+        container.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth)) + 'px';
+      }
+
+      if (isResizingTop && startRect) {
+        const dy = e.clientY - startY; // positive if moved down
+        // dragging top edge: new height = startHeight - dy
+        let newHeight = startRect.height - dy;
+        const minHeight = 120;
+        const maxHeight = Math.min(window.innerHeight - 20, 1200);
+        newHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+        const newTop = startRect.bottom - newHeight;
+        container.style.height = newHeight + 'px';
+        container.style.top = Math.max(0, Math.min(newTop, window.innerHeight - newHeight)) + 'px';
       }
     };
 
-    header.addEventListener('mousedown', mouseDownHandler);
-    document.addEventListener('mousemove', mouseMoveHandler);
-    document.addEventListener('mouseup', mouseUpHandler);
-
-    // Store handlers for cleanup
-    return {
-      mouseDown: mouseDownHandler,
-      mouseMove: mouseMoveHandler,
-      mouseUp: mouseUpHandler,
-      header: header
+    const onMouseUp = () => {
+      if (isResizingLeft || isResizingTop) {
+        isResizingLeft = false;
+        isResizingTop = false;
+        startRect = null;
+        container.classList.remove('vivideo-resizing');
+      }
     };
-  }
 
-  static clampValue(control, value, extendedLimits = false) {
+    leftHandle.addEventListener('mousedown', onMouseDownLeft);
+    topHandle.addEventListener('mousedown', onMouseDownTop);
+    document.addEventListener('mousemove', onMouseMove);
+    document.addEventListener('mouseup', onMouseUp);
+
+    return {
+      leftHandle,
+      topHandle,
+      destroy() {
+        leftHandle.removeEventListener('mousedown', onMouseDownLeft);
+        topHandle.removeEventListener('mousedown', onMouseDownTop);
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      }
+    };
+  },
+
+  clampValue(control, value, extendedLimits = false) {
     const limits = this.getControlLimits(control, extendedLimits);
     return Math.max(limits.min, Math.min(limits.max, value));
-  }
+  },
 
-  // Get limits for a control
-  static getControlLimits(control, extendedLimits = false) {
+  getControlLimits(control, extendedLimits = false) {
     switch (control) {
       case 'brightness':
-        // CSS brightness: 1 + (value/100)
-        // Casual: 0.5 to 1.8 (-50% to +80%) - usuable range
-        // Extended: 0.1 to 4.0 (-90% to +300%) - technical maximum
         return extendedLimits ? { min: -90, max: 300, step: 1 } : { min: -50, max: 80, step: 1 };
-
       case 'contrast':
-        // CSS contrast: 1 + (value/100)
-        // Casual: 0.3 to 2.0 (-70% to +100%) - visible improvements
-        // Extended: 0 to 5.0 (-100% to +400%) - extreme effects
         return extendedLimits ? { min: -100, max: 400, step: 1 } : { min: -70, max: 100, step: 1 };
-
       case 'saturation':
-        // CSS saturate: max(0, 1 + (value/100))
-        // Casual: 0.2 to 1.6 (-80% to +60%) - natural look
-        // Extended: 0 to 3.0 (-100% to +200%) - artistic effects
         return extendedLimits ? { min: -100, max: 200, step: 1 } : { min: -80, max: 60, step: 1 };
-
       case 'gamma':
-        // SVG feComponentTransfer gamma correction
-        // Casual: 0.4 to 2.2 - practical gamma range
-        // Extended: 0.1 to 4.0 - full technical range
         return extendedLimits
           ? { min: 0.1, max: 4.0, step: 0.01 }
           : { min: 0.4, max: 2.2, step: 0.01 };
-
       case 'colortemp':
-        // Custom algorithm for color temperature
-        // Casual: -60 to +60 - noticeable but natural
-        // Extended: -100 to +100 - extreme color shifts
         return extendedLimits ? { min: -100, max: 100, step: 1 } : { min: -60, max: 60, step: 1 };
-
       case 'sharpness':
-        // SVG feConvolveMatrix sharpening
-        // Casual: 0% to 60% - visible improvement without artifacts
-        // Extended: 0% to 120% - aggressive sharpening
         return extendedLimits ? { min: 0, max: 120, step: 1 } : { min: 0, max: 60, step: 1 };
-
       case 'speed':
-        // Video playback speed
-        // Casual: 0.5 to 2.0 - practical speed range
-        // Extended: 0.25 to 4.0 - full technical range
         return extendedLimits
           ? { min: 0.25, max: 4.0, step: 0.01 }
           : { min: 0.5, max: 2.0, step: 0.01 };
-
       default:
         return { min: 0, max: 100, step: 1 };
     }
   }
-}
+};
 
 // Export for use in other files
 window.UIHelper = UIHelper;

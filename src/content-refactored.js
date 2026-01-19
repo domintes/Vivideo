@@ -162,7 +162,7 @@ if (window !== window.top) {
             if (stored) {
               try {
                 data[key] = JSON.parse(stored);
-              } catch (e) {
+              } catch {
                 console.warn('Failed to parse stored data for', key);
               }
             }

@@ -7,6 +7,7 @@ class SpeedController {
     this.currentSpeed = 1.0;
     this.previousSpeed = 1.0;
     this.autoApplyPreviousSpeed = false;
+    this.overwritePlayerSpeed = true; // when true, Vivideo will actively set player playbackRate when Vivideo speed changes
     this.speedObservers = new WeakMap(); // Track speed observers for each video
     this.videoSpeedMap = new WeakMap(); // Track current speed for each video
   }
@@ -34,6 +35,9 @@ class SpeedController {
         this.currentSpeed = data.vivideoSettings.speed || 1.0;
         this.previousSpeed = data.vivideoSettings.previousSpeed || 1.0;
         this.autoApplyPreviousSpeed = data.vivideoSettings.autoApplyPreviousSpeed || false;
+        if (data.vivideoSettings.overwritePlayerSpeed !== undefined) {
+          this.overwritePlayerSpeed = !!data.vivideoSettings.overwritePlayerSpeed;
+        }
       }
     } catch (error) {
       console.error('Vivideo SpeedController: Error loading speed settings:', error);
@@ -47,6 +51,7 @@ class SpeedController {
       currentSettings.speed = this.currentSpeed;
       currentSettings.previousSpeed = this.previousSpeed;
       currentSettings.autoApplyPreviousSpeed = this.autoApplyPreviousSpeed;
+      currentSettings.overwritePlayerSpeed = this.overwritePlayerSpeed;
 
       await StorageUtils.saveSettings(currentSettings);
     } catch (error) {
@@ -57,10 +62,10 @@ class SpeedController {
   // Detect current speed from video element
   detectCurrentSpeed(video) {
     if (!video) return 1.0;
-    
+
     try {
       return video.playbackRate || 1.0;
-    } catch (error) {
+    } catch {
       return 1.0;
     }
   }
@@ -72,15 +77,15 @@ class SpeedController {
 
     // Get speed from first video as reference
     const currentVideoSpeed = this.detectCurrentSpeed(videos[0]);
-    
+
     // Only update if there's a significant difference
     if (Math.abs(currentVideoSpeed - this.currentSpeed) > 0.01) {
       console.log(`Vivideo SpeedController: Syncing with detected speed ${currentVideoSpeed}x`);
       this.currentSpeed = currentVideoSpeed;
-      
+
       // Update controller settings without triggering save
       this.controller.settings.speed = currentVideoSpeed;
-      
+
       // Update UI
       this.controller.updateUI();
     }
@@ -92,19 +97,19 @@ class SpeedController {
 
     // Clamp speed between 0.05 and 25
     const clampedSpeed = Math.max(0.05, Math.min(25, speed));
-    
+
     try {
       // Force set playback rate to override website controls
       video.playbackRate = clampedSpeed;
       this.videoSpeedMap.set(video, clampedSpeed);
-      
+
       // Set a small delay to ensure it sticks
       setTimeout(() => {
         if (video.playbackRate !== clampedSpeed) {
           video.playbackRate = clampedSpeed;
         }
       }, 50);
-      
+
       console.log(`Vivideo SpeedController: Applied speed ${clampedSpeed}x to video`);
     } catch (error) {
       console.error('Vivideo SpeedController: Error applying speed to video:', error);
@@ -114,10 +119,10 @@ class SpeedController {
   // Apply speed to all videos
   applySpeedToAllVideos(speed) {
     const videos = this.controller.filterEngine.findVideos();
-    videos.forEach(video => {
+    videos.forEach((video) => {
       this.applySpeedToVideo(video, speed);
     });
-    
+
     // Force override any website speed controls with multiple attempts
     this.forceSpeedOverride(speed);
   }
@@ -125,23 +130,23 @@ class SpeedController {
   // Aggressively force speed override
   forceSpeedOverride(speed) {
     const clampedSpeed = Math.max(0.05, Math.min(25, speed));
-    
+
     // Multiple attempts to ensure override
     const attempts = [0, 100, 300, 1000]; // Try immediately, then with delays
-    
-    attempts.forEach(delay => {
+
+    attempts.forEach((delay) => {
       setTimeout(() => {
         const videos = this.controller.filterEngine.findVideos();
-        videos.forEach(video => {
+        videos.forEach((video) => {
           if (video && Math.abs(video.playbackRate - clampedSpeed) > 0.01) {
             try {
               video.playbackRate = clampedSpeed;
-              
+
               // Also try to override any possible speed controls
               if (video.defaultPlaybackRate !== undefined) {
                 video.defaultPlaybackRate = clampedSpeed;
               }
-            } catch (error) {
+            } catch {
               // Silent fail for repeated attempts
             }
           }
@@ -154,24 +159,29 @@ class SpeedController {
   setSpeed(newSpeed) {
     // Clamp speed between 0.05 and 25
     newSpeed = Math.max(0.05, Math.min(25, newSpeed));
-    
+
     // Store previous speed before changing
     this.previousSpeed = this.currentSpeed;
     this.currentSpeed = newSpeed;
-    
+
     // Apply to all current videos with force override
     this.applySpeedToAllVideos(newSpeed);
-    
+
+    // If configured to overwrite player speed, aggressively ensure playbackRate is set
+    if (this.overwritePlayerSpeed) {
+      this.forceSpeedOverride(newSpeed);
+    }
+
     // Update controller settings
     this.controller.settings.speed = newSpeed;
     this.controller.settings.previousSpeed = this.previousSpeed;
-    
+
     // Save settings
     this.saveSpeedSettings();
-    
+
     // Trigger UI update
     this.controller.updateUI();
-    
+
     console.log(`Vivideo SpeedController: Speed set to ${newSpeed}x`);
   }
 
@@ -210,7 +220,7 @@ class SpeedController {
             }
             // Check if it contains video elements
             const videos = node.querySelectorAll ? node.querySelectorAll('video') : [];
-            videos.forEach(video => this.handleNewVideo(video));
+            videos.forEach((video) => this.handleNewVideo(video));
           }
         });
       });
@@ -223,7 +233,7 @@ class SpeedController {
 
     // Handle existing videos
     const existingVideos = this.controller.filterEngine.findVideos();
-    existingVideos.forEach(video => this.handleNewVideo(video));
+    existingVideos.forEach((video) => this.handleNewVideo(video));
   }
 
   // Handle new video element
@@ -248,10 +258,11 @@ class SpeedController {
     // Add event listeners for video events
     const playHandler = () => {
       // Reapply speed when video starts playing
-      const targetSpeed = this.autoApplyPreviousSpeed && this.previousSpeed !== 1.0 
-        ? this.previousSpeed 
-        : this.currentSpeed;
-      
+      const targetSpeed =
+        this.autoApplyPreviousSpeed && this.previousSpeed !== 1.0
+          ? this.previousSpeed
+          : this.currentSpeed;
+
       setTimeout(() => {
         this.applySpeedToVideo(video, targetSpeed);
       }, 50);
@@ -259,19 +270,21 @@ class SpeedController {
 
     const loadedMetadataHandler = () => {
       // Apply speed when video metadata is loaded
-      const targetSpeed = this.autoApplyPreviousSpeed && this.previousSpeed !== 1.0 
-        ? this.previousSpeed 
-        : this.currentSpeed;
-      
+      const targetSpeed =
+        this.autoApplyPreviousSpeed && this.previousSpeed !== 1.0
+          ? this.previousSpeed
+          : this.currentSpeed;
+
       this.applySpeedToVideo(video, targetSpeed);
     };
 
     const canPlayHandler = () => {
       // Apply speed when video can start playing
-      const targetSpeed = this.autoApplyPreviousSpeed && this.previousSpeed !== 1.0 
-        ? this.previousSpeed 
-        : this.currentSpeed;
-      
+      const targetSpeed =
+        this.autoApplyPreviousSpeed && this.previousSpeed !== 1.0
+          ? this.previousSpeed
+          : this.currentSpeed;
+
       this.applySpeedToVideo(video, targetSpeed);
     };
 
@@ -324,7 +337,7 @@ class SpeedController {
 
     // Remove all listeners
     const videos = this.controller.filterEngine.findVideos();
-    videos.forEach(video => {
+    videos.forEach((video) => {
       this.removeSpeedListeners(video);
     });
   }
@@ -358,13 +371,16 @@ class SpeedController {
         </div>
         
         <div class="vivideo-speed-options">
-          <label class="vivideo-checkbox-container">
-            <input 
-              type="checkbox" 
-              class="vivideo-auto-speed-checkbox"
-              ${this.autoApplyPreviousSpeed ? 'checked' : ''}
-            >
-            <span class="vivideo-checkbox-label">Auto-apply previous speed to new videos</span>
+          <label class="vivideo-switch-container speed-overwrite-section">
+            <input type="checkbox" class="vivideo-switch-input vivideo-overwrite-player-speed" id="overwrite-player-speed" ${this.overwritePlayerSpeed ? 'checked' : ''}>
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Overwrite player video speed</span>
+          </label>
+
+          <label class="vivideo-switch-container auto-prev-speed-section">
+            <input type="checkbox" class="vivideo-switch-input vivideo-auto-speed-checkbox" id="auto-apply-previous-speed" ${this.autoApplyPreviousSpeed ? 'checked' : ''}>
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Auto active previous Vivideo speed</span>
           </label>
         </div>
       </div>
@@ -390,10 +406,10 @@ class SpeedController {
     }
 
     // Speed control button events
-    speedButtons.forEach(button => {
+    speedButtons.forEach((button) => {
       button.addEventListener('click', (e) => {
         let newSpeed;
-        
+
         if (e.target.dataset.reset) {
           // Reset button
           newSpeed = 1.0;
@@ -402,7 +418,7 @@ class SpeedController {
           const change = parseFloat(e.target.dataset.change);
           newSpeed = Math.max(0.05, Math.min(25, this.currentSpeed + change));
         }
-        
+
         if (newSpeed) {
           this.setSpeed(newSpeed);
           if (slider) {
@@ -419,6 +435,19 @@ class SpeedController {
     if (autoSpeedCheckbox) {
       autoSpeedCheckbox.addEventListener('change', (e) => {
         this.setAutoApplyPreviousSpeed(e.target.checked);
+      });
+    }
+
+    // Overwrite player speed switch
+    const overwriteSwitch = container.querySelector('#overwrite-player-speed');
+    if (overwriteSwitch) {
+      overwriteSwitch.addEventListener('change', (e) => {
+        this.overwritePlayerSpeed = !!e.target.checked;
+        this.saveSpeedSettings();
+        console.log(
+          'Vivideo SpeedController: overwritePlayerSpeed set to',
+          this.overwritePlayerSpeed
+        );
       });
     }
   }
@@ -441,6 +470,11 @@ class SpeedController {
 
     if (autoSpeedCheckbox) {
       autoSpeedCheckbox.checked = this.autoApplyPreviousSpeed;
+    }
+
+    const overwriteSwitch = container.querySelector('#overwrite-player-speed');
+    if (overwriteSwitch) {
+      overwriteSwitch.checked = this.overwritePlayerSpeed;
     }
   }
 }

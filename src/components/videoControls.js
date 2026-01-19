@@ -135,14 +135,7 @@ class VideoControls {
   }
 
   bindControlEvents(container) {
-    const controls = [
-      'brightness',
-      'contrast',
-      'saturation',
-      'gamma',
-      'colortemp',
-      'sharpness'
-    ];
+    const controls = ['brightness', 'contrast', 'saturation', 'gamma', 'colortemp', 'sharpness'];
 
     controls.forEach((control) => {
       const slider = container.querySelector(`#${control}-slider`);

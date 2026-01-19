@@ -183,7 +183,7 @@ class VideoFilterEngine {
     const observer = new MutationObserver((mutations) => {
       let hasNewVideos = false;
       let hasNewImages = false;
-      
+
       mutations.forEach((mutation) => {
         // Check added nodes
         mutation.addedNodes.forEach((node) => {
@@ -242,6 +242,25 @@ class VideoFilterEngine {
       attributes: true,
       attributeFilter: ['src', 'srcset', 'poster']
     });
+
+    // If document.body is not yet available (rare), retry safely
+    if (!document.body) {
+      const retryObserver = new MutationObserver(() => {
+        if (document.body) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['src', 'srcset', 'poster']
+          });
+          retryObserver.disconnect();
+        }
+      });
+      retryObserver.observe(document.documentElement || document, {
+        childList: true,
+        subtree: true
+      });
+    }
 
     return observer;
   }

@@ -18,7 +18,7 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 600px;
+  width: 480px; /* compact layout */
   max-height: calc(100vh - 40px);
   padding: 0;
   border-radius: 12px;
@@ -27,7 +27,32 @@
   display: none;
   animation: vivideo-slide-in 0.3s ease-out;
   z-index: 2147483647;
-  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: hidden;
+}
+
+/* Resize handles */
+.vivideo-resize-left,
+.vivideo-resize-top {
+  position: absolute;
+  z-index: 2147483650; /* above panel content */
+  background: transparent;
+}
+
+.vivideo-resize-left {
+  top: 0;
+  left: 0;
+  width: 8px; /* draggable area on left edge */
+  height: 100%;
+  cursor: ew-resize;
+}
+
+.vivideo-resize-top {
+  top: 0;
+  left: 0;
+  height: 8px; /* draggable area on top edge */
+  width: 100%;
+  cursor: ns-resize;
 }
 
 /* Cybernetic grid background */
@@ -665,7 +690,7 @@
 }
 
 .vivideo-control {
-  margin-bottom: 20px;
+  margin-bottom: 8px;
 }
 
 .vivideo-control:last-child {
@@ -702,37 +727,46 @@
 }
 
 .vivideo-slider-container {
-  display: flex;
+  /* Use grid so label, slider and input fit neatly without causing horizontal scroll */
+  display: grid;
+  gap: 2px;
   align-items: center;
-  gap: 10px;
-  font-size: 16px;
+  width: 100%;
+  font-size: 14px;
   font-family: 'Rajdhani', monospace;
   font-weight: 600;
+  grid-template-columns: 10px auto 10px 50px auto;
 }
 
 .vivideo-slider-container span {
   color: inherit;
   text-shadow: 0 0 6px currentColor;
   user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 64px;
 }
 
 .vivideo-slider {
-  flex: 1;
-  height: 8px;
+  width: 100%;
+  height: 6px;
   border-radius: 4px;
   outline: none;
-  transition: all 0.3s ease;
+  transition: all 0.18s ease;
   cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .vivideo-slider::-webkit-slider-thumb {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   cursor: pointer;
   border: none;
   -webkit-appearance: none;
-  transition: all 0.3s ease;
+  transition: transform 0.12s ease;
   position: relative;
 }
 
@@ -767,13 +801,20 @@
 }
 
 .vivideo-input {
-  width: 60px;
-  padding: 4px 8px;
+  box-sizing: border-box;
+  max-width: none;
+  min-width: auto;
+  width: 100%;
+  padding: 4px 4px;
   border-radius: 4px;
   font-size: 12px;
   text-align: center;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.14s ease;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Specjalne style dla gamma input */
@@ -901,9 +942,14 @@
 }
 
 .vivideo-profile-form {
-  display: flex;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 5fr 2fr;
+  column-gap: 8px;
   margin-bottom: 12px;
+}
+
+.vivideo-profile-input {
+  max-width: 116px;
 }
 
 .vivideo-profile-input {
@@ -1003,7 +1049,9 @@
 .vivideo-profile-item.vivideo-profile-active {
   background: rgba(255, 255, 0, 0.15);
   border: 2px solid #ffff00;
-  box-shadow: 0 0 12px rgba(255, 255, 0, 0.5), inset 0 0 8px rgba(255, 255, 0, 0.2);
+  box-shadow:
+    0 0 12px rgba(255, 255, 0, 0.5),
+    inset 0 0 8px rgba(255, 255, 0, 0.2);
   color: #ffff00;
   position: relative;
 }
@@ -1015,7 +1063,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 0, 0.1) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 0, 0.1) 1px, transparent 1px);
   background-size: 8px 8px;
@@ -1087,8 +1135,6 @@
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-
-
 
 .vivideo-profile-delete {
   background: none;
@@ -1243,8 +1289,6 @@ video:-ms-fullscreen .vivideo-container {
   cursor: grabbing;
 }
 
-
-
 .active-item-status {
   display: block;
   width: 100%;
@@ -1395,6 +1439,7 @@ video:-ms-fullscreen .vivideo-container {
 
   .vivideo-slider-container {
     gap: 6px;
+
   }
 
   .vivideo-input {
@@ -1442,8 +1487,6 @@ video:-ms-fullscreen .vivideo-container {
   letter-spacing: 1px;
   transition: all 0.3s ease;
 }
-
-
 
 .vivideo-profile-name {
   flex: 1;
@@ -2138,14 +2181,14 @@ html .vivideo-container,
 div .vivideo-container,
 .plyr .vivideo-container,
 .plyr--full-ui .vivideo-container,
-[class*="plyr"] .vivideo-container {
-  z-index: 2147483647 ;
+[class*='plyr'] .vivideo-container {
+  z-index: 2147483647;
 }
 
 /* Ensure Vivideo is always on top of video players */
 .vivideo-container {
-  position: fixed ;
-  z-index: 2147483647 ;
+  position: fixed;
+  z-index: 2147483647;
 }
 
 /* =====================
@@ -2173,6 +2216,7 @@ div .vivideo-container,
   margin: 12px;
   height: calc(100vh - 120px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Profile Section (Left) */
@@ -2180,7 +2224,7 @@ div .vivideo-container,
   display: flex;
   flex-direction: column;
   gap: 12px;
-  overflow-y: auto;
+  overflow-y: hidden;
   overflow-x: hidden;
   padding-right: 5px;
 }
@@ -2223,13 +2267,14 @@ div .vivideo-container,
   height: auto;
   overflow-y: auto;
   overflow-x: hidden;
+  max-width: 200px;
 }
 
 /* Reset section styling */
 .vivideo-reset-section {
   text-align: center;
-  background: rgba(255, 100, 100, 0.1) ;
-  border-color: rgba(255, 100, 100, 0.3) ;
+  background: rgba(255, 100, 100, 0.1);
+  border-color: rgba(255, 100, 100, 0.3);
 }
 
 .vivideo-reset-section .vivideo-reset {
@@ -2316,4 +2361,116 @@ div .vivideo-container,
 .vivideo-theme-cybernetic .vivideo-core-section::-webkit-scrollbar-thumb:hover,
 .vivideo-theme-cybernetic .vivideo-main-grid::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 255, 65, 0.6);
+}
+
+/* Compact switch styles */
+.vivideo-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.vivideo-switch-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 42px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  position: relative;
+  flex-shrink: 0;
+  outline: none;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.vivideo-switch-input::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.18s ease;
+}
+
+.vivideo-switch-input:checked {
+  background: linear-gradient(90deg, #00bfff, #0080ff);
+}
+
+.vivideo-switch-input:checked::after {
+  transform: translateX(20px);
+}
+
+.vivideo-switch-track {
+  display: none;
+}
+
+.vivideo-switch-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  flex: 1;
+}
+
+.vivideo-info-icon {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.vivideo-info-popup {
+  background: rgba(20, 24, 30, 0.95);
+  color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 260px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Compact spacing adjustments */
+.vivideo-main-grid {
+  gap: 8px;
+}
+.vivideo-core-section,
+.vivideo-profile-section {
+  padding: 8px;
+}
+.vivideo-profile-input {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.vivideo-profile-save {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.vivideo-profile-item {
+  padding: 6px 8px;
+}
+
+/* Ensure scrollbars when content exceeds panel */
+.vivideo-container {
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* Small fixes for unsaved quick-save panel */
+.vivideo-profile-form {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.vivideo-profile-input {
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.vivideo-profile-save {
+  padding: 6px 8px;
+  font-size: 13px;
 }

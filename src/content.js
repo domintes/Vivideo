@@ -36,6 +36,8 @@ if (window !== window.top) {
         speedStep: 0.25, // Configurable speed increment/decrement
         autoApplyPreviousSpeed: false,
         autoActivate: true,
+        overwritePlayerSpeed: true,
+        autoSaveProfiles: false,
         workOnImagesActivate: true,
         activeProfile: null,
         extendedLimits: true,
@@ -365,7 +367,7 @@ if (window !== window.top) {
           ${UIHelper.createCheckboxesHTML(this.settings)}
           ${UIHelper.createInfoHTML()}
         `;
-        
+
         htmlContent = htmlContent.replace(
           /(<div class="vivideo-profile-section">)([\s\S]*?)(<\/div>)/,
           `$1${profileSectionContent}$3`
@@ -440,7 +442,7 @@ if (window !== window.top) {
       this.videoControls.bindEvents(this.container);
       this.profileManager.bindEvents(this.container);
       this.settingsManager.bindEvents(this.container);
-      
+
       // Bind speed controller events
       if (this.speedController) {
         this.speedController.bindSpeedControlEvents(this.container);
@@ -474,6 +476,8 @@ if (window !== window.top) {
 
       // Dragging functionality
       this.dragHandlers = UIHelper.setupDragging(this.container, this);
+      // Resizing functionality (left edge: ew-resize, top edge: ns-resize)
+      this.resizeHandlers = UIHelper.setupResizing(this.container);
 
       // Handle fullscreen changes
       document.addEventListener('fullscreenchange', () => {
@@ -643,7 +647,7 @@ if (window !== window.top) {
       UIHelper.updateCheckboxes(this.container, this.settings);
       this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
       this.themeManager.updateActiveThemeDisplay(this.container, this.currentTheme);
-      
+
       // Update speed controller UI
       if (this.speedController) {
         this.speedController.updateUI(this.container);
@@ -697,27 +701,38 @@ if (window !== window.top) {
 
       // Main observer for DOM changes
       this.filterEngine.observeVideos(() => {
-        console.log('Vivideo: New media detected, autoActivate:', this.settings.autoActivate, 'isVisible:', this.isVisible);
-        
+        console.log(
+          'Vivideo: New media detected, autoActivate:',
+          this.settings.autoActivate,
+          'isVisible:',
+          this.isVisible
+        );
+
         // Always apply filters and speed if autoActivate is enabled
         if (this.settings.autoActivate) {
           // Apply filters
           this.applyFilters();
-          
+
           // Apply speed through speed controller
           if (this.speedController) {
             setTimeout(() => {
               const videos = this.filterEngine.findVideos();
-              videos.forEach(video => {
-                if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
-                  this.speedController.applySpeedToVideo(video, this.speedController.getPreviousSpeed());
+              videos.forEach((video) => {
+                if (
+                  this.speedController.isAutoApplyPreviousSpeedEnabled() &&
+                  this.speedController.getPreviousSpeed() !== 1.0
+                ) {
+                  this.speedController.applySpeedToVideo(
+                    video,
+                    this.speedController.getPreviousSpeed()
+                  );
                 } else {
                   this.speedController.applySpeedToVideo(video, this.speedController.getSpeed());
                 }
               });
             }, 100);
           }
-          
+
           // Attach play listeners
           if (this.filterEngine && typeof this.filterEngine.attachPlayListeners === 'function') {
             this.filterEngine.attachPlayListeners();
@@ -741,11 +756,11 @@ if (window !== window.top) {
       this.periodicCheckInterval = setInterval(() => {
         if (this.settings.autoActivate) {
           const videos = this.filterEngine.findVideos();
-          const images = this.filterEngine.findImages();
-          
+          this.filterEngine.findImages();
+
           // Check if any videos don't have filters applied
           let needsReapply = false;
-          videos.forEach(video => {
+          videos.forEach((video) => {
             if (!video.style.filter || video.style.filter === 'none' || video.style.filter === '') {
               needsReapply = true;
             }
@@ -754,12 +769,18 @@ if (window !== window.top) {
           if (needsReapply) {
             console.log('Vivideo: Periodic check found unprocessed media, reapplying filters');
             this.applyFilters();
-            
+
             // Apply speed
             if (this.speedController) {
-              videos.forEach(video => {
-                if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
-                  this.speedController.applySpeedToVideo(video, this.speedController.getPreviousSpeed());
+              videos.forEach((video) => {
+                if (
+                  this.speedController.isAutoApplyPreviousSpeedEnabled() &&
+                  this.speedController.getPreviousSpeed() !== 1.0
+                ) {
+                  this.speedController.applySpeedToVideo(
+                    video,
+                    this.speedController.getPreviousSpeed()
+                  );
                 } else {
                   this.speedController.applySpeedToVideo(video, this.speedController.getSpeed());
                 }
@@ -786,13 +807,13 @@ if (window !== window.top) {
       };
 
       this.filterEngine.removeFilters();
-      
+
       // Sync speed controller with reset settings
       if (this.speedController) {
         this.speedController.currentSpeed = 1.0; // Default speed
         this.speedController.applySpeedToAllVideos(1.0);
       }
-      
+
       this.updateUI();
       this.applyFilters();
       this.saveSettings();
@@ -963,6 +984,12 @@ if (window !== window.top) {
           this.themesVisible = true;
         } else if (panelType === 'info') {
           this.infoVisible = true;
+          // Update info panel content whenever it's opened
+          try {
+            this.updateInfoPanel();
+          } catch (e) {
+            console.warn('Vivideo: Failed to update info panel', e);
+          }
         } else if (panelType === 'settingsManagement') {
           this.settingsManagementVisible = true;
         }
@@ -1138,6 +1165,44 @@ if (window !== window.top) {
       this.saveThemeColors();
     }
 
+    // Update info panel dynamic content (video count and enhancement status)
+    updateInfoPanel() {
+      if (!this.container) return;
+      const infoPanel = this.container.querySelector('#info-panel');
+      if (!infoPanel) return;
+
+      const videoCountDiv = infoPanel.querySelector('#vivideo-video-count');
+      const enhancementStatusDiv = infoPanel.querySelector('#vivideo-enhancement-status');
+
+      let videoCount = 0;
+      try {
+        if (this.filterEngine && typeof this.filterEngine.findVideos === 'function') {
+          videoCount = this.filterEngine.findVideos().length;
+        } else {
+          videoCount = document.querySelectorAll('video').length;
+        }
+      } catch (e) {
+        console.warn('Vivideo: Could not determine video count', e);
+      }
+
+      if (videoCountDiv) {
+        videoCountDiv.textContent = `${videoCount} ${videoCount === 1 ? 'video found' : 'videos found'}`;
+      }
+
+      const hasChanges =
+        this.settings.brightness !== 0 ||
+        this.settings.contrast !== 0 ||
+        this.settings.saturation !== 0 ||
+        this.settings.gamma !== 1 ||
+        this.settings.colorTemp !== 0 ||
+        this.settings.sharpness !== 0 ||
+        (this.settings.speed !== undefined && this.settings.speed !== 1.0);
+
+      if (enhancementStatusDiv) {
+        enhancementStatusDiv.textContent = `Enhancement: ${hasChanges ? 'Modified' : 'None'}`;
+      }
+    }
+
     // Main visibility controls
     toggle() {
       console.log('Vivideo: Toggle called, isVisible:', this.isVisible, 'timestamp:', Date.now());
@@ -1185,7 +1250,22 @@ if (window !== window.top) {
 
       this.updateActiveStates();
       this.updateProfilesList(); // Update profiles list when showing panel
+      // Sync speed controller with actual player speeds immediately when panel opens
+      if (this.speedController && typeof this.speedController.syncWithVideoSpeeds === 'function') {
+        try {
+          this.speedController.syncWithVideoSpeeds();
+        } catch (e) {
+          console.warn('Vivideo: Failed to sync speed controller on show', e);
+        }
+      }
       this.applyFilters();
+      // Update info panel status while showing
+      try {
+        this.updateInfoPanel();
+      } catch (e) {
+        // Non-fatal: log and continue
+        console.warn('Vivideo: updateInfoPanel failed on show', e);
+      }
     }
 
     hide() {
@@ -1212,6 +1292,33 @@ if (window !== window.top) {
     // Storage methods
     async saveSettings() {
       await StorageUtils.saveSettings(this.settings);
+
+      // If auto-save profiles is enabled, update the active user profile with current settings
+      try {
+        if (
+          this.settings.autoSaveProfiles &&
+          this.settings.activeProfile &&
+          this.settings.activeProfile !== 'DEFAULT'
+        ) {
+          const idx = this.profiles.findIndex((p) => p.name === this.settings.activeProfile);
+          if (idx !== -1) {
+            // Copy only relevant visual settings into profile
+            const profileSettings = {
+              brightness: this.settings.brightness,
+              contrast: this.settings.contrast,
+              saturation: this.settings.saturation,
+              gamma: this.settings.gamma,
+              colorTemp: this.settings.colorTemp,
+              sharpness: this.settings.sharpness,
+              speed: this.settings.speed
+            };
+            this.profiles[idx].settings = profileSettings;
+            await StorageUtils.saveProfiles(this.profiles);
+          }
+        }
+      } catch (e) {
+        console.warn('Vivideo: Auto-save profile failed', e);
+      }
     }
 
     async saveProfiles() {
@@ -1365,6 +1472,12 @@ if (window !== window.top) {
       sendResponse({ success: true });
     }
 
+    if (request.action === 'ensure-vivideo') {
+      // Sent from background when tab is activated or updated
+      tryEnsureInitializedAndApply();
+      sendResponse({ success: true });
+    }
+
     if (request.action === 'default-profile') {
       // Simple toggle to default profile
       if (window.vivideoController) {
@@ -1399,6 +1512,59 @@ if (window !== window.top) {
     return true;
   });
 
+    // Additional automatic re-checks to improve auto-activation reliability
+    function tryEnsureInitializedAndApply() {
+      try {
+        if (!window.vivideoController) {
+          initializeVivideo();
+          setTimeout(() => {
+            if (window.vivideoController) window.vivideoController.applyFilters();
+          }, 150);
+        } else {
+          // Controller exists - ensure filters are applied and videos observed
+          try {
+            window.vivideoController.applyFilters();
+            if (window.vivideoController.filterEngine && typeof window.vivideoController.filterEngine.observeVideos === 'function') {
+              // Re-attach observers if needed
+              // observeVideos already sets up observers; calling ensure doesn't duplicate heavy work
+            }
+          } catch (e) {
+            console.warn('Vivideo: Error during auto apply', e);
+          }
+        }
+      } catch (e) {
+        console.warn('Vivideo: tryEnsureInitializedAndApply failed', e);
+      }
+    }
+
+    // Visibility and navigation events: re-check on tab switch, back/forward, pageshow and focus
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        tryEnsureInitializedAndApply();
+      }
+    });
+
+    window.addEventListener('pageshow', (e) => {
+      tryEnsureInitializedAndApply();
+    });
+
+    window.addEventListener('focus', () => {
+      tryEnsureInitializedAndApply();
+    });
+
+    // Listen for media play events globally to ensure filters apply to newly started media
+    document.addEventListener(
+      'play',
+      (e) => {
+        try {
+          if (window.vivideoController) window.vivideoController.applyFilters();
+        } catch (err) {
+          console.warn('Vivideo: play handler error', err);
+        }
+      },
+      true
+    );
+
   // Initialization
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeVivideo);
@@ -1416,24 +1582,25 @@ if (window !== window.top) {
   document.addEventListener('keydown', (e) => {
     const controller = window.vivideoController;
     // Always get fresh toggleWithoutAlt setting
-    const toggleWithoutAlt = controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
+    const toggleWithoutAlt =
+      controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
 
     // Handle V key for panel toggle
     if (shouldHandleKeyboardShortcuts && e.key.toLowerCase() === 'v') {
       // Check if we should handle V without Alt or Alt+V
-      const shouldToggle = toggleWithoutAlt ? 
-        (!e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey) : 
-        (e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey);
+      const shouldToggle = toggleWithoutAlt
+        ? !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey
+        : e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey;
 
       if (shouldToggle) {
         // Additional check to avoid conflicts with input fields
         const activeElement = document.activeElement;
-        const isInputField = activeElement && (
-          activeElement.tagName === 'INPUT' || 
-          activeElement.tagName === 'TEXTAREA' || 
-          activeElement.contentEditable === 'true' ||
-          activeElement.isContentEditable
-        );
+        const isInputField =
+          activeElement &&
+          (activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.contentEditable === 'true' ||
+            activeElement.isContentEditable);
 
         // If toggle without Alt is enabled, be extra careful about input fields
         if (toggleWithoutAlt && isInputField) {
@@ -1444,7 +1611,7 @@ if (window !== window.top) {
         e.preventDefault();
         e.stopPropagation();
         console.log(`Vivideo: ${toggleWithoutAlt ? 'V' : 'Alt+V'} keyboard shortcut detected`);
-        
+
         if (controller) {
           controller.toggle();
         } else {
@@ -1486,9 +1653,14 @@ if (window !== window.top) {
     }
 
     // Handle B and C keys for profile switching when toggleWithoutAlt is enabled
-    if (controller && controller.settings && controller.settings.toggleWithoutAlt && 
-        !e.altKey && !e.ctrlKey && !e.shiftKey) {
-      
+    if (
+      controller &&
+      controller.settings &&
+      controller.settings.toggleWithoutAlt &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.shiftKey
+    ) {
       // C: Previous Profile (without Alt)
       if (e.key === 'c') {
         e.preventDefault();
