@@ -5,7 +5,13 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Handle action button click (when icon is clicked)
 chrome.action.onClicked.addListener((tab) => {
-  chrome.tabs.sendMessage(tab.id, { action: 'toggle-vivideo' });
+    // Use a callback and check runtime.lastError to avoid unchecked runtime errors
+    chrome.tabs.sendMessage(tab.id, { action: 'toggle-vivideo' }, () => {
+      if (chrome.runtime.lastError) {
+        // The tab may not have the content script; suppress noisy console error
+        console.debug('Vivideo Background: sendMessage failed (possibly no receiver)');
+      }
+    });
 });
 
 // When user switches tabs, notify content script to ensure Vivideo is initialized/applied
@@ -30,7 +36,11 @@ chrome.commands.onCommand.addListener((command) => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (tabs[0]) {
       console.log('Vivideo Background: Sending command to tab:', tabs[0].id, command);
-      chrome.tabs.sendMessage(tabs[0].id, { action: command });
+        chrome.tabs.sendMessage(tabs[0].id, { action: command }, () => {
+          if (chrome.runtime.lastError) {
+            console.debug('Vivideo Background: command send failed (no receiver)');
+          }
+        });
     }
   });
 });

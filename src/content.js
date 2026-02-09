@@ -1564,7 +1564,10 @@ if (window !== window.top) {
       'play',
       (e) => {
         try {
-          if (window.vivideoController) window.vivideoController.applyFilters();
+          // Only apply filters if our controller exists and is fully initialized
+          if (window.vivideoController && window.vivideoController.isInitialized) {
+            window.vivideoController.applyFilters();
+          }
         } catch (err) {
           console.warn('Vivideo: play handler error', err);
         }
@@ -1593,7 +1596,8 @@ if (window !== window.top) {
       controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
 
     // Handle V key for panel toggle
-    if (shouldHandleKeyboardShortcuts && e.key.toLowerCase() === 'v') {
+    // Guard access to `e.key` in case it's undefined in some environments
+    if (shouldHandleKeyboardShortcuts && typeof e.key === 'string' && e.key.toLowerCase() === 'v') {
       // Check if we should handle V without Alt or Alt+V
       const shouldToggle = toggleWithoutAlt
         ? !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey
