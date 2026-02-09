@@ -46,13 +46,20 @@ class ProfileManager {
 
             <!-- Unsaved quick-save row (shown when settings are not saved) -->
             <div id="unsaved-save-panel" style="display: none; width:100%;">
-              <div class="vivideo-profile-form" style="display:flex;gap:6px;align-items:center;">
-                  <div class="profile-panel-header">
-                  🛠️ Create Profile
-            <!-- removed "Display default profiles" option - simplified single default profile model -->
-                    </div>
-                <input type="text" id="unsaved-profile-name" class="vivideo-profile-input" placeholder="New profile" style="flex:1;padding:6px 8px;">
-                <button id="unsaved-save-btn" class="vivideo-profile-save">Save</button>
+              <div class="vivideo-profile-form" style="display:flex;flex-direction:column;gap:6px;">
+                <div class="profile-panel-header">🛠️ Create Profile</div>
+                <div style="display:grid;grid-template-columns:3fr 1fr;gap:6px;align-items:center;">
+                  <input type="text" id="unsaved-profile-name" class="vivideo-profile-input" placeholder="New profile" style="width:100%;padding:6px 8px;">
+                  <button id="unsaved-save-btn" class="vivideo-profile-save">💾</button>
+                </div>
+              </div>
+              <!-- Overwrite confirmation modal -->
+              <div id="overwrite-confirm-modal" class="vivideo-modal" style="display:none;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2147483700;padding:12px;background:rgba(0,0,0,0.9);border:1px solid rgba(255,255,255,0.06);border-radius:8px;min-width:260px;max-width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+                <div class="overwrite-message" style="margin-bottom:10px;color:#fff;font-weight:600;font-size:13px;"></div>
+                <div style="display:flex;justify-content:flex-end;gap:8px;">
+                  <button class="overwrite-cancel" style="padding:6px 10px;border-radius:6px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:#fff;">Cancel</button>
+                  <button class="overwrite-confirm" style="padding:6px 10px;border-radius:6px;background:#bb531e;border:none;color:#fff;">Overwrite</button>
+                </div>
               </div>
             </div>
           </div>
@@ -67,12 +74,12 @@ class ProfileManager {
         <div class="vivideo-profile-list" id="profile-list"></div>
         <!-- Profile Save Form -->
         <div class="vivideo-profile-save-section">
-          <div class="vivideo-profile-form">
-            <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
-            <button class="vivideo-profile-save" id="save-profile" data-overwrite="false">
-              <span class="save-icon">💾</span>
-              <span class="save-text">Save</span>
-            </button>
+          <div class="vivideo-profile-form" style="display:flex;flex-direction:column;gap:6px;">
+            <div class="profile-panel-header">🛠️ Create Profile</div>
+            <div style="display:grid;grid-template-columns:3fr 1fr;gap:6px;align-items:center;">
+              <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1" style="width:100%;">
+              <button class="vivideo-profile-save" id="save-profile" data-overwrite="false">💾</button>
+            </div>
           </div>
         </div>
       </div>
@@ -132,6 +139,50 @@ class ProfileManager {
     `;
   }
 
+  // Append modal HTML to HTML template by patching container after render (fallback if missing)
+  // The modal markup will be present in the container when createProfilesHTML output is inserted.
+
+
+
+
+  // Show overwrite confirmation modal with callbacks
+  showOverwriteModal(profileName, onConfirm, onCancel) {
+    try {
+      const container = this.controller && this.controller.container ? this.controller.container : document.body;
+      let modal = container.querySelector('#overwrite-confirm-modal');
+      if (!modal) return; // modal should exist in markup
+
+      const msgEl = modal.querySelector('.overwrite-message');
+      const confirmBtn = modal.querySelector('.overwrite-confirm');
+      const cancelBtn = modal.querySelector('.overwrite-cancel');
+
+      if (msgEl) msgEl.textContent = `This will overwrite profile "${profileName}". Confirm?`;
+
+      const cleanup = () => {
+        confirmBtn.removeEventListener('click', onConfirmWrapper);
+        cancelBtn.removeEventListener('click', onCancelWrapper);
+        modal.style.display = 'none';
+      };
+
+      const onConfirmWrapper = () => {
+        try { if (typeof onConfirm === 'function') onConfirm(); } catch (e) { console.warn(e); }
+        cleanup();
+      };
+
+      const onCancelWrapper = () => {
+        try { if (typeof onCancel === 'function') onCancel(); } catch (e) { console.warn(e); }
+        cleanup();
+      };
+
+      confirmBtn.addEventListener('click', onConfirmWrapper);
+      cancelBtn.addEventListener('click', onCancelWrapper);
+
+      modal.style.display = 'block';
+    } catch (e) {
+      console.warn('Vivideo: showOverwriteModal failed', e);
+    }
+  }
+
   bindEvents(container) {
     // Themes button
     const themesBtn = UIHelper.safeQuery(container, '#themes-btn');
@@ -170,15 +221,21 @@ class ProfileManager {
           this.saveUnsavedProfile(container);
         }
       });
-      // live validation for unsaved input: show message if >16 chars
+      // live validation for unsaved input: show message if >16 chars or warn on duplicate
       unsavedInput.addEventListener('input', (e) => {
-        const val = e.target.value || '';
+        const val = (e.target.value || '').trim();
         if (val.length > 16) {
           this.updateActiveStatus('Nazwa nie może mieć więcej niż 16 znaków', '#ff4d4f');
-        } else {
-          // clear only if not in error state
-          this.updateActiveStatus('EDITING', '');
+          return;
         }
+        // duplicate check
+        const exists = this.controller.profiles.some((p) => p.name === val);
+        if (exists && val.length > 0) {
+          this.updateActiveStatus(`You will overwrite ${val}`, '#bb531e');
+          return;
+        }
+        // default editing state
+        this.updateActiveStatus('EDITING', '');
       });
     }
 
@@ -201,9 +258,11 @@ class ProfileManager {
           if (saveIcon) saveIcon.textContent = '💾';
           saveBtn.classList.remove('overwrite');
         }
-        // Dynamic validation for max length
+        // Dynamic validation for max length and duplicate warning
         if (e.target.value.length > 16) {
           this.updateActiveStatus('Nazwa nie może mieć więcej niż 16 znaków', '#ff4d4f');
+        } else if (exists && name.length > 0) {
+          this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
         } else {
           // clear visible validation only if safe
           this.updateActiveStatus('EDITING', '');
@@ -384,7 +443,8 @@ class ProfileManager {
                 }
               }
             } catch (e) {
-              console.warn('Vivideo: Safe load profile failed', e);
+                    console.warn('Vivideo: Safe load profile failed', e);
+                    try { this.updateActiveStatus('Unknown error!', 'error'); } catch (err) {}
             }
 
             // Show the profile save section (unified form) and populate it for editing
@@ -489,6 +549,7 @@ class ProfileManager {
         if (unsavedPanel && !this.isEditingProfile) unsavedPanel.style.display = 'none';
       } catch (e) {
         console.warn('Vivideo: showUserProfiles failed', e);
+        try { this.updateActiveStatus('Unknown error!', 'error'); } catch (err) {}
       }
     }
   }
@@ -529,14 +590,38 @@ class ProfileManager {
     // Check if profile name already exists
     const existingProfileIndex = this.controller.profiles.findIndex((p) => p.name === profileName);
     if (existingProfileIndex !== -1) {
-      // Overwrite existing profile
-      this.controller.profiles[existingProfileIndex].settings = {
-        ...currentSettings,
-        autoActivate: this.controller.settings.autoActivate
-      };
-      console.log('Vivideo: Profile overwritten:', profileName);
-      // Inform user with orange message
-      this.updateActiveStatus(`You will overwrite ${profileName}`, '#bb531e');
+      // Ask user to confirm overwrite
+      this.showOverwriteModal(profileName, () => {
+        try {
+          this.controller.profiles[existingProfileIndex].settings = {
+            ...currentSettings,
+            autoActivate: this.controller.settings.autoActivate
+          };
+          console.log('Vivideo: Profile overwritten:', profileName);
+
+          // proceed with save flow (same as new profile path)
+          this.controller.settings.activeProfile = profileName;
+          this.controller.saveProfiles();
+          this.controller.saveSettings();
+          this.controller.saveAppState();
+
+          // Update UI
+          this.updateProfilesList(this.controller.container);
+          this.updateActiveProfileDisplay(this.controller.container, this.controller.settings);
+          if (nameInput) nameInput.value = '';
+          this.isEditingProfile = false;
+          this.editingIndex = null;
+        } catch (e) {
+          console.warn('Vivideo: overwrite confirm handler failed', e);
+          try { this.updateActiveStatus('Unknown error!', 'error'); } catch (err) {}
+        }
+      }, () => {
+        // cancel
+        this.updateActiveStatus('Canceled', '');
+      });
+
+      // return early - action will continue in confirm callback
+      return;
     } else {
       // Create new profile
       const profile = {
@@ -788,6 +873,7 @@ class ProfileManager {
     return false;
   }
 
+
   // Validate profile name; return {valid,msg}
   validateProfileName(name) {
     if (!name || name.length === 0) return { valid: false, msg: 'Nazwa profilu jest wymagana' };
@@ -802,9 +888,27 @@ class ProfileManager {
         ? this.controller.container.querySelector('#active-profile-display')
         : document.querySelector('#active-profile-display');
       if (!el) return;
-      if (message) el.textContent = message;
-      if (color) el.style.color = color;
-      else el.style.color = '';
+      // update message
+      if (typeof message !== 'undefined' && message !== null) el.textContent = message;
+
+      // normalize and remove warning/error/editing classes first
+      el.classList.remove('active-profile-status-warning', 'active-profile-status-error', 'active-profile-status-editing');
+
+      // Interpret color parameter as either a hex color or a semantic type
+      const param = color || '';
+      if (param === '#bb531e' || param === 'warning') {
+        el.classList.add('active-profile-status-warning');
+        el.style.color = '';
+      } else if (param === '#ff4d4f' || param === 'error') {
+        el.classList.add('active-profile-status-error');
+        el.style.color = '';
+      } else if (message === 'EDITING') {
+        el.classList.add('active-profile-status-editing');
+        el.style.color = '';
+      } else {
+        // clear inline color and leave visual state to other classes
+        el.style.color = '';
+      }
     } catch (e) {
       // silent
     }
@@ -863,6 +967,8 @@ class ProfileManager {
 
     return null;
   }
+
+  // Markup for overwrite confirmation modal is injected into createProfilesHTML output.
 
   // Check if current settings match any existing profile to prevent duplicates
   findMatchingProfile(settings) {

@@ -1346,6 +1346,35 @@ video:-ms-fullscreen .vivideo-container {
   animation: pulse-orange 2s infinite;
 }
 
+/* Warning state for active profile display (duplicate/name conflict) */
+.active-item-status.active-profile-status-warning {
+  background: #fff6ed;
+  border: 1px solid #bb531e;
+  color: #7a2f11;
+  box-shadow: none;
+}
+
+/* Error state for active profile display (invalid value/error) */
+.active-item-status.active-profile-status-error {
+  background: #ffecec;
+  border: 1px solid #ff4d4f;
+  color: #a10000;
+  box-shadow: none;
+}
+
+/* Editing state for active profile display (neutral) */
+.active-item-status.active-profile-status-editing {
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.04);
+  color: inherit;
+}
+
+/* Simple modal styling for overwrite confirmation */
+.vivideo-modal { /* inline styles used by markup; fallback styles here */ }
+.vivideo-modal .overwrite-message { color: inherit; }
+.vivideo-modal .overwrite-confirm { cursor: pointer; }
+.vivideo-modal .overwrite-cancel { cursor: pointer; }
+
 /* Theme status styles */
 .active-theme-status.active {
   background: rgba(0, 150, 255, 0.2);
