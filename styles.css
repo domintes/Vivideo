@@ -1810,6 +1810,31 @@ button.vivideo-close {
 }
 
 /* Extended limits indicator */
+
+/* Added classes for ProfileManager refactor */
+.vivideo-bottom-controls-right { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
+.vivideo-unsaved-panel { display:none; width:100%; }
+.vivideo-profile-form-compact { display:flex; flex-direction:column; gap:6px; }
+.vivideo-grid-3-1 { display:grid; grid-template-columns:3fr 1fr; gap:6px; align-items:center; }
+.vivideo-grid-1-3-1 { display:grid; grid-template-columns:1fr 3fr 1fr; gap:6px; align-items:center; }
+.vivideo-unsaved-input { padding:6px 8px; width:100%; }
+.vivideo-modal-actions { display:flex; justify-content:flex-end; gap:8px; }
+.vivideo-modal-cancel { padding:6px 10px; border-radius:6px; background:transparent; border:1px solid rgba(255,255,255,0.08); color:#fff; }
+.vivideo-modal-confirm { padding:6px 10px; border-radius:6px; background:#bb531e; border:none; color:#fff; }
+.vivideo-btn { padding:6px 8px; border-radius:6px; cursor:pointer; }
+.vivideo-restore-default-profiles-btn { background: transparent; border: 1px solid rgba(255,255,255,0.06); }
+.vivideo-profile-overwrite { background: #1a3488a1; border: none; color: #fff; display: none; }
+.vivideo-edit-mode-active .vivideo-profile-overwrite { display: inline-block; }
+.vivideo-profile-delete-btn { background: transparent; border: none; color: #ff6b6b; }
+.vivideo-compare-controls { display: none; }
+
+.vivideo-open-edit-mode { background: #2b7cff; color: #fff; border: none; padding: 8px 12px; }
+
+/* Notification styles */
+.vivideo-notification { position: fixed; top: 20px; right: 20px; background: rgba(40,44,52,0.95); color: #61dafb; padding: 12px 20px; border-radius: 8px; font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(97, 218, 251, 0.3); border: 1px solid rgba(97, 218, 251, 0.5); opacity: 0; transform: translateX(100%); transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: none; backdrop-filter: blur(10px); }
+.vivideo-notification-content { display:flex; align-items:center; gap:8px; }
+.vivideo-notification-icon { font-size:16px; }
+.vivideo-notification-fullscreen { font-size:12px; opacity:0.8; }
 .vivideo-container.extended-limits .vivideo-control .vivideo-label::after {
   content: ' [MAX]';
   color: #ff6b35;
@@ -2519,4 +2544,8 @@ div .vivideo-container,
 .vivideo-profile-save {
   padding: 6px 8px;
   font-size: 13px;
+}
+
+.vivideo-restore-default-built-in-profiles-btn { 
+  font-size: 12px;
 }

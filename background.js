@@ -17,7 +17,10 @@ chrome.action.onClicked.addListener((tab) => {
 // When user switches tabs, notify content script to ensure Vivideo is initialized/applied
 chrome.tabs.onActivated.addListener((activeInfo) => {
   chrome.tabs.sendMessage(activeInfo.tabId, { action: 'ensure-vivideo' }, (res) => {
-    // ignore errors (tab may not have content script)
+    if (chrome.runtime && chrome.runtime.lastError) {
+      // suppress noisy console errors when tab has no content script
+      console.debug('Vivideo Background: onActivated sendMessage no receiver');
+    }
   });
 });
 
@@ -25,7 +28,9 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete') {
     chrome.tabs.sendMessage(tabId, { action: 'ensure-vivideo' }, (res) => {
-      // ignore errors
+      if (chrome.runtime && chrome.runtime.lastError) {
+        console.debug('Vivideo Background: onUpdated sendMessage no receiver');
+      }
     });
   }
 });
