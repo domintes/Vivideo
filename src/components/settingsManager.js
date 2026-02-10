@@ -47,7 +47,7 @@ class SettingsManager {
         const a = document.createElement('a');
         a.href = url;
         a.download = fileName;
-        document.body.appendChild(a);
+        UIHelper.safeAppend(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);

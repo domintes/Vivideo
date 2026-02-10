@@ -160,7 +160,7 @@ class VideoFilterEngine {
       </filter>
     `;
 
-    document.body.appendChild(svg);
+    UIHelper.safeAppend(svg);
   }
 
   removeFilters() {
@@ -320,20 +320,20 @@ class VideoFilterEngine {
 
       // Wrap the video element
       element.parentNode.insertBefore(container, element);
-      container.appendChild(element);
+      UIHelper.safeAppendTo(container, element);
     }
 
     // Create left overlay (current profile)
     const leftOverlay = document.createElement('div');
     leftOverlay.className = 'vivideo-left-overlay';
     this.setupSplitOverlay(leftOverlay, 'left', leftSettings);
-    container.appendChild(leftOverlay);
+    UIHelper.safeAppendTo(container, leftOverlay);
 
     // Create right overlay (compare profile)
     const rightOverlay = document.createElement('div');
     rightOverlay.className = 'vivideo-right-overlay';
     this.setupSplitOverlay(rightOverlay, 'right', rightSettings);
-    container.appendChild(rightOverlay);
+    UIHelper.safeAppendTo(container, rightOverlay);
 
     console.log('Vivideo: Split filters applied to video element');
   }
@@ -400,7 +400,7 @@ class VideoFilterEngine {
 
     const profileName = settings.name || (side === 'left' ? 'Current' : 'Compare');
     indicator.textContent = `${side.toUpperCase()}: ${profileName}`;
-    overlay.appendChild(indicator);
+    UIHelper.safeAppendTo(overlay, indicator);
   }
 
   applySplitFiltersToImages(leftSettings, rightSettings) {

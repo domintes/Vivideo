@@ -304,6 +304,43 @@ if (window !== window.top) {
       return true;
     }
 
+    ensureFilterEngine() {
+      if (this.filterEngine) return true;
+      if (typeof VideoFilterEngine === 'undefined') {
+        console.warn('Vivideo: VideoFilterEngine class not available for lazy init');
+        return false;
+      }
+      try {
+        this.filterEngine = new VideoFilterEngine(this);
+        console.log('Vivideo: FilterEngine lazy-initialized');
+        return true;
+      } catch (e) {
+        console.error('Vivideo: Failed to lazy-initialize FilterEngine', e);
+        return false;
+      }
+    }
+
+    safeAppend(node) {
+      if (!node) return;
+      if (document && document.body) {
+        try {
+          document.body.appendChild(node);
+        } catch (e) {
+          console.warn('Vivideo: safeAppend failed', e);
+        }
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          if (document && document.body) {
+            try {
+              document.body.appendChild(node);
+            } catch (e) {
+              console.warn('Vivideo: safeAppend failed on DOMContentLoaded', e);
+            }
+          }
+        });
+      }
+    }
+
     loadActiveProfile(profileName) {
       if (profileName && this.profiles.length > 0) {
         const profile = this.profiles.find((p) => p.name === profileName);
@@ -376,7 +413,7 @@ if (window !== window.top) {
 
       this.container.innerHTML = htmlContent;
 
-      document.body.appendChild(this.container);
+      this.safeAppend(this.container);
       this.updateProfilesList();
 
       // Initialize checkbox and button states based on showDefaultProfiles setting
@@ -524,8 +561,13 @@ if (window !== window.top) {
       // Move panel to fullscreen element to make it visible
       try {
         if (fullscreenElement && fullscreenElement.appendChild) {
-          fullscreenElement.appendChild(this.container);
-          console.log('Vivideo: Panel moved to fullscreen element');
+          try {
+            fullscreenElement.appendChild(this.container);
+            console.log('Vivideo: Panel moved to fullscreen element');
+          } catch (e) {
+            console.warn('Vivideo: Could not append to fullscreenElement', e);
+            UIHelper.safeAppend(this.container);
+          }
         }
       } catch (error) {
         console.warn('Vivideo: Could not move panel to fullscreen element:', error);
@@ -543,12 +585,17 @@ if (window !== window.top) {
 
       // Restore panel to original parent
       try {
-        if (this.originalParent && this.originalParent.appendChild) {
-          this.originalParent.appendChild(this.container);
-          console.log('Vivideo: Panel restored to original position');
-        } else if (document.body) {
-          // Fallback: move to body
-          document.body.appendChild(this.container);
+        if (this.originalParent && typeof this.originalParent.appendChild === 'function') {
+          try {
+            this.originalParent.appendChild(this.container);
+            console.log('Vivideo: Panel restored to original position');
+          } catch (e) {
+            console.warn('Vivideo: Could not restore to originalParent', e);
+            UIHelper.safeAppend(this.container);
+            console.log('Vivideo: Panel restored to document body');
+          }
+        } else {
+          UIHelper.safeAppend(this.container);
           console.log('Vivideo: Panel restored to document body');
         }
       } catch (error) {
@@ -625,7 +672,7 @@ if (window !== window.top) {
         pointer-events: none;
         transition: opacity 0.3s ease;
       `;
-        document.body.appendChild(overlay);
+        this.safeAppend(overlay);
       }
 
       overlay.textContent = `${speed.toFixed(2)}x`;
@@ -655,7 +702,7 @@ if (window !== window.top) {
     }
 
     applyFilters() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
@@ -673,7 +720,7 @@ if (window !== window.top) {
     }
 
     applyCompareFilters() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
@@ -686,15 +733,17 @@ if (window !== window.top) {
     }
 
     removeFilters() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
-      this.filterEngine.removeFilters();
+      if (this.filterEngine && typeof this.filterEngine.removeFilters === 'function') {
+        this.filterEngine.removeFilters();
+      }
     }
 
     observeVideos() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }

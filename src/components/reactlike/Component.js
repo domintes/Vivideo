@@ -43,7 +43,7 @@ class Component {
     this.element = tempDiv.firstElementChild;
 
     if (parentElement) {
-      parentElement.appendChild(this.element);
+      UIHelper.safeAppendTo(parentElement, this.element);
     }
 
     this.mounted = true;

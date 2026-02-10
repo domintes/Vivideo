@@ -273,6 +273,51 @@ const UIHelper = {
         return { min: 0, max: 100, step: 1 };
     }
   }
+    ,
+
+    // Safe append helpers to avoid calling appendChild on null parents
+    safeAppend(node) {
+      if (!node) return;
+      if (document && document.body) {
+        try {
+          document.body.appendChild(node);
+        } catch (e) {
+          console.warn('UIHelper.safeAppend failed', e);
+        }
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          try {
+            if (document && document.body) document.body.appendChild(node);
+          } catch (e) {
+            console.warn('UIHelper.safeAppend failed on DOMContentLoaded', e);
+          }
+        });
+      }
+    },
+
+    safeAppendTo(parent, node) {
+      if (!node) return;
+      if (parent && typeof parent.appendChild === 'function') {
+        try {
+          parent.appendChild(node);
+        } catch (e) {
+          console.warn('UIHelper.safeAppendTo failed', e);
+        }
+        return;
+      }
+
+      // If parent is a selector string, try to resolve it
+      try {
+        const resolved = typeof parent === 'string' ? document.querySelector(parent) : parent;
+        if (resolved && typeof resolved.appendChild === 'function') {
+          resolved.appendChild(node);
+          return;
+        }
+      } catch (e) {}
+
+      // Fallback to appending to body when parent not available yet
+      this.safeAppend(node);
+    }
 };
 
 // Export for use in other files

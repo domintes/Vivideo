@@ -3,14 +3,20 @@
 
 class StorageUtils {
   static sendMessage(action, data) {
-    return new Promise((resolve, reject) => {
-      chrome.runtime.sendMessage({ action, ...data }, (response) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(response);
-        }
-      });
+    return new Promise((resolve) => {
+      try {
+        chrome.runtime.sendMessage({ action, ...data }, (response) => {
+          if (chrome.runtime && chrome.runtime.lastError) {
+            console.warn('StorageUtils.sendMessage runtime.lastError:', chrome.runtime.lastError);
+            resolve(null);
+          } else {
+            resolve(response);
+          }
+        });
+      } catch (e) {
+        console.warn('StorageUtils.sendMessage failed to send message', e);
+        resolve(null);
+      }
     });
   }
 

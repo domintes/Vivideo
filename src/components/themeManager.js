@@ -291,7 +291,7 @@ class ThemeManager {
       }
     `;
 
-    document.head.appendChild(style);
+    UIHelper.safeAppendTo(document.head, style);
     container.className = `vivideo-container vivideo-theme-${currentTheme}`;
     if (container.classList.contains('vivideo-visible')) {
       container.classList.add('vivideo-visible');

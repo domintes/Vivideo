@@ -118,7 +118,7 @@ const VivideoMainPanel = ({
         popup = document.createElement('div');
         popup.className = 'vivideo-info-popup';
         popup.textContent = text;
-        document.body.appendChild(popup);
+        UIHelper.safeAppend(popup);
         const rect = icon.getBoundingClientRect();
         popup.style.position = 'absolute';
         popup.style.left = rect.right + 8 + 'px';
