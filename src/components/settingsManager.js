@@ -63,7 +63,7 @@ class SettingsManager {
   // Import settings from JSON file
   async importSettings(file) {
     return new Promise((resolve, reject) => {
-        if (!file) {
+      if (!file) {
         reject(new Error('No file selected'));
         return;
       }
@@ -199,9 +199,9 @@ class SettingsManager {
   // Create import/export HTML interface
   createImportExportHTML() {
     return /*html*/ `
-      <div class="vivideo-settings-management" style="display: none;" id="settings-management">
-        <div class="vivideo-settings-section">
-            <h3>⚙️ Settings Management</h3>
+      <div class="vivideo-settings-management" style="display: block;" id="settings-management">
+        <div>
+            <div class="vivideo-box-header vivideo-settings-box-header">⚙️ Settings Management</div>
           
           <div class="settings-actions">
             <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Export all settings and profiles">
@@ -255,21 +255,21 @@ class SettingsManager {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
-            this.showMessage(messageDiv, 'Importing settings...', 'info');
-            try {
-              const result = await this.importSettings(file);
-              this.showMessage(
-                messageDiv,
-                `${result.message} Imported ${result.profilesCount} profiles.`,
-                'success'
-              );
-              // Clear file input
-              fileInput.value = '';
-            } catch (error) {
-              this.showMessage(messageDiv, error.message, 'error');
-              fileInput.value = '';
-            }
+          this.showMessage(messageDiv, 'Importing settings...', 'info');
+          try {
+            const result = await this.importSettings(file);
+            this.showMessage(
+              messageDiv,
+              `${result.message} Imported ${result.profilesCount} profiles.`,
+              'success'
+            );
+            // Clear file input
+            fileInput.value = '';
+          } catch (error) {
+            this.showMessage(messageDiv, error.message, 'error');
+            fileInput.value = '';
           }
+        }
       });
     }
   }

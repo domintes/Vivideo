@@ -47,6 +47,46 @@ const UIHelper = {
           <span class="vivideo-switch-label">Auto-activate</span>
         </label>
       </div>
+      <div class="vivideo-auto-activate switch-section vivideo-quality-section">
+        <div class="profile-panel-header">✨ Improve quality</div>
+        <div class="vivideo-quality-subtitle">Video Quality</div>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="keep-quality-checkbox" class="vivideo-switch-input" ${
+            settings.keepQuality ? 'checked' : ''
+          }>
+          <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-label">Keep Quality</span>
+        </label>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="force-high-quality-scaling-checkbox" class="vivideo-switch-input" ${
+            settings.forceHighQualityScaling ? 'checked' : ''
+          }>
+          <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-label">High quality scaling</span>
+        </label>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="linear-color-pipeline-checkbox" class="vivideo-switch-input" ${
+            settings.linearColorPipeline ? 'checked' : ''
+          }>
+          <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-label">Linear color pipeline</span>
+        </label>
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="upscale-quality-boost-checkbox" class="vivideo-switch-input" ${
+            settings.upscaleQualityBoost ? 'checked' : ''
+          }>
+          <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-label">Upscale boost</span>
+        </label>
+        <label class="vivideo-quality-mode-row">
+          <span class="vivideo-switch-label">Quality profile</span>
+          <select id="video-quality-mode-select" class="vivideo-compare-select">
+            <option value="soft" ${settings.videoQualityMode === 'soft' ? 'selected' : ''}>Soft</option>
+            <option value="balanced" ${settings.videoQualityMode === 'balanced' ? 'selected' : ''}>Balanced</option>
+            <option value="detail" ${settings.videoQualityMode === 'detail' ? 'selected' : ''}>Detail</option>
+          </select>
+        </label>
+      </div>
     `;
   },
 
@@ -109,11 +149,46 @@ const UIHelper = {
         if (typeof controller.saveAppState === 'function') controller.saveAppState();
       });
     }
+
+    const qualityToggles = [
+      ['#keep-quality-checkbox', 'keepQuality'],
+      ['#force-high-quality-scaling-checkbox', 'forceHighQualityScaling'],
+      ['#linear-color-pipeline-checkbox', 'linearColorPipeline'],
+      ['#upscale-quality-boost-checkbox', 'upscaleQualityBoost']
+    ];
+    qualityToggles.forEach(([selector, settingKey]) => {
+      const checkbox = this.safeQuery(container, selector);
+      if (!checkbox) return;
+      checkbox.addEventListener('change', (e) => {
+        controller.settings[settingKey] = e.target.checked;
+        if (typeof controller.saveSettings === 'function') controller.saveSettings();
+        if (typeof controller.applyFilters === 'function') controller.applyFilters();
+      });
+    });
+
+    const qualityModeSelect = this.safeQuery(container, '#video-quality-mode-select');
+    if (qualityModeSelect) {
+      qualityModeSelect.addEventListener('change', (e) => {
+        controller.settings.videoQualityMode = e.target.value;
+        if (typeof controller.saveSettings === 'function') controller.saveSettings();
+        if (typeof controller.applyFilters === 'function') controller.applyFilters();
+      });
+    }
   },
 
   updateCheckboxes(container, settings = {}) {
     const autoActivateCheckbox = this.safeQuery(container, '#auto-activate-checkbox');
     if (autoActivateCheckbox) autoActivateCheckbox.checked = !!settings.autoActivate;
+    const keepQualityCheckbox = this.safeQuery(container, '#keep-quality-checkbox');
+    if (keepQualityCheckbox) keepQualityCheckbox.checked = !!settings.keepQuality;
+    const scalingCheckbox = this.safeQuery(container, '#force-high-quality-scaling-checkbox');
+    if (scalingCheckbox) scalingCheckbox.checked = !!settings.forceHighQualityScaling;
+    const linearCheckbox = this.safeQuery(container, '#linear-color-pipeline-checkbox');
+    if (linearCheckbox) linearCheckbox.checked = !!settings.linearColorPipeline;
+    const upscaleCheckbox = this.safeQuery(container, '#upscale-quality-boost-checkbox');
+    if (upscaleCheckbox) upscaleCheckbox.checked = !!settings.upscaleQualityBoost;
+    const qualityModeSelect = this.safeQuery(container, '#video-quality-mode-select');
+    if (qualityModeSelect) qualityModeSelect.value = settings.videoQualityMode || 'balanced';
   },
 
   setupDragging(container, _controller) {
@@ -272,52 +347,53 @@ const UIHelper = {
       default:
         return { min: 0, max: 100, step: 1 };
     }
-  }
-    ,
+  },
 
-    // Safe append helpers to avoid calling appendChild on null parents
-    safeAppend(node) {
-      if (!node) return;
-      if (document && document.body) {
-        try {
-          document.body.appendChild(node);
-        } catch (e) {
-          console.warn('UIHelper.safeAppend failed', e);
-        }
-      } else {
-        document.addEventListener('DOMContentLoaded', () => {
-          try {
-            if (document && document.body) document.body.appendChild(node);
-          } catch (e) {
-            console.warn('UIHelper.safeAppend failed on DOMContentLoaded', e);
-          }
-        });
+  // Safe append helpers to avoid calling appendChild on null parents
+  safeAppend(node) {
+    if (!node) return;
+    if (document && document.body) {
+      try {
+        document.body.appendChild(node);
+      } catch (e) {
+        console.warn('UIHelper.safeAppend failed', e);
       }
-    },
-
-    safeAppendTo(parent, node) {
-      if (!node) return;
-      if (parent && typeof parent.appendChild === 'function') {
+    } else {
+      document.addEventListener('DOMContentLoaded', () => {
         try {
-          parent.appendChild(node);
+          if (document && document.body) document.body.appendChild(node);
         } catch (e) {
-          console.warn('UIHelper.safeAppendTo failed', e);
+          console.warn('UIHelper.safeAppend failed on DOMContentLoaded', e);
         }
+      });
+    }
+  },
+
+  safeAppendTo(parent, node) {
+    if (!node) return;
+    if (parent && typeof parent.appendChild === 'function') {
+      try {
+        parent.appendChild(node);
+      } catch (e) {
+        console.warn('UIHelper.safeAppendTo failed', e);
+      }
+      return;
+    }
+
+    // If parent is a selector string, try to resolve it
+    try {
+      const resolved = typeof parent === 'string' ? document.querySelector(parent) : parent;
+      if (resolved && typeof resolved.appendChild === 'function') {
+        resolved.appendChild(node);
         return;
       }
-
-      // If parent is a selector string, try to resolve it
-      try {
-        const resolved = typeof parent === 'string' ? document.querySelector(parent) : parent;
-        if (resolved && typeof resolved.appendChild === 'function') {
-          resolved.appendChild(node);
-          return;
-        }
-      } catch (e) {}
-
-      // Fallback to appending to body when parent not available yet
-      this.safeAppend(node);
+    } catch (e) {
+      console.warn('UIHelper.safeAppendTo selector resolution failed', e);
     }
+
+    // Fallback to appending to body when parent not available yet
+    this.safeAppend(node);
+  }
 };
 
 // Export for use in other files

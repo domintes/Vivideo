@@ -14,6 +14,8 @@ class ProfileManager {
     this.builtinCollapsed = true; // Default Built-in collapsed by default
     this.userCollapsed = true; // User Profiles collapsed by default
     this.isEditingBuiltin = false; // track editing built-in profile
+    this.profileCategories = [];
+    this.workOnEverything = false; // apply filters to whole page when enabled
   }
 
   createDefaultProfiles() {
@@ -22,6 +24,7 @@ class ProfileManager {
       {
         name: 'DEFAULT',
         description: 'Default Vivideo profile, without any value changed',
+        profileCategory: 'Built-in',
         settings: {
           contrast: 0,
           colorTemp: 0,
@@ -35,6 +38,7 @@ class ProfileManager {
       {
         name: 'Vivid Colors',
         description: 'High saturation and contrast for vivid playback',
+        profileCategory: 'Built-in',
         settings: {
           contrast: 27,
           colorTemp: -72,
@@ -48,6 +52,7 @@ class ProfileManager {
       {
         name: 'Black & White',
         description: 'Desaturate to create a black & white effect',
+        profileCategory: 'Built-in',
         settings: {
           contrast: 0,
           colorTemp: 0,
@@ -61,6 +66,7 @@ class ProfileManager {
       {
         name: 'High Gamma / Low Contrast',
         description: 'Brighter midtones with reduced contrast',
+        profileCategory: 'Built-in',
         settings: {
           contrast: -15,
           gamma: 1.6,
@@ -74,6 +80,7 @@ class ProfileManager {
       {
         name: 'Low Gamma / High Contrast',
         description: 'Deeper tones with stronger contrast',
+        profileCategory: 'Built-in',
         settings: {
           contrast: 25,
           gamma: 0.8,
@@ -87,6 +94,7 @@ class ProfileManager {
       {
         name: 'Matrix (Sharp)',
         description: 'Sharpness boost only (matrix-like)',
+        profileCategory: 'Built-in',
         settings: {
           contrast: 0,
           gamma: 1,
@@ -100,31 +108,52 @@ class ProfileManager {
     ];
   }
 
+  normalizeCategoryName(categoryName) {
+    return (categoryName || '').trim();
+  }
+
+  getProfileCategory(profile) {
+    const normalized = this.normalizeCategoryName(profile && profile.profileCategory);
+    return normalized || 'General';
+  }
+
+  getOrderedUserCategories() {
+    const categories = new Set(this.profileCategories || []);
+    this.controller.profiles.forEach((profile) => categories.add(this.getProfileCategory(profile)));
+    if (categories.size === 0) {
+      categories.add('General');
+    }
+    return [...categories];
+  }
+
   createProfilesHTML() {
     return /*html*/ `
       <!-- Profiles Section -->
       <div class="vivideo-bottom-controls">
-        <div class="control-buttons">
-            <button class="vivideo-control-btn themes-btn" id="themes-btn" title="Themes">Themes</button>
-            <button class="vivideo-control-btn settings-btn" id="settings-btn" title="Import/Export settings">⚙️</button>
-          </div>
             <div class="vivideo-bottom-controls-right">
               <div class="active-item-status active-profile-status" id="active-profile-display">DEFAULT</div>
 
             <!-- Edit mode panel (shown when NOT SAVED, default) -->
             <div id="edit-mode-panel" class="vivideo-edit-mode-panel">
-              <div class="profile-panel-header">🛠️ Edit Profile</div>
+              <div class="vivideo-box-header profile-panel-header">🛠️ Edit Profile</div>
               <button id="open-edit-mode-btn" class="vivideo-btn vivideo-open-edit-mode">✂️ Open Edit Mode</button>
             </div>
 
             <!-- Unsaved quick-save row (opened when user clicks Open Edit Mode) -->
             <div id="unsaved-save-panel" class="vivideo-unsaved-panel" style="display:none;">
               <div class="vivideo-profile-form vivideo-profile-form-compact">
-                <div class="profile-panel-header">🛠️ Create Profile</div>
+                <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
                 <div class="vivideo-grid-1-3-1">
                   <button id="vivideo-cancel-edit-mode-btn" class="vivideo-btn vivideo-cancel-edit-mode-btn">✖</button>
                   <input type="text" id="unsaved-profile-name" class="vivideo-profile-input vivideo-unsaved-input" placeholder="New profile">
                   <button id="unsaved-save-btn" class="vivideo-profile-save vivideo-btn">💾</button>
+                </div>
+                <div class="vivideo-grid-1-3-1 vivideo-category-row">
+                  <button id="create-unsaved-profile-category-btn" class="vivideo-btn" title="Create category">＋</button>
+                  <select id="unsaved-profile-category" class="vivideo-profile-input">
+                    <option value="">General</option>
+                  </select>
+                  <button id="delete-unsaved-profile-category-btn" class="vivideo-btn" title="Delete selected category">🗑️</button>
                 </div>
               </div>
             </div>
@@ -132,8 +161,8 @@ class ProfileManager {
       </div>
 
       <!-- Profiles Panel -->
-      <div class="vivideo-profiles" id="profiles-panel">
-        <div class="profile-panel-header">
+      <div class="vivideo-profiles vivideo-border-box" id="profiles-panel">
+        <div class="vivideo-box-header profile-panel-header">
           🎥 Video Profiles
             <!-- removed "Display default profiles" option - simplified single default profile model -->
         </div>
@@ -141,10 +170,15 @@ class ProfileManager {
         <!-- Profile Save Form -->
         <div class="vivideo-profile-save-section">
           <div class="vivideo-profile-form vivideo-profile-form-compact">
-            <div class="profile-panel-header">🛠️ Create Profile</div>
+            <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
             <div class="vivideo-grid-3-1">
               <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
               <button class="vivideo-profile-save vivideo-btn" id="save-profile" data-overwrite="false">💾</button>
+            </div>
+            <div class="vivideo-grid-3-1 vivideo-category-row">
+              <select id="profile-category" class="vivideo-profile-input">
+                <option value="">General</option>
+              </select>
             </div>
           </div>
         </div>
@@ -167,6 +201,15 @@ class ProfileManager {
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-label">Work on all websites</span>
             <button class="vivideo-info-icon" data-info="Apply video filters to all websites, not just YouTube">i</button>
+          </label>
+        </div>
+
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="work-on-everything-checkbox" class="vivideo-switch-input">
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Work on everything on website</span>
+            <button class="vivideo-info-icon" data-info="Apply filters to whole page except Vivideo UI">i</button>
           </label>
         </div>
 
@@ -256,21 +299,7 @@ class ProfileManager {
   }
 
   bindEvents(container) {
-    // Themes button
-    const themesBtn = UIHelper.safeQuery(container, '#themes-btn');
-    if (themesBtn) {
-      themesBtn.addEventListener('click', () => {
-        this.showThemes(container);
-      });
-    }
-
-    // Settings management button
-    const settingsBtn = UIHelper.safeQuery(container, '#settings-btn');
-    if (settingsBtn) {
-      settingsBtn.addEventListener('click', () => {
-        this.controller.toggleSettingsManagement();
-      });
-    }
+    // (themes and settings buttons removed from UI) - no bindings here
 
     const saveProfileBtn = UIHelper.safeQuery(container, '#save-profile');
     if (saveProfileBtn) {
@@ -320,6 +349,7 @@ class ProfileManager {
           this.isEditingProfile = true;
           if (this.controller && this.controller.container)
             this.controller.container.classList.add('vivideo-edit-mode-active');
+          this.updateProfilesList(container);
           const inputField = container.querySelector('#unsaved-profile-name');
           if (inputField) setTimeout(() => inputField.focus(), 40);
         });
@@ -339,9 +369,64 @@ class ProfileManager {
           if (inputField) inputField.value = '';
           if (this.controller && this.controller.container)
             this.controller.container.classList.remove('vivideo-edit-mode-active');
+          this.updateProfilesList(container);
           this.updateActiveStatus('NOT SAVED', '');
         });
       }
+    }
+
+    const unsavedCategorySelect = UIHelper.safeQuery(container, '#unsaved-profile-category');
+    if (unsavedCategorySelect) {
+      unsavedCategorySelect.addEventListener('change', () => {
+        this.updateActiveStatus('EDITING', '');
+      });
+    }
+
+    const mainCategorySelect = UIHelper.safeQuery(container, '#profile-category');
+    if (mainCategorySelect) {
+      mainCategorySelect.addEventListener('change', () => {
+        this.updateActiveStatus('EDITING', '');
+      });
+    }
+
+    const createCategoryBtn = UIHelper.safeQuery(container, '#create-unsaved-profile-category-btn');
+    if (createCategoryBtn) {
+      createCategoryBtn.addEventListener('click', () => {
+        const rawName = prompt('Category name:', '');
+        const categoryName = this.normalizeCategoryName(rawName);
+        if (!categoryName) return;
+        if (!this.profileCategories.includes(categoryName)) {
+          this.profileCategories.push(categoryName);
+          this.profileCategories.sort((a, b) => a.localeCompare(b));
+        }
+        this.refreshCategorySelectors(container, categoryName);
+        this.updateProfilesList(container);
+        this.controller.saveAppState();
+      });
+    }
+
+    const deleteCategoryBtn = UIHelper.safeQuery(container, '#delete-unsaved-profile-category-btn');
+    if (deleteCategoryBtn) {
+      deleteCategoryBtn.addEventListener('click', () => {
+        const select = container.querySelector('#unsaved-profile-category');
+        const categoryName = this.normalizeCategoryName(select ? select.value : '');
+        if (!categoryName || categoryName === 'General') return;
+        this.profileCategories = (this.profileCategories || []).filter((c) => c !== categoryName);
+        this.controller.profiles.forEach((profile) => {
+          if (this.getProfileCategory(profile) === categoryName) {
+            profile.profileCategory = 'General';
+          }
+        });
+        this.defaultProfiles.forEach((profile) => {
+          if (this.getProfileCategoryByType(profile, 'builtin') === categoryName) {
+            profile.profileCategory = 'Built-in';
+          }
+        });
+        this.controller.saveProfiles();
+        this.controller.saveAppState();
+        this.refreshCategorySelectors(container, 'General');
+        this.updateProfilesList(container);
+      });
     }
 
     // Toggle Save/Overwrite button based on input name matching existing profiles
@@ -416,6 +501,26 @@ class ProfileManager {
       });
     }
 
+    // Work on everything on website checkbox
+    const workOnEverythingCheckbox = UIHelper.safeQuery(container, '#work-on-everything-checkbox');
+    if (workOnEverythingCheckbox) {
+      workOnEverythingCheckbox.addEventListener('change', (e) => {
+        this.workOnEverything = e.target.checked;
+        console.log('Vivideo: Work on everything on website:', this.workOnEverything);
+        // Save setting
+        if (this.controller) this.controller.saveAppState();
+
+        // Apply or remove global page filters
+        if (this.workOnEverything) {
+          if (this.controller && typeof this.controller.applyGlobalPageFilters === 'function')
+            this.controller.applyGlobalPageFilters();
+        } else {
+          if (this.controller && typeof this.controller.removeGlobalPageFilters === 'function')
+            this.controller.removeGlobalPageFilters();
+        }
+      });
+    }
+
     // Speed step input
     const speedStepInput = UIHelper.safeQuery(container, '#speed-step-input');
     if (speedStepInput) {
@@ -443,6 +548,8 @@ class ProfileManager {
         this.selectCompareProfile(container, e.target.value);
       });
     }
+
+    this.refreshCategorySelectors(container);
   }
 
   // Check if current site is YouTube
@@ -469,245 +576,381 @@ class ProfileManager {
     }
   }
 
+  refreshCategorySelectors(container, selectedCategory = 'General') {
+    const categoryNames = this.getOrderedUserCategories();
+    ['#profile-category', '#unsaved-profile-category'].forEach((selector) => {
+      const select = container.querySelector(selector);
+      if (!select) return;
+      const previous = this.normalizeCategoryName(select.value) || selectedCategory;
+      select.innerHTML = '';
+      categoryNames.forEach((categoryName) => {
+        const option = document.createElement('option');
+        option.value = categoryName;
+        option.textContent = categoryName;
+        select.appendChild(option);
+      });
+      const finalSelection = categoryNames.includes(previous) ? previous : selectedCategory;
+      select.value = categoryNames.includes(finalSelection) ? finalSelection : categoryNames[0];
+    });
+  }
+
+  getProfileCategoryByType(profile, profileType) {
+    const fallback = profileType === 'builtin' ? 'Built-in' : 'General';
+    const normalized = this.normalizeCategoryName(profile && profile.profileCategory);
+    return normalized || fallback;
+  }
+
+  getOrderedCategoriesForType(profileType, editModeActive) {
+    const categories = new Set();
+    if (profileType === 'builtin') {
+      categories.add('Built-in');
+      this.defaultProfiles.forEach((profile) =>
+        categories.add(this.getProfileCategoryByType(profile, 'builtin'))
+      );
+      if (editModeActive) {
+        (this.profileCategories || []).forEach((categoryName) => categories.add(categoryName));
+      }
+    } else {
+      this.getOrderedUserCategories().forEach((categoryName) => categories.add(categoryName));
+      if (editModeActive) categories.add('General');
+    }
+    return [...categories];
+  }
+
+  getCategoryCollapseStore(profileType) {
+    if (profileType === 'builtin') {
+      if (!this.builtinCategoryCollapsedMap) this.builtinCategoryCollapsedMap = {};
+      return this.builtinCategoryCollapsedMap;
+    }
+    if (!this.userCategoryCollapsedMap) this.userCategoryCollapsedMap = {};
+    return this.userCategoryCollapsedMap;
+  }
+
+  getProfilesArrayByType(profileType) {
+    return profileType === 'builtin' ? this.defaultProfiles : this.controller.profiles;
+  }
+
+  moveProfile(profileType, fromIndex, toIndex, targetCategory) {
+    const list = this.getProfilesArrayByType(profileType);
+    if (
+      !Array.isArray(list) ||
+      fromIndex < 0 ||
+      fromIndex >= list.length ||
+      toIndex < 0 ||
+      toIndex > list.length
+    ) {
+      return false;
+    }
+    const [movingProfile] = list.splice(fromIndex, 1);
+    if (!movingProfile) return false;
+    const safeCategory =
+      this.normalizeCategoryName(targetCategory) ||
+      this.getProfileCategoryByType(movingProfile, profileType);
+    movingProfile.profileCategory = safeCategory;
+    const adjustedTargetIndex = fromIndex < toIndex ? toIndex - 1 : toIndex;
+    list.splice(adjustedTargetIndex, 0, movingProfile);
+    if (profileType === 'user') {
+      if (!this.profileCategories.includes(safeCategory)) {
+        this.profileCategories.push(safeCategory);
+        this.profileCategories.sort((a, b) => a.localeCompare(b));
+      }
+      this.controller.saveProfiles();
+    }
+    this.controller.saveAppState();
+    return true;
+  }
+
+  bindDragAndDropForProfileItem(profileItem, container, profileType, profileIndex, categoryName) {
+    profileItem.setAttribute('draggable', 'true');
+    profileItem.classList.add('vivideo-draggable-profile');
+    profileItem.addEventListener('dragstart', (e) => {
+      this.dragContext = { profileType, profileIndex, categoryName };
+      profileItem.classList.add('vivideo-dragging-item');
+      if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData(
+          'text/plain',
+          JSON.stringify({ profileType, profileIndex, categoryName })
+        );
+      }
+    });
+    profileItem.addEventListener('dragend', () => {
+      this.dragContext = null;
+      container
+        .querySelectorAll('.vivideo-drop-target, .vivideo-dragging-item')
+        .forEach((node) => node.classList.remove('vivideo-drop-target', 'vivideo-dragging-item'));
+    });
+    profileItem.addEventListener('dragover', (e) => {
+      if (!this.dragContext || this.dragContext.profileType !== profileType) return;
+      e.preventDefault();
+      profileItem.classList.add('vivideo-drop-target');
+    });
+    profileItem.addEventListener('dragleave', () => {
+      profileItem.classList.remove('vivideo-drop-target');
+    });
+    profileItem.addEventListener('drop', (e) => {
+      e.preventDefault();
+      profileItem.classList.remove('vivideo-drop-target');
+      if (!this.dragContext || this.dragContext.profileType !== profileType) return;
+      const moved = this.moveProfile(
+        profileType,
+        this.dragContext.profileIndex,
+        profileIndex,
+        categoryName
+      );
+      if (moved) this.updateProfilesList(container);
+    });
+  }
+
+  bindDragAndDropForCategoryList(categoryList, container, profileType, categoryName) {
+    categoryList.addEventListener('dragover', (e) => {
+      if (!this.dragContext || this.dragContext.profileType !== profileType) return;
+      e.preventDefault();
+      categoryList.classList.add('vivideo-drop-target');
+    });
+    categoryList.addEventListener('dragleave', () => {
+      categoryList.classList.remove('vivideo-drop-target');
+    });
+    categoryList.addEventListener('drop', (e) => {
+      e.preventDefault();
+      categoryList.classList.remove('vivideo-drop-target');
+      if (!this.dragContext || this.dragContext.profileType !== profileType) return;
+      const list = this.getProfilesArrayByType(profileType);
+      const insertAtEnd = list.length;
+      const moved = this.moveProfile(
+        profileType,
+        this.dragContext.profileIndex,
+        insertAtEnd,
+        categoryName
+      );
+      if (moved) this.updateProfilesList(container);
+    });
+  }
+
   // Update unified profiles list
   updateProfilesList(container) {
     const profileList = container.querySelector('#profile-list');
     if (!profileList) return;
 
     profileList.innerHTML = '';
-    // User Profiles Section (collapsible)
-    const userSection = document.createElement('div');
-    userSection.className = 'profile-section';
-    const userHeader = document.createElement('div');
-    userHeader.className = 'profile-section-header profile-section-header-user';
-    const userArrow = document.createElement('span');
-    userArrow.className = 'profile-section-arrow';
-    userArrow.textContent = this.userCollapsed ? '▶' : '▼';
-    userHeader.innerHTML = '👤 User Profiles';
-    userHeader.prepend(userArrow);
-    // cursor handled by CSS
-    userSection.appendChild(userHeader);
+    const editModeActive = !!(
+      this.controller &&
+      this.controller.container &&
+      this.controller.container.classList.contains('vivideo-edit-mode-active')
+    );
 
-    const userList = document.createElement('div');
-    userList.className = 'vivideo-profile-list-group user-profiles-group';
-    userList.style.display = this.userCollapsed ? 'none' : 'block';
+    const renderSection = (config) => {
+      const { profileType, title, sectionCollapsed } = config;
+      const section = document.createElement('div');
+      section.className = 'profile-section';
+      const sectionHeader = document.createElement('div');
+      sectionHeader.className = `profile-section-header ${
+        profileType === 'builtin' ? 'profile-section-header-default' : 'profile-section-header-user'
+      }`;
+      const sectionArrow = document.createElement('span');
+      sectionArrow.className = 'profile-section-arrow';
+      sectionArrow.textContent = sectionCollapsed ? '▶' : '▼';
+      sectionHeader.innerHTML = title;
+      sectionHeader.prepend(sectionArrow);
+      section.appendChild(sectionHeader);
 
-    if (this.controller.profiles.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'vivideo-profile-empty';
-      empty.textContent = ':Empty:';
-      userList.appendChild(empty);
-    } else {
-      this.controller.profiles.forEach((profile, index) => {
-        const profileItem = document.createElement('div');
-        profileItem.className = 'vivideo-profile-item user-profile';
-        profileItem.setAttribute('data-index', index);
-        const isActive = this.controller.settings.activeProfile === profile.name;
-        if (isActive) profileItem.classList.add('vivideo-profile-active');
+      const sectionList = document.createElement('div');
+      sectionList.className = `vivideo-profile-list-group ${
+        profileType === 'builtin' ? 'builtin-profiles-group' : 'user-profiles-group'
+      }`;
+      sectionList.style.display = sectionCollapsed ? 'none' : 'block';
 
-        const displayName =
-          profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
+      const profilesArray = this.getProfilesArrayByType(profileType);
+      const groupedProfiles = {};
+      profilesArray.forEach((profile, index) => {
+        const categoryName = this.getProfileCategoryByType(profile, profileType);
+        if (!groupedProfiles[categoryName]) groupedProfiles[categoryName] = [];
+        groupedProfiles[categoryName].push({ profile, index });
+      });
 
-        profileItem.innerHTML = `
-          <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
-          <button class="vivideo-profile-edit vivideo-btn vivideo-profile-overwrite" data-index="${index}" title="Overwrite profile with current values">💾</button>
-          <button class="vivideo-profile-delete vivideo-btn vivideo-profile-delete-btn" data-index="${index}" title="Delete profile">✖</button>
-        `;
+      const categoryCollapseStore = this.getCategoryCollapseStore(profileType);
+      const orderedCategories = this.getOrderedCategoriesForType(profileType, editModeActive);
 
-        profileItem.addEventListener('click', (e) => {
-          if (
-            e.target.classList.contains('vivideo-profile-delete') ||
-            e.target.classList.contains('vivideo-profile-edit') ||
-            profileItem.classList.contains('editing')
-          )
-            return;
-          e.preventDefault();
-          e.stopPropagation();
-          container
-            .querySelectorAll('.vivideo-profile-item')
-            .forEach((item) => item.classList.remove('vivideo-profile-active'));
-          profileItem.classList.add('vivideo-profile-active');
-          this.controller.loadProfile(profile);
-        });
+      orderedCategories.forEach((categoryName) => {
+        const profilesInCategory = groupedProfiles[categoryName] || [];
+        if (!editModeActive && profilesInCategory.length === 0) return;
 
-        // edit / delete handlers reuse existing logic
-        const editBtn = profileItem.querySelector('.vivideo-profile-edit');
-        if (editBtn) {
-          editBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-            const currentSettings = {
-              brightness: this.controller.settings.brightness,
-              contrast: this.controller.settings.contrast,
-              saturation: this.controller.settings.saturation,
-              gamma: this.controller.settings.gamma,
-              colorTemp: this.controller.settings.colorTemp,
-              sharpness: this.controller.settings.sharpness,
-              speed: this.controller.settings.speed
-            };
-            // Validate before overwrite
-            if (this.validateSettings(currentSettings)) {
-              this.updateActiveStatus('Invalid value entered', '#bb531e');
+        const categorySection = document.createElement('div');
+        categorySection.className = 'vivideo-user-category-section';
+        const categoryHeader = document.createElement('div');
+        categoryHeader.className = 'profile-section-header vivideo-user-category-header';
+        const categoryArrow = document.createElement('span');
+        categoryArrow.className = 'profile-section-arrow';
+        const categoryCollapsed = !!categoryCollapseStore[categoryName];
+        categoryArrow.textContent = categoryCollapsed ? '▶' : '▼';
+        categoryHeader.appendChild(categoryArrow);
+        categoryHeader.appendChild(
+          document.createTextNode(`📂 ${categoryName} (${profilesInCategory.length})`)
+        );
+        categorySection.appendChild(categoryHeader);
+
+        const categoryList = document.createElement('div');
+        categoryList.className = 'vivideo-category-list';
+        categoryList.style.display = categoryCollapsed ? 'none' : 'block';
+        if (editModeActive) {
+          this.bindDragAndDropForCategoryList(categoryList, container, profileType, categoryName);
+        }
+
+        if (profilesInCategory.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'vivideo-profile-empty';
+          empty.textContent =
+            'This Group No have any styles. This text is just cast if something go in wrong way';
+          categoryList.appendChild(empty);
+        }
+
+        profilesInCategory.forEach(({ profile, index }) => {
+          const profileItem = document.createElement('div');
+          profileItem.className = `vivideo-profile-item ${
+            profileType === 'builtin' ? 'builtin-profile' : 'user-profile'
+          }`;
+          if (profileType === 'builtin') profileItem.setAttribute('data-builtin-index', index);
+          else profileItem.setAttribute('data-index', index);
+          const isActive =
+            this.controller.settings.activeProfile === profile.name ||
+            (!this.controller.settings.activeProfile &&
+              profileType === 'builtin' &&
+              profile.name === 'DEFAULT');
+          if (isActive) profileItem.classList.add('vivideo-profile-active');
+
+          const displayName =
+            profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
+
+          profileItem.innerHTML = `
+            <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
+            <button class="vivideo-profile-edit vivideo-btn vivideo-profile-overwrite" ${
+              profileType === 'builtin' ? `data-builtin-index="${index}"` : `data-index="${index}"`
+            } title="Overwrite profile with current values">💾</button>
+            <button class="vivideo-profile-delete vivideo-btn vivideo-profile-delete-btn" ${
+              profileType === 'builtin' ? `data-builtin-index="${index}"` : `data-index="${index}"`
+            } title="Delete profile">✖</button>
+          `;
+
+          profileItem.addEventListener('click', (e) => {
+            if (
+              e.target.classList.contains('vivideo-profile-delete') ||
+              e.target.classList.contains('vivideo-profile-edit') ||
+              profileItem.classList.contains('editing')
+            ) {
               return;
             }
-            // Overwrite user profile settings
-            this.controller.profiles[idx].settings = currentSettings;
-            console.log('Vivideo: Overwrote user profile:', this.controller.profiles[idx].name);
-            this.controller.settings.activeProfile = this.controller.profiles[idx].name;
-            this.controller.saveProfiles();
-            this.controller.saveSettings();
-            this.controller.saveAppState();
-            this.updateProfilesList(container);
-            this.updateActiveProfileDisplay(container, this.controller.settings);
-            this.updateActiveStatus('Saved', '');
-          });
-        }
-
-        const deleteBtn = profileItem.querySelector('.vivideo-profile-delete');
-        if (deleteBtn) {
-          deleteBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             e.stopPropagation();
-            const idx = parseInt(e.currentTarget.getAttribute('data-index'));
-            this.controller.deleteProfile(idx);
+            container
+              .querySelectorAll('.vivideo-profile-item')
+              .forEach((item) => item.classList.remove('vivideo-profile-active'));
+            profileItem.classList.add('vivideo-profile-active');
+            if (profileType === 'builtin' && profile.name === 'DEFAULT') {
+              this.controller.loadProfile(this.controller.defaultProfile);
+            } else {
+              this.controller.loadProfile(profile);
+            }
           });
-        }
 
-        userList.appendChild(profileItem);
+          const editBtn = profileItem.querySelector('.vivideo-profile-edit');
+          if (editBtn) {
+            editBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const currentSettings = {
+                brightness: this.controller.settings.brightness,
+                contrast: this.controller.settings.contrast,
+                saturation: this.controller.settings.saturation,
+                gamma: this.controller.settings.gamma,
+                colorTemp: this.controller.settings.colorTemp,
+                sharpness: this.controller.settings.sharpness,
+                speed: this.controller.settings.speed
+              };
+              if (this.validateSettings(currentSettings)) {
+                this.updateActiveStatus('Invalid value entered', '#bb531e');
+                return;
+              }
+              if (profileType === 'builtin') {
+                this.defaultProfiles[index].settings = currentSettings;
+                this.controller.settings.activeProfile = this.defaultProfiles[index].name;
+              } else {
+                this.controller.profiles[index].settings = currentSettings;
+                this.controller.settings.activeProfile = this.controller.profiles[index].name;
+                this.controller.saveProfiles();
+              }
+              this.controller.saveSettings();
+              this.controller.saveAppState();
+              this.updateProfilesList(container);
+              this.updateActiveProfileDisplay(container, this.controller.settings);
+              this.updateActiveStatus('Saved', '');
+            });
+          }
+
+          const deleteBtn = profileItem.querySelector('.vivideo-profile-delete');
+          if (deleteBtn) {
+            deleteBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (profileType === 'builtin') {
+                this.defaultProfiles.splice(index, 1);
+                this.updateProfilesList(this.controller.container);
+              } else {
+                this.controller.deleteProfile(index);
+              }
+            });
+          }
+
+          if (editModeActive) {
+            this.bindDragAndDropForProfileItem(
+              profileItem,
+              container,
+              profileType,
+              index,
+              categoryName
+            );
+          }
+
+          categoryList.appendChild(profileItem);
+        });
+
+        categoryHeader.addEventListener('click', () => {
+          categoryCollapseStore[categoryName] = !categoryCollapseStore[categoryName];
+          this.updateProfilesList(container);
+        });
+
+        categorySection.appendChild(categoryList);
+        sectionList.appendChild(categorySection);
       });
-    }
 
-    userHeader.addEventListener('click', () => {
-      this.userCollapsed = !this.userCollapsed;
-      userArrow.textContent = this.userCollapsed ? '▶' : '▼';
-      userList.style.display = this.userCollapsed ? 'none' : 'block';
+      sectionHeader.addEventListener('click', () => {
+        if (profileType === 'builtin') this.builtinCollapsed = !this.builtinCollapsed;
+        else this.userCollapsed = !this.userCollapsed;
+        this.updateProfilesList(container);
+      });
+
+      section.appendChild(sectionList);
+      return section;
+    };
+
+    const userSection = renderSection({
+      profileType: 'user',
+      title: '👤 User Profiles',
+      sectionCollapsed: this.userCollapsed
     });
-
-    userSection.appendChild(userList);
     profileList.appendChild(userSection);
 
-    // Default Built-in Section (collapsible)
-    const defaultSection = document.createElement('div');
-    defaultSection.className = 'profile-section';
-    const defaultHeader = document.createElement('div');
-    defaultHeader.className = 'profile-section-header profile-section-header-default';
-    const defaultArrow = document.createElement('span');
-    defaultArrow.className = 'profile-section-arrow';
-    defaultArrow.textContent = this.builtinCollapsed ? '▶' : '▼';
-    defaultHeader.innerHTML = '🛠️ Default Built-in';
-    defaultHeader.prepend(defaultArrow);
-    // cursor handled by CSS
-    defaultSection.appendChild(defaultHeader);
-
-    const builtinList = document.createElement('div');
-    builtinList.className = 'vivideo-profile-list-group builtin-profiles-group';
-    builtinList.style.display = this.builtinCollapsed ? 'none' : 'block';
-
-    // Render built-in profiles
-    this.defaultProfiles.forEach((profile, idx) => {
-      const profileItem = document.createElement('div');
-      profileItem.className = 'vivideo-profile-item builtin-profile';
-      profileItem.setAttribute('data-builtin-index', idx);
-      const isActive =
-        this.controller.settings.activeProfile === profile.name ||
-        (!this.controller.settings.activeProfile && profile.name === 'DEFAULT');
-      if (isActive) profileItem.classList.add('vivideo-profile-active');
-
-      const displayName =
-        profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
-
-      profileItem.innerHTML = `
-        <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
-        <button class="vivideo-profile-edit vivideo-btn vivideo-profile-overwrite" data-builtin-index="${idx}" title="Overwrite built-in with current values">💾</button>
-        <button class="vivideo-profile-delete vivideo-btn vivideo-profile-delete-btn" data-builtin-index="${idx}" title="Delete built-in profile">✖</button>
-      `;
-
-      profileItem.addEventListener('click', (e) => {
-        if (
-          e.target.classList.contains('vivideo-profile-delete') ||
-          e.target.classList.contains('vivideo-profile-edit') ||
-          profileItem.classList.contains('editing')
-        )
-          return;
-        e.preventDefault();
-        e.stopPropagation();
-        container
-          .querySelectorAll('.vivideo-profile-item')
-          .forEach((item) => item.classList.remove('vivideo-profile-active'));
-        profileItem.classList.add('vivideo-profile-active');
-        // Load as built-in profile (use controller.defaultProfile if DEFAULT)
-        if (profile.name === 'DEFAULT') {
-          this.controller.loadProfile(this.controller.defaultProfile);
-        } else {
-          this.controller.loadProfile(profile);
-        }
-      });
-
-      // Edit built-in
-      const editBtn = profileItem.querySelector('.vivideo-profile-edit');
-      if (editBtn) {
-        editBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const bIdx = parseInt(e.currentTarget.getAttribute('data-builtin-index'));
-          const currentSettings = {
-            brightness: this.controller.settings.brightness,
-            contrast: this.controller.settings.contrast,
-            saturation: this.controller.settings.saturation,
-            gamma: this.controller.settings.gamma,
-            colorTemp: this.controller.settings.colorTemp,
-            sharpness: this.controller.settings.sharpness,
-            speed: this.controller.settings.speed
-          };
-          if (this.validateSettings(currentSettings)) {
-            this.updateActiveStatus('Invalid value entered', '#bb531e');
-            return;
-          }
-          const bp = this.defaultProfiles[bIdx];
-          if (bp) {
-            bp.settings = currentSettings;
-            console.log('Vivideo: Overwrote built-in profile:', bp.name);
-            this.controller.settings.activeProfile = bp.name;
-            this.updateProfilesList(this.controller.container);
-            this.controller.saveSettings();
-            this.controller.saveAppState();
-            this.updateActiveProfileDisplay(this.controller.container, this.controller.settings);
-            this.updateActiveStatus('Saved', '');
-          }
-        });
-      }
-
-      // Delete built-in
-      const deleteBtn = profileItem.querySelector('.vivideo-profile-delete');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const bIdx = parseInt(e.currentTarget.getAttribute('data-builtin-index'));
-          // remove built-in profile
-          this.defaultProfiles.splice(bIdx, 1);
-          this.updateProfilesList(this.controller.container);
-        });
-      }
-
-      builtinList.appendChild(profileItem);
+    const defaultSection = renderSection({
+      profileType: 'builtin',
+      title: '🛠️ Default Built-in',
+      sectionCollapsed: this.builtinCollapsed
     });
 
-    // Restore defaults button
     const restoreBtn = document.createElement('button');
     restoreBtn.className = 'vivideo-btn vivideo-control-btn vivideo-restore-default-profiles-btn';
     restoreBtn.id = 'restore-default-builtins';
     restoreBtn.textContent = 'Restore All Default Profiles';
     restoreBtn.addEventListener('click', () => {
-      // restore canonical list
       this.defaultProfiles = this.createDefaultProfiles();
       this.updateProfilesList(this.controller.container);
     });
-
-    defaultHeader.addEventListener('click', () => {
-      this.builtinCollapsed = !this.builtinCollapsed;
-      defaultArrow.textContent = this.builtinCollapsed ? '▶' : '▼';
-      builtinList.style.display = this.builtinCollapsed ? 'none' : 'block';
-    });
-
-    defaultSection.appendChild(builtinList);
     defaultSection.appendChild(restoreBtn);
     profileList.appendChild(defaultSection);
 
@@ -716,6 +959,7 @@ class ProfileManager {
     if (profileNameInput) {
       profileNameInput.placeholder = `Profile_${this.controller.profiles.length + 1}`;
     }
+    this.refreshCategorySelectors(container);
   }
 
   // Show user profiles panel (compat for controller calls)
@@ -742,6 +986,9 @@ class ProfileManager {
   saveCurrentProfile(container) {
     const nameInput = container.querySelector('#profile-name');
     let profileName = nameInput.value.trim();
+    const categorySelect = container.querySelector('#profile-category');
+    const selectedCategory = this.normalizeCategoryName(categorySelect ? categorySelect.value : '');
+    const profileCategory = selectedCategory || 'General';
 
     if (!profileName) {
       profileName = `Profile_${this.controller.profiles.length + 1}`;
@@ -793,6 +1040,7 @@ class ProfileManager {
               ...currentSettings,
               autoActivate: this.controller.settings.autoActivate
             };
+            this.controller.profiles[existingProfileIndex].profileCategory = profileCategory;
             console.log('Vivideo: Profile overwritten:', profileName);
 
             // proceed with save flow (same as new profile path)
@@ -844,6 +1092,7 @@ class ProfileManager {
         // Create new profile
         const profile = {
           name: profileName,
+          profileCategory,
           settings: {
             ...currentSettings,
             autoActivate: this.controller.settings.autoActivate
@@ -857,6 +1106,10 @@ class ProfileManager {
     }
 
     this.controller.settings.activeProfile = profileName;
+    if (!this.profileCategories.includes(profileCategory)) {
+      this.profileCategories.push(profileCategory);
+      this.profileCategories.sort((a, b) => a.localeCompare(b));
+    }
     this.controller.saveProfiles();
     this.controller.saveSettings();
     this.controller.saveAppState();
@@ -908,6 +1161,9 @@ class ProfileManager {
         ? parseInt(editBtn.dataset.editBuiltinIndex)
         : null;
     const editType = editBtn && editBtn.dataset ? editBtn.dataset.editType : null;
+    const categorySelect = container.querySelector('#unsaved-profile-category');
+    const selectedCategory = this.normalizeCategoryName(categorySelect ? categorySelect.value : '');
+    const profileCategory = selectedCategory || 'General';
 
     if (!name) {
       // show red error only on save attempt
@@ -944,6 +1200,7 @@ class ProfileManager {
     if (existingIndex !== -1 && existingIndex !== editIndex) {
       // Will overwrite different existing profile - inform user (orange) and overwrite
       this.controller.profiles[existingIndex].settings = currentSettings;
+      this.controller.profiles[existingIndex].profileCategory = profileCategory;
       console.log('Vivideo: Unsaved profile overwrite (existing):', name);
       this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
       this.controller.settings.activeProfile = name;
@@ -951,6 +1208,7 @@ class ProfileManager {
       // Overwrite the profile we're editing
       this.controller.profiles[editIndex].name = name;
       this.controller.profiles[editIndex].settings = currentSettings;
+      this.controller.profiles[editIndex].profileCategory = profileCategory;
       console.log('Vivideo: Unsaved profile overwrite (edit):', name);
       this.controller.settings.activeProfile = name;
     } else if (editBuiltinIndex !== null && editBuiltinIndex >= 0 && editType === 'builtin') {
@@ -964,10 +1222,15 @@ class ProfileManager {
       }
     } else {
       // Create new profile
-      this.controller.profiles.push({ name, settings: currentSettings });
+      this.controller.profiles.push({ name, profileCategory, settings: currentSettings });
       console.log('Vivideo: Unsaved profile saved:', name);
       this.controller.settings.activeProfile = name;
       this.updateActiveStatus(name, '');
+    }
+
+    if (!this.profileCategories.includes(profileCategory)) {
+      this.profileCategories.push(profileCategory);
+      this.profileCategories.sort((a, b) => a.localeCompare(b));
     }
 
     this.controller.saveProfiles();
@@ -1087,17 +1350,25 @@ class ProfileManager {
 
     // Add user profiles
     if (this.controller.profiles.length > 0) {
-      const userGroup = document.createElement('optgroup');
-      userGroup.label = '👤 User Profiles';
-
+      const groupedProfiles = {};
       this.controller.profiles.forEach((profile) => {
-        const option = document.createElement('option');
-        option.value = profile.name;
-        option.textContent = profile.name;
-        userGroup.appendChild(option);
+        const categoryName = this.getProfileCategory(profile);
+        if (!groupedProfiles[categoryName]) groupedProfiles[categoryName] = [];
+        groupedProfiles[categoryName].push(profile);
       });
-
-      selectElement.appendChild(userGroup);
+      this.getOrderedUserCategories().forEach((categoryName) => {
+        const profiles = groupedProfiles[categoryName] || [];
+        if (profiles.length === 0) return;
+        const userGroup = document.createElement('optgroup');
+        userGroup.label = `👤 ${categoryName}`;
+        profiles.forEach((profile) => {
+          const option = document.createElement('option');
+          option.value = profile.name;
+          option.textContent = profile.name;
+          userGroup.appendChild(option);
+        });
+        selectElement.appendChild(userGroup);
+      });
     }
 
     // Add default profiles
@@ -1181,7 +1452,7 @@ class ProfileManager {
         el.style.color = '';
       }
     } catch (e) {
-      // silent
+      console.warn('Vivideo: updateActiveStatus failed', e);
     }
   }
 

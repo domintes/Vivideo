@@ -31,6 +31,11 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        keepQuality: true,
+        videoQualityMode: 'balanced',
+        upscaleQualityBoost: false,
+        linearColorPipeline: true,
+        forceHighQualityScaling: true,
         speed: 1.0,
         previousSpeed: 1.0,
         speedStep: 0.25, // Configurable speed increment/decrement
@@ -43,7 +48,8 @@ if (window !== window.top) {
         extendedLimits: true,
         toggleWithoutAlt: false,
         compareMode: false,
-        compareProfile: null
+        compareProfile: null,
+        workOnEverything: false
       };
       this.defaultSettings = { ...this.settings };
       this.profiles = [];
@@ -116,82 +122,9 @@ if (window !== window.top) {
         if (response && response.vivideoProfiles) {
           this.profiles = response.vivideoProfiles;
         }
-        // If no user profiles exist (fresh install or cleared), add helpful built-in profiles
+        // User profiles stay empty by default. Built-ins are rendered from ProfileManager.
         if (!this.profiles || this.profiles.length === 0) {
-          this.profiles = [
-            // These are user-visible bonus profiles to help users understand effects; users can edit/remove/reorder them
-            {
-              name: 'Vivid Colors',
-              description: 'High saturation and contrast for vivid playback',
-              settings: {
-                contrast: 27,
-                colorTemp: -72,
-                saturation: 72,
-                gamma: 1,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            {
-              name: 'Black & White',
-              description: 'Desaturate to create a black & white effect',
-              settings: {
-                contrast: 0,
-                colorTemp: 0,
-                saturation: -100,
-                gamma: 1,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            {
-              name: 'High Gamma / Low Contrast',
-              description: 'Brighter midtones with reduced contrast',
-              settings: {
-                contrast: -15,
-                gamma: 1.6,
-                saturation: 0,
-                colorTemp: 0,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            {
-              name: 'Low Gamma / High Contrast',
-              description: 'Deeper tones with stronger contrast',
-              settings: {
-                contrast: 25,
-                gamma: 0.8,
-                saturation: 0,
-                colorTemp: 0,
-                sharpness: 0,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            {
-              name: 'Matrix (Sharp)',
-              description: 'Sharpness boost only (matrix-like)',
-              settings: {
-                contrast: 0,
-                gamma: 1,
-                saturation: 0,
-                colorTemp: 0,
-                sharpness: 31,
-                brightness: 0,
-                speed: 1.0
-              }
-            }
-          ];
-          // persist built-in profiles so they're available in UI immediately
-          try {
-            await StorageUtils.saveProfiles(this.profiles);
-          } catch (e) {
-            console.warn('Vivideo: Could not save built-in profiles', e);
-          }
+          this.profiles = [];
         }
         if (response && response.vivideoTheme) {
           this.currentTheme = response.vivideoTheme;
@@ -212,6 +145,16 @@ if (window !== window.top) {
           // Load workOnAllSites setting
           if (response.vivideoAppState.workOnAllSites !== undefined) {
             this.tempWorkOnAllSites = response.vivideoAppState.workOnAllSites;
+          }
+          // Load workOnEverything setting
+          if (response.vivideoAppState.workOnEverything !== undefined) {
+            this.tempWorkOnEverything = response.vivideoAppState.workOnEverything;
+          }
+          if (Array.isArray(response.vivideoAppState.profileCategories)) {
+            this.tempProfileCategories = response.vivideoAppState.profileCategories;
+          }
+          if (Array.isArray(response.vivideoAppState.builtinProfiles)) {
+            this.tempBuiltinProfiles = response.vivideoAppState.builtinProfiles;
           }
         }
       } catch (error) {
@@ -298,6 +241,18 @@ if (window !== window.top) {
       if (this.tempWorkOnAllSites !== undefined) {
         this.profileManager.workOnAllSites = this.tempWorkOnAllSites;
         delete this.tempWorkOnAllSites;
+      }
+      if (this.tempWorkOnEverything !== undefined) {
+        this.profileManager.workOnEverything = this.tempWorkOnEverything;
+        delete this.tempWorkOnEverything;
+      }
+      if (Array.isArray(this.tempProfileCategories)) {
+        this.profileManager.profileCategories = [...this.tempProfileCategories];
+        delete this.tempProfileCategories;
+      }
+      if (Array.isArray(this.tempBuiltinProfiles) && this.tempBuiltinProfiles.length > 0) {
+        this.profileManager.defaultProfiles = [...this.tempBuiltinProfiles];
+        delete this.tempBuiltinProfiles;
       }
 
       console.log('Vivideo: All components initialized successfully');
@@ -450,6 +405,12 @@ if (window !== window.top) {
         workOnAllSitesCheckbox.checked = this.profileManager.workOnAllSites;
       }
 
+      // Set checkbox state based on workOnEverything setting
+      const workOnEverythingCheckbox = this.container.querySelector('#work-on-everything-checkbox');
+      if (workOnEverythingCheckbox) {
+        workOnEverythingCheckbox.checked = !!this.profileManager.workOnEverything;
+      }
+
       // Set preferred speed input value
       const preferredSpeedInput = this.container.querySelector('#preferred-speed-input');
       if (preferredSpeedInput) {
@@ -459,7 +420,8 @@ if (window !== window.top) {
       console.log('Vivideo: Profiles UI initialized with settings:', {
         displayDefaultProfiles: this.profileManager.displayDefaultProfiles,
         showProfileAfterChange: this.profileManager.showProfileAfterChange,
-        workOnAllSites: this.profileManager.workOnAllSites
+        workOnAllSites: this.profileManager.workOnAllSites,
+        workOnEverything: this.profileManager.workOnEverything
       });
     }
 
@@ -717,6 +679,17 @@ if (window !== window.top) {
           this.filterEngine.attachPlayListeners();
         }
       }
+
+      // Apply global page filters when requested by profile manager
+      try {
+        if (this.profileManager && this.profileManager.workOnEverything) {
+          this.applyGlobalPageFilters();
+        } else {
+          this.removeGlobalPageFilters();
+        }
+      } catch (e) {
+        console.warn('Vivideo: applyGlobalPageFilters failed', e);
+      }
     }
 
     applyCompareFilters() {
@@ -739,6 +712,61 @@ if (window !== window.top) {
       }
       if (this.filterEngine && typeof this.filterEngine.removeFilters === 'function') {
         this.filterEngine.removeFilters();
+      }
+      try {
+        this.removeGlobalPageFilters();
+      } catch (e) {
+        console.warn('Vivideo: removeGlobalPageFilters failed', e);
+      }
+    }
+
+    applyGlobalPageFilters() {
+      try {
+        // Compute CSS filter values similar to VideoFilterEngine.applyFilterToElement
+        const adjusted = this.filterEngine
+          ? this.filterEngine.getAdjustedSettings(this.settings)
+          : this.settings;
+        const brightness = 1 + (adjusted.brightness || 0) / 100;
+        const contrast = 1 + (adjusted.contrast || 0) / 100;
+        const saturate = Math.max(0, 1 + (adjusted.saturation || 0) / 100);
+
+        let cssFilter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturate})`;
+
+        // If advanced filters would be used (gamma/colorTemp/sharpness), note in comment
+        const advancedExists =
+          (adjusted.gamma && adjusted.gamma !== 1) ||
+          (adjusted.colorTemp && adjusted.colorTemp !== 0) ||
+          (adjusted.sharpness && adjusted.sharpness > 0);
+        if (advancedExists) {
+          // Add a CSS comment indicating advanced SVG filter usage (SVG not applied globally here)
+          cssFilter += ' /* advanced-filter-present */';
+        }
+
+        const selector = 'body:not(.vivideo-container), body:not(.vivideo-container) *';
+        let styleEl = document.getElementById('vivideo-global-filter');
+        const rule = `${selector} { filter: ${cssFilter} !important; backdrop-filter: ${cssFilter} !important; }`;
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = 'vivideo-global-filter';
+          styleEl.type = 'text/css';
+          styleEl.appendChild(document.createTextNode(rule));
+          document.head.appendChild(styleEl);
+        } else {
+          // Replace content
+          if (styleEl.firstChild) styleEl.firstChild.nodeValue = rule;
+          else styleEl.textContent = rule;
+        }
+      } catch (e) {
+        console.warn('Vivideo: applyGlobalPageFilters error', e);
+      }
+    }
+
+    removeGlobalPageFilters() {
+      try {
+        const existing = document.getElementById('vivideo-global-filter');
+        if (existing) existing.remove();
+      } catch (e) {
+        console.warn('Vivideo: removeGlobalPageFilters error', e);
       }
     }
 
@@ -848,6 +876,11 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        keepQuality: this.settings.keepQuality,
+        videoQualityMode: this.settings.videoQualityMode,
+        upscaleQualityBoost: this.settings.upscaleQualityBoost,
+        linearColorPipeline: this.settings.linearColorPipeline,
+        forceHighQualityScaling: this.settings.forceHighQualityScaling,
         speed: 1.0,
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
@@ -886,6 +919,11 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        keepQuality: this.settings.keepQuality,
+        videoQualityMode: this.settings.videoQualityMode,
+        upscaleQualityBoost: this.settings.upscaleQualityBoost,
+        linearColorPipeline: this.settings.linearColorPipeline,
+        forceHighQualityScaling: this.settings.forceHighQualityScaling,
         speed: 1.0,
         speedStep: this.settings.speedStep || 0.25, // Keep user's speed step setting
         autoActivate: this.settings.autoActivate,
@@ -1082,17 +1120,26 @@ if (window !== window.top) {
       }
 
       try {
+        const profileScopedExclusions = [
+          'autoActivate',
+          'workOnImagesActivate',
+          'keepQuality',
+          'videoQualityMode',
+          'upscaleQualityBoost',
+          'linearColorPipeline',
+          'forceHighQualityScaling'
+        ];
         if (profile.name === 'DEFAULT') {
           this.settings.activeProfile = null;
           Object.keys(this.defaultSettings).forEach((key) => {
-            if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+            if (!profileScopedExclusions.includes(key)) {
               this.settings[key] = this.defaultSettings[key];
             }
           });
         } else {
           this.settings.activeProfile = profile.name;
           Object.keys(profile.settings).forEach((key) => {
-            if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+            if (!profileScopedExclusions.includes(key)) {
               this.settings[key] = profile.settings[key];
             }
           });
@@ -1340,7 +1387,9 @@ if (window !== window.top) {
           try {
             this.profileManager.isEditingProfile = false;
             this.profileManager.editingIndex = null;
-          } catch (e) {}
+          } catch (e) {
+            console.warn('Vivideo: Failed to clear profile edit state on hide', e);
+          }
         }
       }, 300);
     }
@@ -1396,7 +1445,10 @@ if (window !== window.top) {
         showProfileAfterChange: this.profileManager
           ? this.profileManager.showProfileAfterChange
           : true,
-        workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false
+        workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false,
+        workOnEverything: this.profileManager ? this.profileManager.workOnEverything : false,
+        profileCategories: this.profileManager ? this.profileManager.profileCategories : [],
+        builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : []
       });
     }
 
@@ -1568,61 +1620,64 @@ if (window !== window.top) {
     return true;
   });
 
-    // Additional automatic re-checks to improve auto-activation reliability
-    function tryEnsureInitializedAndApply() {
-      try {
-        if (!window.vivideoController) {
-          initializeVivideo();
-          setTimeout(() => {
-            if (window.vivideoController) window.vivideoController.applyFilters();
-          }, 150);
-        } else {
-          // Controller exists - ensure filters are applied and videos observed
-          try {
-            window.vivideoController.applyFilters();
-            if (window.vivideoController.filterEngine && typeof window.vivideoController.filterEngine.observeVideos === 'function') {
-              // Re-attach observers if needed
-              // observeVideos already sets up observers; calling ensure doesn't duplicate heavy work
-            }
-          } catch (e) {
-            console.warn('Vivideo: Error during auto apply', e);
-          }
-        }
-      } catch (e) {
-        console.warn('Vivideo: tryEnsureInitializedAndApply failed', e);
-      }
-    }
-
-    // Visibility and navigation events: re-check on tab switch, back/forward, pageshow and focus
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        tryEnsureInitializedAndApply();
-      }
-    });
-
-    window.addEventListener('pageshow', (e) => {
-      tryEnsureInitializedAndApply();
-    });
-
-    window.addEventListener('focus', () => {
-      tryEnsureInitializedAndApply();
-    });
-
-    // Listen for media play events globally to ensure filters apply to newly started media
-    document.addEventListener(
-      'play',
-      (e) => {
+  // Additional automatic re-checks to improve auto-activation reliability
+  function tryEnsureInitializedAndApply() {
+    try {
+      if (!window.vivideoController) {
+        initializeVivideo();
+        setTimeout(() => {
+          if (window.vivideoController) window.vivideoController.applyFilters();
+        }, 150);
+      } else {
+        // Controller exists - ensure filters are applied and videos observed
         try {
-          // Only apply filters if our controller exists and is fully initialized
-          if (window.vivideoController && window.vivideoController.isInitialized) {
-            window.vivideoController.applyFilters();
+          window.vivideoController.applyFilters();
+          if (
+            window.vivideoController.filterEngine &&
+            typeof window.vivideoController.filterEngine.observeVideos === 'function'
+          ) {
+            // Re-attach observers if needed
+            // observeVideos already sets up observers; calling ensure doesn't duplicate heavy work
           }
-        } catch (err) {
-          console.warn('Vivideo: play handler error', err);
+        } catch (e) {
+          console.warn('Vivideo: Error during auto apply', e);
         }
-      },
-      true
-    );
+      }
+    } catch (e) {
+      console.warn('Vivideo: tryEnsureInitializedAndApply failed', e);
+    }
+  }
+
+  // Visibility and navigation events: re-check on tab switch, back/forward, pageshow and focus
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      tryEnsureInitializedAndApply();
+    }
+  });
+
+  window.addEventListener('pageshow', (e) => {
+    tryEnsureInitializedAndApply();
+  });
+
+  window.addEventListener('focus', () => {
+    tryEnsureInitializedAndApply();
+  });
+
+  // Listen for media play events globally to ensure filters apply to newly started media
+  document.addEventListener(
+    'play',
+    (e) => {
+      try {
+        // Only apply filters if our controller exists and is fully initialized
+        if (window.vivideoController && window.vivideoController.isInitialized) {
+          window.vivideoController.applyFilters();
+        }
+      } catch (err) {
+        console.warn('Vivideo: play handler error', err);
+      }
+    },
+    true
+  );
 
   // Initialization
   if (document.readyState === 'loading') {
