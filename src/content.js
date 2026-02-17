@@ -1655,7 +1655,7 @@ if (window !== window.top) {
     }
   });
 
-  window.addEventListener('pageshow', (e) => {
+  window.addEventListener('pageshow', () => {
     tryEnsureInitializedAndApply();
   });
 
@@ -1666,7 +1666,7 @@ if (window !== window.top) {
   // Listen for media play events globally to ensure filters apply to newly started media
   document.addEventListener(
     'play',
-    (e) => {
+    () => {
       try {
         // Only apply filters if our controller exists and is fully initialized
         if (window.vivideoController && window.vivideoController.isInitialized) {

@@ -341,7 +341,7 @@ class ProfileManager {
       // Open edit mode button (in edit-mode-panel)
       const openEditModeBtn = UIHelper.safeQuery(container, '#open-edit-mode-btn');
       if (openEditModeBtn) {
-        openEditModeBtn.addEventListener('click', (e) => {
+        openEditModeBtn.addEventListener('click', () => {
           const editModePanel = container.querySelector('#edit-mode-panel');
           const unsavedPanel = container.querySelector('#unsaved-save-panel');
           if (editModePanel) editModePanel.style.display = 'none';
@@ -358,7 +358,7 @@ class ProfileManager {
       // Cancel edit mode button
       const cancelEditModeBtn = UIHelper.safeQuery(container, '#vivideo-cancel-edit-mode-btn');
       if (cancelEditModeBtn) {
-        cancelEditModeBtn.addEventListener('click', (e) => {
+        cancelEditModeBtn.addEventListener('click', () => {
           const unsavedPanel = container.querySelector('#unsaved-save-panel');
           const editModePanel = container.querySelector('#edit-mode-panel');
           if (unsavedPanel) unsavedPanel.style.display = 'none';

@@ -1374,7 +1374,17 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 /* Simple modal styling for overwrite confirmation */
-.vivideo-modal { /* inline styles used by markup; fallback styles here */ }
+.vivideo-modal {
+  position: fixed;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2147483650;
+}
 .vivideo-modal .overwrite-message { color: inherit; }
 .vivideo-modal .overwrite-confirm { cursor: pointer; }
 .vivideo-modal .overwrite-cancel { cursor: pointer; }
@@ -2580,8 +2590,7 @@ div .vivideo-container,
 }
 
 .vivideo-profiles,
-.vivideo-profile-list,
-#profiles-panel {
+.vivideo-profile-list {
   min-height: 140px;
   max-height: 42vh;
   overflow: auto;
@@ -2602,11 +2611,7 @@ div .vivideo-container,
   grid-template-columns: auto minmax(140px, 1fr) auto;
 }
 
-.vivideo-profile-input,
-#profile-name,
-#unsaved-profile-name,
-#profile-category,
-#unsaved-profile-category {
+.vivideo-profile-input {
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
