@@ -6,7 +6,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        // No input files needed for Chrome extension
+        popup: 'popup.html',
+        privacy: 'privacy/index.html'
       },
       output: {
         // Output to dist directory

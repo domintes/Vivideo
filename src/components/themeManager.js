@@ -76,6 +76,14 @@ class ThemeManager {
     }
   }
 
+  updateThemesList(container, currentTheme) {
+    this.updateThemeSelection(container, currentTheme);
+    this.updateThemeColorSliders(container, currentTheme);
+    this.updateColorPreviews(container, currentTheme);
+    this.updateActiveThemeDisplay(container, currentTheme);
+    this.applyThemeColors(currentTheme, this.controller.themeColors, container);
+  }
+
   updateThemeSelection(container, currentTheme) {
     container.querySelectorAll('.vivideo-theme-option').forEach((option) => {
       const theme = option.getAttribute('data-theme');

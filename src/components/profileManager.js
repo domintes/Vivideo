@@ -1620,35 +1620,24 @@ class ProfileManager {
   // Profile switching methods for keyboard shortcuts
   nextProfile() {
     console.log('Vivideo: Next profile shortcut (Alt+B)');
+    // Build combined list of profiles: built-in defaults first, then user profiles
+    const combined = [...this.defaultProfiles, ...(this.controller.profiles || [])];
 
-    // Build target profiles list: user profiles + one default built-in profile
-    let targetProfiles = [...this.controller.profiles]; // User profiles first
-    targetProfiles.push({ name: 'DEFAULT', settings: { ...this.controller.defaultSettings } }); // Add default built-in at end
-
-    console.log('Vivideo: Cycling through user profiles + default built-in');
-
-    // Find current profile index
-    let currentIndex = -1;
-    if (
-      !this.controller.settings.activeProfile ||
-      this.controller.settings.activeProfile === 'DEFAULT'
-    ) {
-      // Currently on DEFAULT built-in - find it at the end
-      currentIndex = targetProfiles.length - 1;
-    } else {
-      // Find current user profile
-      currentIndex = targetProfiles.findIndex(
-        (p) => p.name === this.controller.settings.activeProfile
-      );
-    }
-
-    // If no profiles available, do nothing
-    if (targetProfiles.length === 0) {
+    if (!Array.isArray(combined) || combined.length === 0) {
       console.log('Vivideo: No profiles to cycle through');
       return;
     }
 
-    const nextIndex = (currentIndex + 1) % targetProfiles.length;
+    // Find current profile index within combined list
+    let currentIndex = combined.findIndex((p) => p.name === this.controller.settings.activeProfile);
+    // If activeProfile not set or not found, try locating DEFAULT
+    if (currentIndex === -1) {
+      currentIndex = combined.findIndex((p) => p.name === 'DEFAULT');
+    }
+    // If still -1, start at end so nextIndex becomes 0
+    if (currentIndex === -1) currentIndex = combined.length - 1;
+
+    const nextIndex = (currentIndex + 1) % combined.length;
 
     // Add animation for active-profile-display
     const profileDisplay = this.controller.container.querySelector('#active-profile-display');
@@ -1660,9 +1649,9 @@ class ProfileManager {
     }
 
     // Load the target profile
-    const targetProfile = targetProfiles[nextIndex];
-    console.log('Vivideo: Switching to next profile:', targetProfile.name);
-    this.controller.loadProfile(targetProfile);
+    const targetProfile = combined[nextIndex];
+    console.log('Vivideo: Switching to next profile:', targetProfile && targetProfile.name);
+    if (targetProfile) this.controller.loadProfile(targetProfile);
 
     // Show notification if enabled
     if (this.showProfileAfterChange) {
@@ -1673,34 +1662,24 @@ class ProfileManager {
   previousProfile() {
     console.log('Vivideo: Previous profile shortcut (Alt+C)');
 
-    // Build target profiles list: user profiles + one default built-in profile
-    let targetProfiles = [...this.controller.profiles]; // User profiles first
-    targetProfiles.push({ name: 'DEFAULT', settings: { ...this.controller.defaultSettings } }); // Add default built-in at end
+    // Build combined list of profiles: built-in defaults first, then user profiles
+    const combined = [...this.defaultProfiles, ...(this.controller.profiles || [])];
 
-    console.log('Vivideo: Cycling through user profiles + default built-in');
-
-    // Find current profile index
-    let currentIndex = -1;
-    if (
-      !this.controller.settings.activeProfile ||
-      this.controller.settings.activeProfile === 'DEFAULT'
-    ) {
-      // Currently on DEFAULT built-in - find it at the end
-      currentIndex = targetProfiles.length - 1;
-    } else {
-      // Find current user profile
-      currentIndex = targetProfiles.findIndex(
-        (p) => p.name === this.controller.settings.activeProfile
-      );
-    }
-
-    // If no profiles available, do nothing
-    if (targetProfiles.length === 0) {
+    if (!Array.isArray(combined) || combined.length === 0) {
       console.log('Vivideo: No profiles to cycle through');
       return;
     }
 
-    const prevIndex = currentIndex === 0 ? targetProfiles.length - 1 : currentIndex - 1;
+    // Find current profile index within combined list
+    let currentIndex = combined.findIndex((p) => p.name === this.controller.settings.activeProfile);
+    // If activeProfile not set or not found, try locating DEFAULT
+    if (currentIndex === -1) {
+      currentIndex = combined.findIndex((p) => p.name === 'DEFAULT');
+    }
+    // If still -1, set to 0 so prevIndex becomes last
+    if (currentIndex === -1) currentIndex = 0;
+
+    const prevIndex = currentIndex === 0 ? combined.length - 1 : currentIndex - 1;
 
     // Add animation for active-profile-display
     const profileDisplay = this.controller.container.querySelector('#active-profile-display');
@@ -1712,9 +1691,9 @@ class ProfileManager {
     }
 
     // Load the target profile
-    const targetProfile = targetProfiles[prevIndex];
-    console.log('Vivideo: Switching to previous profile:', targetProfile.name);
-    this.controller.loadProfile(targetProfile);
+    const targetProfile = combined[prevIndex];
+    console.log('Vivideo: Switching to previous profile:', targetProfile && targetProfile.name);
+    if (targetProfile) this.controller.loadProfile(targetProfile);
 
     // Show notification if enabled
     if (this.showProfileAfterChange) {
