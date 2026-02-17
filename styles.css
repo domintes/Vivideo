@@ -2463,16 +2463,6 @@ div .vivideo-container,
   flex: 1;
 }
 
-.vivideo-info-icon {
-  background: transparent;
-  border: none;
-  color: rgba(255, 255, 255, 0.6);
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
 .vivideo-info-popup {
   background: rgba(20, 24, 30, 0.95);
   color: #fff;
@@ -2674,7 +2664,7 @@ div .vivideo-container,
   }
 }
 
-/* Vivideo Styles */
+/* Vivideo Domintes' Styles */
 
 /* Vivideo Grid Container */
 .vivideo-main-grid {
@@ -2708,6 +2698,26 @@ div .vivideo-container,
   overflow-x: hidden;
   width: 100%;
   min-width: 0;
+}
+
+/* Info Icon Styles */ 
+.vivideo-info-icon {
+  font-weight: bold;
+  color: #19adff;
+  border: 1px solid #0474b3;
+  border-radius: 25px;
+  cursor: pointer;
+  background: transparent;
+  font-size: 13px;
+  width: auto;
+  height: auto;
+  padding: 0px 7px;
+  transition: all 0.3s;
+}
+.vivideo-info-icon:hover {
+  background: #09367dc4;
+  color: #45beff;
+  transition: all 0.3s;
 }
 
 /* Vivideo Reusable Styles */ 
