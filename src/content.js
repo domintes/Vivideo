@@ -54,7 +54,7 @@ if (window !== window.top) {
       this.defaultSettings = { ...this.settings };
       this.profiles = [];
       this.defaultProfile = {
-        name: 'DEFAULT',
+        name: 'Default',
         settings: { ...this.defaultSettings }
       };
       this.currentTheme = window.VivideoConfig.defaultTheme;
@@ -122,9 +122,22 @@ if (window !== window.top) {
         if (response && response.vivideoProfiles) {
           this.profiles = response.vivideoProfiles;
         }
-        // User profiles stay empty by default. Built-ins are rendered from ProfileManager.
+        // Ensure profiles array exists
         if (!this.profiles || this.profiles.length === 0) {
           this.profiles = [];
+        }
+
+        // Ensure single default profile named 'Default' always exists
+        if (
+          !this.profiles.some(
+            (p) => p && typeof p.name === 'string' && p.name.toLowerCase() === 'default'
+          )
+        ) {
+          this.profiles.unshift({
+            name: 'Default',
+            profileCategory: 'General',
+            settings: { ...this.defaultSettings }
+          });
         }
         if (response && response.vivideoTheme) {
           this.currentTheme = response.vivideoTheme;
@@ -134,10 +147,7 @@ if (window !== window.top) {
         }
         if (response && response.vivideoAppState) {
           this.loadActiveProfile(response.vivideoAppState.activeProfile);
-          // Load displayDefaultProfiles setting
-          if (response.vivideoAppState.displayDefaultProfiles !== undefined) {
-            this.tempDisplayDefaultProfiles = response.vivideoAppState.displayDefaultProfiles;
-          }
+          // (displayDefaultProfiles removed)
           // Load showProfileAfterChange setting
           if (response.vivideoAppState.showProfileAfterChange !== undefined) {
             this.tempShowProfileAfterChange = response.vivideoAppState.showProfileAfterChange;
@@ -153,9 +163,7 @@ if (window !== window.top) {
           if (Array.isArray(response.vivideoAppState.profileCategories)) {
             this.tempProfileCategories = response.vivideoAppState.profileCategories;
           }
-          if (Array.isArray(response.vivideoAppState.builtinProfiles)) {
-            this.tempBuiltinProfiles = response.vivideoAppState.builtinProfiles;
-          }
+          // builtinProfiles removed: legacy data ignored
         }
       } catch (error) {
         console.error('Vivideo: Error loading settings:', error);
@@ -250,10 +258,7 @@ if (window !== window.top) {
         this.profileManager.profileCategories = [...this.tempProfileCategories];
         delete this.tempProfileCategories;
       }
-      if (Array.isArray(this.tempBuiltinProfiles) && this.tempBuiltinProfiles.length > 0) {
-        this.profileManager.defaultProfiles = [...this.tempBuiltinProfiles];
-        delete this.tempBuiltinProfiles;
-      }
+      // builtin profiles removed: use single `this.profiles` array with a persistent Default
 
       console.log('Vivideo: All components initialized successfully');
       return true;
@@ -320,7 +325,7 @@ if (window !== window.top) {
         this.container.classList.add('extended-limits');
       }
 
-      // New layout structure
+      // New layout structure: left nav + right views
       let htmlContent = `
         <!-- Fixed Header -->
         <div class="vivideo-header-fixed">
@@ -329,22 +334,36 @@ if (window !== window.top) {
 
         <!-- Main Content Grid -->
         <div class="vivideo-main-grid">
-          <!-- Left Section: Profiles -->
-          <div class="vivideo-profile-section">
-            ${this.profileManager.createProfilesHTML()}
-            ${this.settingsManager.createImportExportHTML()}
-            ${UIHelper.createCheckboxesHTML(this.settings)}
-            ${UIHelper.createInfoHTML()}
+          <div class="vivideo-left-nav">
+            <ul class="vivideo-nav-list">
+              <li class="vivideo-nav-item" data-view="profiles">User Profiles</li>
+              <li class="vivideo-nav-item active" data-view="controls">Video Parameters</li>
+              <li class="vivideo-nav-item" data-view="enhancers">Enhancers</li>
+              <li class="vivideo-nav-item" data-view="settings">Settings</li>
+            </ul>
           </div>
 
-          <!-- Right Section: Core Controls -->
-          <div class="vivideo-core-section">
-            ${this.videoControls.createControlsHTML()}
-            ${this.speedController ? this.speedController.createSpeedControlHTML() : ''}
-            <div class="vivideo-reset-section">
-              <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
+          <div class="vivideo-right-views">
+            <div class="vivideo-view" data-view="profiles" style="display:none;">
+              ${this.profileManager.createProfilesHTML()}
             </div>
-            ${UIHelper.createShortcutsHTML()}
+
+            <div class="vivideo-view" data-view="controls" style="display:none;">
+              ${this.profileManager ? this.profileManager.createProfileSaveHTML() : ''}
+              ${this.videoControls.createControlsHTML()}
+              ${UIHelper.createCheckboxesHTML(this.settings)}
+              ${this.speedController ? this.speedController.createSpeedControlHTML() : ''}
+            </div>
+
+            <div class="vivideo-view" data-view="enhancers" style="display:none;">
+              ${UIHelper.createEnhancersHTML(this.settings)}
+            </div>
+
+            <div class="vivideo-view" data-view="settings" style="display:none;">
+              ${this.settingsManager.createImportExportHTML()}
+              ${UIHelper.createCheckboxesHTML(this.settings)}
+              ${UIHelper.createInfoHTML()}
+            </div>
           </div>
         </div>
       `;
@@ -369,10 +388,104 @@ if (window !== window.top) {
       this.container.innerHTML = htmlContent;
 
       this.safeAppend(this.container);
-      this.updateProfilesList();
 
-      // Initialize checkbox and button states based on showDefaultProfiles setting
+      // Initial bindings and UI updates for default view
+      this.updateProfilesList();
       this.initializeProfilesUI();
+
+      // Setup left nav view switching
+      try {
+        const self = this;
+        const navItems = this.container.querySelectorAll('.vivideo-nav-item');
+        const views = this.container.querySelectorAll('.vivideo-view');
+
+        const showView = (name) => {
+          views.forEach((v) => {
+            if (v.dataset.view === name) v.style.display = 'block';
+            else v.style.display = 'none';
+          });
+          navItems.forEach((n) => n.classList.toggle('active', n.dataset.view === name));
+
+          // Bind view-specific events
+          if (name === 'profiles' && self.profileManager) {
+            try {
+              self.profileManager.updateProfilesList(self.container);
+              self.profileManager.bindEvents(self.container);
+            } catch (e) {
+              console.warn('Vivideo: Failed to bind profileManager events', e);
+            }
+          }
+          if (name === 'controls' && self.videoControls) {
+            try {
+              self.videoControls.bindEvents(self.container);
+              self.videoControls.updateUI(self.settings, self.container);
+              // Ensure profile save header shows correct mode
+              try {
+                const saveHeaderTitle = self.container.querySelector('.profile-save-title');
+                const saveBtn = self.container.querySelector('#save-profile');
+                const nameInput = self.container.querySelector('#profile-name');
+                if (self.profileManager && self.profileManager.isEditingProfile) {
+                  if (saveHeaderTitle) saveHeaderTitle.textContent = 'Edit Profile';
+                } else {
+                  if (saveHeaderTitle) saveHeaderTitle.textContent = 'Create New Profile';
+                  if (saveBtn) {
+                    delete saveBtn.dataset.editIndex;
+                    delete saveBtn.dataset.overwrite;
+                    saveBtn.classList.remove('overwrite');
+                    const saveText = saveBtn.querySelector('.save-text');
+                    const saveIcon = saveBtn.querySelector('.save-icon');
+                    if (saveText) saveText.textContent = 'Save';
+                    if (saveIcon) saveIcon.textContent = '💾';
+                  }
+                  if (nameInput) {
+                    nameInput.value = '';
+                    nameInput.setAttribute('data-cleared', '0');
+                  }
+                }
+                // Refresh checkbox bindings for enhancers if present
+                UIHelper.bindCheckboxEvents(self.container, self);
+                UIHelper.updateCheckboxes(self.container, self.settings);
+              } catch (e) {
+                /* ignore */
+              }
+            } catch (e) {
+              console.warn('Vivideo: Failed to bind videoControls events', e);
+            }
+          }
+          if (name === 'enhancers') {
+            try {
+              // bind checkboxes / enhancer toggles
+              UIHelper.bindCheckboxEvents(self.container, self);
+              UIHelper.updateCheckboxes(self.container, self.settings);
+            } catch (e) {
+              console.warn('Vivideo: Failed to bind enhancers events', e);
+            }
+          }
+          if (name === 'settings' && self.settingsManager) {
+            try {
+              self.settingsManager.bindEvents(self.container);
+            } catch (e) {
+              console.warn('Vivideo: Failed to bind settingsManager events', e);
+            }
+          }
+        };
+
+        navItems.forEach((item) => {
+          item.addEventListener('click', (e) => {
+            e.preventDefault();
+            const view = item.dataset.view;
+            showView(view);
+          });
+        });
+
+        // Expose showView so other components can switch views programmatically
+        this.showView = showView;
+
+        // Ensure initial view is Controls (Video Parameters)
+        showView('controls');
+      } catch (e) {
+        console.warn('Vivideo: View binding failed', e);
+      }
 
       // Only update theme selection if themes panel is enabled
       if (window.VivideoConfig.testMode && window.VivideoConfig.features.themesPanel) {
@@ -383,13 +496,7 @@ if (window !== window.top) {
     initializeProfilesUI() {
       if (!this.profileManager || !this.container) return;
 
-      // Set checkbox state based on displayDefaultProfiles setting
-      const displayDefaultCheckbox = this.container.querySelector(
-        '#display-default-profiles-checkbox'
-      );
-      if (displayDefaultCheckbox) {
-        displayDefaultCheckbox.checked = this.profileManager.displayDefaultProfiles;
-      }
+      // (displayDefaultProfiles option removed)
 
       // Set checkbox state based on showProfileAfterChange setting
       const showProfileAfterChangeCheckbox = this.container.querySelector(
@@ -418,7 +525,6 @@ if (window !== window.top) {
       }
 
       console.log('Vivideo: Profiles UI initialized with settings:', {
-        displayDefaultProfiles: this.profileManager.displayDefaultProfiles,
         showProfileAfterChange: this.profileManager.showProfileAfterChange,
         workOnAllSites: this.profileManager.workOnAllSites,
         workOnEverything: this.profileManager.workOnEverything
@@ -910,8 +1016,8 @@ if (window !== window.top) {
     }
 
     resetToDefault() {
-      // Simple reset to neutral DEFAULT profile
-      console.log('Vivideo: Resetting to DEFAULT profile');
+      // Simple reset to neutral Default profile
+      console.log('Vivideo: Resetting to Default profile');
       this.settings = {
         brightness: 0,
         contrast: 0,
@@ -929,7 +1035,7 @@ if (window !== window.top) {
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
         extendedLimits: this.settings.extendedLimits,
-        activeProfile: 'DEFAULT'
+        activeProfile: 'Default'
       };
 
       // Sync speed controller with default settings
@@ -1129,7 +1235,7 @@ if (window !== window.top) {
           'linearColorPipeline',
           'forceHighQualityScaling'
         ];
-        if (profile.name === 'DEFAULT') {
+        if (profile.name && profile.name.toLowerCase() === 'default') {
           this.settings.activeProfile = null;
           Object.keys(this.defaultSettings).forEach((key) => {
             if (!profileScopedExclusions.includes(key)) {
@@ -1403,7 +1509,7 @@ if (window !== window.top) {
         if (
           this.settings.autoSaveProfiles &&
           this.settings.activeProfile &&
-          this.settings.activeProfile !== 'DEFAULT'
+          this.settings.activeProfile.toLowerCase() !== 'default'
         ) {
           const idx = this.profiles.findIndex((p) => p.name === this.settings.activeProfile);
           if (idx !== -1) {
@@ -1447,8 +1553,7 @@ if (window !== window.top) {
           : true,
         workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false,
         workOnEverything: this.profileManager ? this.profileManager.workOnEverything : false,
-        profileCategories: this.profileManager ? this.profileManager.profileCategories : [],
-        builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : []
+        profileCategories: this.profileManager ? this.profileManager.profileCategories : []
       });
     }
 

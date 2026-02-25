@@ -47,8 +47,13 @@ const UIHelper = {
           <span class="vivideo-switch-label">Auto-activate</span>
         </label>
       </div>
+    `;
+  },
+
+  createEnhancersHTML(settings = {}) {
+    return `
       <div class="vivideo-auto-activate switch-section vivideo-quality-section">
-        <div class="profile-panel-header">✨ Improve quality</div>
+        <div class="profile-panel-header">✨ Enhance & Quality</div>
         <div class="vivideo-quality-subtitle">Video Quality</div>
         <label class="vivideo-switch-container">
           <input type="checkbox" id="keep-quality-checkbox" class="vivideo-switch-input" ${
