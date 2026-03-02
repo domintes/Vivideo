@@ -2591,9 +2591,10 @@ div .vivideo-container,
 
 .vivideo-profiles,
 .vivideo-profile-list {
-  min-height: 140px;
+  min-height: 420px;
   max-height: 42vh;
   overflow: auto;
+  
 }
 
 .vivideo-profile-form,
