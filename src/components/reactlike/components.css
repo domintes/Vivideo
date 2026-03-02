@@ -408,48 +408,61 @@
   align-items: flex-start;
 }
 
-/* Switch styles for options (compact) */
 .vivideo-switch-container {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
+  position: relative;
+  padding-left: 52px; /* reserve space for visible switch */
 }
 
+/* Visually hide the native checkbox but keep it accessible */
 .vivideo-switch-input {
-  appearance: none;
-  -webkit-appearance: none;
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 22px;
+  opacity: 0;
+  margin: 0;
+  z-index: 2;
+}
+
+.vivideo-switch-track {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 40px;
   height: 22px;
   border-radius: 14px;
   background: rgba(255, 255, 255, 0.08);
-  position: relative;
-  flex-shrink: 0;
   border: 1px solid rgba(0, 0, 0, 0.12);
+  z-index: 1;
 }
 
-.vivideo-switch-input::after {
-  content: '';
+.vivideo-switch-knob {
   position: absolute;
-  left: 3px;
-  top: 3px;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
-  background: #fff;
   border-radius: 50%;
+  background: #fff;
   transition: transform 0.18s ease;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
 }
 
-.vivideo-switch-input:checked {
+.vivideo-switch-input:checked ~ .vivideo-switch-track {
   background: linear-gradient(90deg, #00bfff, #0080ff);
 }
 
-.vivideo-switch-input:checked::after {
-  transform: translateX(18px);
-}
-
-.vivideo-switch-track {
-  display: none;
+.vivideo-switch-input:checked ~ .vivideo-switch-knob {
+  transform: translateY(-50%) translateX(18px);
 }
 
 .vivideo-switch-label {

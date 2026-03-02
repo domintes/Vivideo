@@ -44,6 +44,7 @@ const UIHelper = {
             settings.autoActivate ? 'checked' : ''
           }>
           <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">Auto-activate</span>
         </label>
       </div>
@@ -55,6 +56,7 @@ const UIHelper = {
             settings.keepQuality ? 'checked' : ''
           }>
           <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">Keep Quality</span>
         </label>
         <label class="vivideo-switch-container">
@@ -62,6 +64,7 @@ const UIHelper = {
             settings.forceHighQualityScaling ? 'checked' : ''
           }>
           <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">High quality scaling</span>
         </label>
         <label class="vivideo-switch-container">
@@ -69,6 +72,7 @@ const UIHelper = {
             settings.linearColorPipeline ? 'checked' : ''
           }>
           <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">Linear color pipeline</span>
         </label>
         <label class="vivideo-switch-container">
@@ -76,6 +80,7 @@ const UIHelper = {
             settings.upscaleQualityBoost ? 'checked' : ''
           }>
           <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">Upscale boost</span>
         </label>
         <label class="vivideo-quality-mode-row">

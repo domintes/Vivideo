@@ -907,7 +907,7 @@
 /* Compact buttons for profile sections */
 .vivideo-control-btn.compact {
   padding: 6px 12px;
-  font-size: 14px;
+  font-size: 12px;
   min-width: 60px;
 }
 
@@ -1684,8 +1684,6 @@ button.vivideo-close {
 }
 
 .settings-actions {
-  display: flex;
-  flex-direction: column;
   gap: 10px;
   margin-bottom: 15px;
 }
@@ -1715,6 +1713,7 @@ button.vivideo-close {
 
 .import-section {
   position: relative;
+  width: auto;
 }
 
 .settings-info {
@@ -2422,55 +2421,60 @@ div .vivideo-container,
   background: rgba(0, 255, 65, 0.6);
 }
 
-/* Compact switch styles */
-.vivideo-switch-container {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+
+/* Hide native checkbox visually but keep it accessible */
+.vivideo-switch-input {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 42px;
+  height: 22px;
+  opacity: 0;
+  margin: 0;
+  z-index: 2;
 }
 
-.vivideo-switch-input {
-  appearance: none;
-  -webkit-appearance: none;
+.vivideo-switch-track {
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 42px;
   height: 22px;
   background: rgba(255, 255, 255, 0.12);
   border-radius: 16px;
-  position: relative;
-  flex-shrink: 0;
-  outline: none;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  z-index: 1;
 }
 
-.vivideo-switch-input::after {
-  content: '';
+.vivideo-switch-knob {
   position: absolute;
-  left: 3px;
-  top: 3px;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 16px;
   height: 16px;
   background: #fff;
   border-radius: 50%;
   transition: transform 0.18s ease;
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.vivideo-switch-input:checked {
+.vivideo-switch-input:checked ~ .vivideo-switch-track {
   background: linear-gradient(90deg, #00bfff, #0080ff);
 }
 
-.vivideo-switch-input:checked::after {
-  transform: translateX(20px);
-}
-
-.vivideo-switch-track {
-  display: none;
+.vivideo-switch-input:checked ~ .vivideo-switch-knob {
+  transform: translateY(-50%) translateX(20px);
 }
 
 .vivideo-switch-label {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.9);
   flex: 1;
+  /* label text is offset by container padding-left */
 }
 
 .vivideo-info-popup {
@@ -2687,8 +2691,10 @@ div .vivideo-container,
   overflow-x: hidden;
   padding-right: 5px;
   margin-bottom: 32px;
-  height: 100vh;
+  min-height: 100vh;
   overflow-y: auto;
+  height: auto;
+  padding-bottom: 10vh;
 }
 
 /* Vivideo Controls Section */
@@ -2748,5 +2754,27 @@ div .vivideo-container,
 
 .vivideo-main-grid {
   height: 100vh;
+  padding-bottom: 15%;
   overflow-y: auto;
+}
+
+/* Compact switch styles */
+.vivideo-switch-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  padding-bottom: 8px;
+  padding-left: 52px;
+}
+
+.settings-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
+}
+
+.vivideo-control-btn {
+  padding: 4px;
 }

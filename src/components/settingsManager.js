@@ -201,17 +201,17 @@ class SettingsManager {
     return /*html*/ `
       <div class="vivideo-settings-management" style="display: block;" id="settings-management">
         <div>
-            <div class="vivideo-box-header vivideo-settings-box-header">⚙️ Settings Management</div>
+            <div class="vivideo-box-header vivideo-settings-box-header">🔄 Import/Export Settings</div>
           
           <div class="settings-actions">
             <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Export all settings and profiles">
-              📤 Export settings
+            📤 Export settings
             </button>
             
             <div class="import-section">
               <input type="file" id="import-settings-file" accept=".json" style="display: none;">
               <button class="vivideo-control-btn import-btn" id="import-settings-btn" title="Import settings from file">
-                📥 Import settings
+              📥 Import settings
               </button>
             </div>
           </div>
