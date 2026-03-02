@@ -142,6 +142,10 @@ if (window !== window.top) {
           if (response.vivideoAppState.showProfileAfterChange !== undefined) {
             this.tempShowProfileAfterChange = response.vivideoAppState.showProfileAfterChange;
           }
+          // Load applyProfileSpeed setting
+          if (response.vivideoAppState.applyProfileSpeed !== undefined) {
+            this.tempApplyProfileSpeed = response.vivideoAppState.applyProfileSpeed;
+          }
           // Load workOnAllSites setting
           if (response.vivideoAppState.workOnAllSites !== undefined) {
             this.tempWorkOnAllSites = response.vivideoAppState.workOnAllSites;
@@ -246,6 +250,11 @@ if (window !== window.top) {
         this.profileManager.workOnEverything = this.tempWorkOnEverything;
         delete this.tempWorkOnEverything;
       }
+      // Apply saved applyProfileSpeed setting if available
+      if (this.tempApplyProfileSpeed !== undefined) {
+        this.profileManager.applyProfileSpeed = this.tempApplyProfileSpeed;
+        delete this.tempApplyProfileSpeed;
+      }
       if (Array.isArray(this.tempProfileCategories)) {
         this.profileManager.profileCategories = [...this.tempProfileCategories];
         delete this.tempProfileCategories;
@@ -296,12 +305,23 @@ if (window !== window.top) {
       }
     }
 
-    loadActiveProfile(profileName) {
-      if (profileName && this.profiles.length > 0) {
-        const profile = this.profiles.find((p) => p.name === profileName);
+    loadActiveProfile(profileRef) {
+      if (!profileRef) return;
+
+      // If saved ref is 'DEFAULT', keep default behavior
+      if (profileRef === 'DEFAULT') {
+        this.settings.activeProfile = 'DEFAULT';
+        return;
+      }
+
+      // Try to find user profile by id first, then by name
+      if (this.profiles && this.profiles.length > 0) {
+        const byId = this.profiles.find((p) => p.id && p.id === profileRef);
+        const byName = this.profiles.find((p) => p.name === profileRef);
+        const profile = byId || byName;
         if (profile) {
           this.settings = { ...this.settings, ...profile.settings };
-          this.settings.activeProfile = profileName;
+          this.settings.activeProfile = profile.id || profile.name;
         }
       }
     }
@@ -409,6 +429,12 @@ if (window !== window.top) {
       const workOnEverythingCheckbox = this.container.querySelector('#work-on-everything-checkbox');
       if (workOnEverythingCheckbox) {
         workOnEverythingCheckbox.checked = !!this.profileManager.workOnEverything;
+      }
+
+      // Set checkbox state based on applyProfileSpeed setting
+      const applyProfileSpeedCheckbox = this.container.querySelector('#apply-profile-speed-checkbox');
+      if (applyProfileSpeedCheckbox) {
+        applyProfileSpeedCheckbox.checked = !!this.profileManager.applyProfileSpeed;
       }
 
       // Set preferred speed input value
@@ -1137,14 +1163,36 @@ if (window !== window.top) {
             }
           });
         } else {
-          this.settings.activeProfile = profile.name;
-          Object.keys(profile.settings).forEach((key) => {
+          // Use id for user profiles when available (migrate activeProfile to id)
+          this.settings.activeProfile = profile.id || profile.name;
+          // Sanitize profile settings to avoid missing/invalid values
+          let sanitized = profile.settings || {};
+          if (this.profileManager && typeof this.profileManager.sanitizeSettings === 'function') {
+            sanitized = this.profileManager.sanitizeSettings(profile.settings || {});
+          } else {
+            // Fallback sanitization
+            const defaults = this.defaultSettings || {};
+            const keys = [
+              'brightness',
+              'contrast',
+              'saturation',
+              'gamma',
+              'colorTemp',
+              'sharpness',
+              'speed'
+            ];
+            keys.forEach((k) => {
+              const v = sanitized && Object.prototype.hasOwnProperty.call(sanitized, k) ? sanitized[k] : undefined;
+              sanitized[k] = typeof v === 'number' && !Number.isNaN(v) ? v : defaults[k] !== undefined ? defaults[k] : k === 'gamma' ? 1 : k === 'speed' ? 1.0 : 0;
+            });
+          }
+          Object.keys(sanitized).forEach((key) => {
             if (!profileScopedExclusions.includes(key)) {
-              this.settings[key] = profile.settings[key];
+              this.settings[key] = sanitized[key];
             }
           });
-          if (profile.settings.autoActivate !== undefined) {
-            this.settings.autoActivate = profile.settings.autoActivate;
+          if (sanitized.autoActivate !== undefined) {
+            this.settings.autoActivate = sanitized.autoActivate;
           }
         }
 
@@ -1155,8 +1203,14 @@ if (window !== window.top) {
 
         // Sync speed controller with loaded profile settings
         if (this.speedController && this.settings.speed !== undefined) {
-          this.speedController.currentSpeed = this.settings.speed;
-          this.speedController.applySpeedToAllVideos(this.settings.speed);
+          if (this.profileManager && this.profileManager.applyProfileSpeed) {
+            this.speedController.currentSpeed = this.settings.speed;
+            this.speedController.applySpeedToAllVideos(this.settings.speed);
+          } else {
+            // Apply currently-set controller speed to videos (do not override from profile)
+            const current = this.speedController.currentSpeed !== undefined ? this.speedController.currentSpeed : this.settings.speed || 1.0;
+            this.speedController.applySpeedToAllVideos(current);
+          }
         }
 
         // Force immediate UI update with delay to ensure DOM is ready
@@ -1183,7 +1237,10 @@ if (window !== window.top) {
 
     deleteProfile(index) {
       const deletedProfile = this.profiles[index];
-      if (this.settings.activeProfile === deletedProfile.name) {
+      if (
+        this.settings.activeProfile === deletedProfile.name ||
+        (deletedProfile.id && this.settings.activeProfile === deletedProfile.id)
+      ) {
         this.settings.activeProfile = null;
         this.saveAppState();
       }
@@ -1405,7 +1462,9 @@ if (window !== window.top) {
           this.settings.activeProfile &&
           this.settings.activeProfile !== 'DEFAULT'
         ) {
-          const idx = this.profiles.findIndex((p) => p.name === this.settings.activeProfile);
+          const idx = this.profiles.findIndex(
+            (p) => (p.id && p.id === this.settings.activeProfile) || p.name === this.settings.activeProfile
+          );
           if (idx !== -1) {
             // Copy only relevant visual settings into profile
             const profileSettings = {
@@ -1445,6 +1504,7 @@ if (window !== window.top) {
         showProfileAfterChange: this.profileManager
           ? this.profileManager.showProfileAfterChange
           : true,
+        applyProfileSpeed: this.profileManager ? this.profileManager.applyProfileSpeed : false,
         workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false,
         workOnEverything: this.profileManager ? this.profileManager.workOnEverything : false,
         profileCategories: this.profileManager ? this.profileManager.profileCategories : [],
@@ -1747,9 +1807,10 @@ if (window !== window.top) {
     // Profile control shortcuts - Alt+B/C only
     if (window.vivideoController) {
       const controller = window.vivideoController;
+      const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
       // Alt + C: Previous Profile
-      if (e.key === 'c') {
+      if (key === 'c') {
         e.preventDefault();
         if (controller.profileManager) {
           controller.profileManager.previousProfile();
@@ -1758,7 +1819,7 @@ if (window !== window.top) {
       }
 
       // Alt + B: Next Profile
-      else if (e.key === 'b') {
+      else if (key === 'b') {
         e.preventDefault();
         if (controller.profileManager) {
           controller.profileManager.nextProfile();
@@ -1776,8 +1837,9 @@ if (window !== window.top) {
       !e.ctrlKey &&
       !e.shiftKey
     ) {
+      const keyNoAlt = typeof e.key === 'string' ? e.key.toLowerCase() : '';
       // C: Previous Profile (without Alt)
-      if (e.key === 'c') {
+      if (keyNoAlt === 'c') {
         e.preventDefault();
         e.stopPropagation();
         if (controller.profileManager) {
@@ -1788,7 +1850,7 @@ if (window !== window.top) {
       }
 
       // B: Next Profile (without Alt)
-      else if (e.key === 'b') {
+      else if (keyNoAlt === 'b') {
         e.preventDefault();
         e.stopPropagation();
         if (controller.profileManager) {

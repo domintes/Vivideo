@@ -1373,6 +1373,28 @@ video:-ms-fullscreen .vivideo-container {
   color: inherit;
 }
 
+/* Duplicate warning box inside controls section */
+.vivideo-duplicate-warning {
+  background: #fff9f0;
+  border-left: 4px solid #bb531e;
+  color: #7a2f11;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+/* Inline actions shown under the compact profile form input */
+.profile-inline-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.profile-inline-actions .vivideo-inline-action {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
 /* Simple modal styling for overwrite confirmation */
 .vivideo-modal {
   position: fixed;
@@ -1825,7 +1847,6 @@ button.vivideo-close {
 .profile-display-name-input { padding:6px 8px; width:100%; }
 
 /* Profile form panel (quick-create) */
-#profile-form-panel { width: 100%; }
 .vivideo-profile-form-panel { width: 100%; }
 
 /* Cancel button on profile form (red X, no background) */
@@ -1845,7 +1866,8 @@ button.vivideo-close {
 .vivideo-modal-confirm { padding:6px 10px; border-radius:6px; background:#bb531e; border:none; color:#fff; }
 .vivideo-btn { padding:6px 8px; border-radius:6px; cursor:pointer; }
 .vivideo-restore-default-profiles-btn { background: transparent; border: 1px solid rgba(255,255,255,0.06); }
-.vivideo-profile-overwrite { background: #1a3488a1; border: none; color: #fff; display: none; }
+.vivideo-profile-overwrite { background: #1a3488a1; border: none; color: #fff; display: inline-block; }
+/* Previously overwrite button was shown only in edit-mode; now visible always for better UX */
 .vivideo-edit-mode-active .vivideo-profile-overwrite { display: inline-block; }
 .vivideo-profile-delete-btn { background: transparent; border: none; color: #ff6b6b; }
 .vivideo-compare-controls { display: none; }
@@ -2797,6 +2819,7 @@ div .vivideo-container,
 
 .vivideo-profile-list {
   overflow-x: hidden;
+  min-height: 100%;
 }
 
 div.user-profile {
@@ -2806,4 +2829,14 @@ div.user-profile {
 div.vivideo-border-box {
   overflow-y: hidden;
   overflow-x: hidden;
+}
+
+button.vivideo-restore-default-profiles-btn {
+  width: 100%;
+  margin: 12px 0;
+  padding: 8px;
+}
+
+.vivideo-default-profile-item {
+  background: rgb(0 0 0 / 27%);
 }
