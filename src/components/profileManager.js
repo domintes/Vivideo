@@ -133,28 +133,13 @@ class ProfileManager {
             <div class="vivideo-bottom-controls-right">
               <div class="active-item-status active-profile-status" id="active-profile-display">DEFAULT</div>
 
-            <!-- Edit mode panel (shown when NOT SAVED, default) -->
-            <div id="edit-mode-panel" class="vivideo-edit-mode-panel">
-              <div class="vivideo-box-header profile-panel-header">🛠️ Edit Profile</div>
-              <button id="open-edit-mode-btn" class="vivideo-btn vivideo-open-edit-mode">✂️ Open Edit Mode</button>
-            </div>
-
-            <!-- Unsaved quick-save row (opened when user clicks Open Edit Mode) -->
-            <div id="unsaved-save-panel" class="vivideo-unsaved-panel" style="display:none;">
-              <div class="vivideo-profile-form vivideo-profile-form-compact">
-                <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
-                <div class="vivideo-grid-1-3-1">
-                  <button id="vivideo-cancel-edit-mode-btn" class="vivideo-btn vivideo-cancel-edit-mode-btn">✖</button>
-                  <input type="text" id="unsaved-profile-name" class="vivideo-profile-input vivideo-unsaved-input" placeholder="New profile">
-                  <button id="unsaved-save-btn" class="vivideo-profile-save vivideo-btn">💾</button>
-                </div>
-                <div class="vivideo-grid-1-3-1 vivideo-category-row">
-                  <button id="create-unsaved-profile-category-btn" class="vivideo-btn" title="Create category">＋</button>
-                  <select id="unsaved-profile-category" class="vivideo-profile-input">
-                    <option value="">General</option>
-                  </select>
-                  <button id="delete-unsaved-profile-category-btn" class="vivideo-btn" title="Delete selected category">🗑️</button>
-                </div>
+            <!-- Profile form (always visible) -->
+            <div id="profile-form-panel" class="vivideo-profile-form vivideo-profile-form-compact vivideo-profile-form-panel">
+              <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
+              <div class="vivideo-grid-1-3-1">
+                <input type="text" id="profile-display-name-input" class="vivideo-profile-input profile-display-name-input" placeholder="New profile">
+                <button id="profile-form-save-button" class="vivideo-profile-save vivideo-btn profile-form-save-button" data-overwrite="false">💾</button>
+                <button id="profile-form-cancel-button" class="profile-form-cancel-button vivideo-btn" title="Cancel">✖</button>
               </div>
             </div>
           </div>
@@ -308,65 +293,42 @@ class ProfileManager {
       });
     }
 
-    // Unsaved quick-save handlers
-    const unsavedSaveBtn = UIHelper.safeQuery(container, '#unsaved-save-btn');
-    const unsavedInput = UIHelper.safeQuery(container, '#unsaved-profile-name');
-    if (unsavedSaveBtn && unsavedInput) {
-      unsavedSaveBtn.addEventListener('click', () => {
-        this.saveUnsavedProfile(container);
+    // Profile form handlers (always visible)
+    const profileFormSaveBtn = UIHelper.safeQuery(container, '#profile-form-save-button');
+    const profileDisplayInput = UIHelper.safeQuery(container, '#profile-display-name-input');
+    if (profileFormSaveBtn && profileDisplayInput) {
+      profileFormSaveBtn.addEventListener('click', () => {
+        this.saveProfileForm(container);
       });
 
-      unsavedInput.addEventListener('keydown', (e) => {
+      profileDisplayInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          this.saveUnsavedProfile(container);
+          this.saveProfileForm(container);
         }
       });
-      // live validation for unsaved input: show message if >16 chars or warn on duplicate
-      unsavedInput.addEventListener('input', (e) => {
+
+      profileDisplayInput.addEventListener('input', (e) => {
         const val = (e.target.value || '').trim();
         if (val.length > 16) {
           this.updateActiveStatus('Profile name cannot exceed 16 characters', '#ff4d4f');
           return;
         }
-        // duplicate check
         const exists = this.controller.profiles.some((p) => p.name === val);
         if (exists && val.length > 0) {
           this.updateActiveStatus(`You will overwrite ${val}`, '#bb531e');
           return;
         }
-        // default editing state
         this.updateActiveStatus('EDITING', '');
       });
-      // Open edit mode button (in edit-mode-panel)
-      const openEditModeBtn = UIHelper.safeQuery(container, '#open-edit-mode-btn');
-      if (openEditModeBtn) {
-        openEditModeBtn.addEventListener('click', () => {
-          const editModePanel = container.querySelector('#edit-mode-panel');
-          const unsavedPanel = container.querySelector('#unsaved-save-panel');
-          if (editModePanel) editModePanel.style.display = 'none';
-          if (unsavedPanel) unsavedPanel.style.display = 'block';
-          this.isEditingProfile = true;
-          if (this.controller && this.controller.container)
-            this.controller.container.classList.add('vivideo-edit-mode-active');
-          this.updateProfilesList(container);
-          const inputField = container.querySelector('#unsaved-profile-name');
-          if (inputField) setTimeout(() => inputField.focus(), 40);
-        });
-      }
 
-      // Cancel edit mode button
-      const cancelEditModeBtn = UIHelper.safeQuery(container, '#vivideo-cancel-edit-mode-btn');
-      if (cancelEditModeBtn) {
-        cancelEditModeBtn.addEventListener('click', () => {
-          const unsavedPanel = container.querySelector('#unsaved-save-panel');
-          const editModePanel = container.querySelector('#edit-mode-panel');
-          if (unsavedPanel) unsavedPanel.style.display = 'none';
-          if (editModePanel) editModePanel.style.display = 'block';
-          this.isEditingProfile = false;
-          // reset input value
-          const inputField = container.querySelector('#unsaved-profile-name');
+      // Cancel button for profile form
+      const profileFormCancel = UIHelper.safeQuery(container, '#profile-form-cancel-button');
+      if (profileFormCancel) {
+        profileFormCancel.addEventListener('click', () => {
+          const inputField = container.querySelector('#profile-display-name-input');
           if (inputField) inputField.value = '';
+          this.isEditingProfile = false;
           if (this.controller && this.controller.container)
             this.controller.container.classList.remove('vivideo-edit-mode-active');
           this.updateProfilesList(container);
@@ -375,57 +337,10 @@ class ProfileManager {
       }
     }
 
-    const unsavedCategorySelect = UIHelper.safeQuery(container, '#unsaved-profile-category');
-    if (unsavedCategorySelect) {
-      unsavedCategorySelect.addEventListener('change', () => {
-        this.updateActiveStatus('EDITING', '');
-      });
-    }
-
     const mainCategorySelect = UIHelper.safeQuery(container, '#profile-category');
     if (mainCategorySelect) {
       mainCategorySelect.addEventListener('change', () => {
         this.updateActiveStatus('EDITING', '');
-      });
-    }
-
-    const createCategoryBtn = UIHelper.safeQuery(container, '#create-unsaved-profile-category-btn');
-    if (createCategoryBtn) {
-      createCategoryBtn.addEventListener('click', () => {
-        const rawName = prompt('Category name:', '');
-        const categoryName = this.normalizeCategoryName(rawName);
-        if (!categoryName) return;
-        if (!this.profileCategories.includes(categoryName)) {
-          this.profileCategories.push(categoryName);
-          this.profileCategories.sort((a, b) => a.localeCompare(b));
-        }
-        this.refreshCategorySelectors(container, categoryName);
-        this.updateProfilesList(container);
-        this.controller.saveAppState();
-      });
-    }
-
-    const deleteCategoryBtn = UIHelper.safeQuery(container, '#delete-unsaved-profile-category-btn');
-    if (deleteCategoryBtn) {
-      deleteCategoryBtn.addEventListener('click', () => {
-        const select = container.querySelector('#unsaved-profile-category');
-        const categoryName = this.normalizeCategoryName(select ? select.value : '');
-        if (!categoryName || categoryName === 'General') return;
-        this.profileCategories = (this.profileCategories || []).filter((c) => c !== categoryName);
-        this.controller.profiles.forEach((profile) => {
-          if (this.getProfileCategory(profile) === categoryName) {
-            profile.profileCategory = 'General';
-          }
-        });
-        this.defaultProfiles.forEach((profile) => {
-          if (this.getProfileCategoryByType(profile, 'builtin') === categoryName) {
-            profile.profileCategory = 'Built-in';
-          }
-        });
-        this.controller.saveProfiles();
-        this.controller.saveAppState();
-        this.refreshCategorySelectors(container, 'General');
-        this.updateProfilesList(container);
       });
     }
 
@@ -578,7 +493,7 @@ class ProfileManager {
 
   refreshCategorySelectors(container, selectedCategory = 'General') {
     const categoryNames = this.getOrderedUserCategories();
-    ['#profile-category', '#unsaved-profile-category'].forEach((selector) => {
+    ['#profile-category'].forEach((selector) => {
       const select = container.querySelector(selector);
       if (!select) return;
       const previous = this.normalizeCategoryName(select.value) || selectedCategory;
@@ -733,11 +648,7 @@ class ProfileManager {
     if (!profileList) return;
 
     profileList.innerHTML = '';
-    const editModeActive = !!(
-      this.controller &&
-      this.controller.container &&
-      this.controller.container.classList.contains('vivideo-edit-mode-active')
-    );
+    
 
     // Połącz profile built-in i user w jedną tablicę
     const allProfiles = [
@@ -873,9 +784,7 @@ class ProfileManager {
       // Ensure profiles panel is rendered and active
       try {
         this.updateProfilesList(container);
-        // ensure unsaved panel hidden unless editing
-        const unsavedPanel = container.querySelector('#unsaved-save-panel');
-        if (unsavedPanel && !this.isEditingProfile) unsavedPanel.style.display = 'none';
+        // Profile form is always visible now
       } catch (e) {
         console.warn('Vivideo: showUserProfiles failed', e);
         try {
@@ -1038,10 +947,8 @@ class ProfileManager {
       try {
         if (this.controller && this.controller.container) {
           this.controller.container.classList.remove('vivideo-edit-mode-active');
-          const editModePanel = this.controller.container.querySelector('#edit-mode-panel');
-          const unsavedPanel = this.controller.container.querySelector('#unsaved-save-panel');
-          if (editModePanel) editModePanel.style.display = 'block';
-          if (unsavedPanel) unsavedPanel.style.display = 'none';
+          const profileFormPanel = this.controller.container.querySelector('#profile-form-panel');
+          if (profileFormPanel) profileFormPanel.style.display = 'block';
         }
       } catch (err) {
         console.warn('Vivideo: clearing edit-mode after main save failed', err);
@@ -1050,12 +957,12 @@ class ProfileManager {
     }
   }
 
-  // Save profile from the unsaved quick-save input
-  saveUnsavedProfile(container) {
-    const input = container.querySelector('#unsaved-profile-name');
+  // Save profile from the profile form
+  saveProfileForm(container) {
+    const input = container.querySelector('#profile-display-name-input');
     if (!input) return;
     let name = input.value.trim();
-    const editBtn = container.querySelector('#unsaved-save-btn');
+    const editBtn = container.querySelector('#profile-form-save-button');
     const editIndex =
       editBtn && editBtn.dataset && typeof editBtn.dataset.editIndex !== 'undefined'
         ? parseInt(editBtn.dataset.editIndex)
@@ -1065,9 +972,8 @@ class ProfileManager {
         ? parseInt(editBtn.dataset.editBuiltinIndex)
         : null;
     const editType = editBtn && editBtn.dataset ? editBtn.dataset.editType : null;
-    const categorySelect = container.querySelector('#unsaved-profile-category');
-    const selectedCategory = this.normalizeCategoryName(categorySelect ? categorySelect.value : '');
-    const profileCategory = selectedCategory || 'General';
+    // Quick form doesn't include category selector; default to General
+    const profileCategory = 'General';
 
     if (!name) {
       // show red error only on save attempt
@@ -1105,7 +1011,7 @@ class ProfileManager {
       // Will overwrite different existing profile - inform user (orange) and overwrite
       this.controller.profiles[existingIndex].settings = currentSettings;
       this.controller.profiles[existingIndex].profileCategory = profileCategory;
-      console.log('Vivideo: Unsaved profile overwrite (existing):', name);
+      console.log('Vivideo: Profile overwrite (existing):', name);
       this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
       this.controller.settings.activeProfile = name;
     } else if (editIndex !== null && editIndex >= 0) {
@@ -1113,7 +1019,7 @@ class ProfileManager {
       this.controller.profiles[editIndex].name = name;
       this.controller.profiles[editIndex].settings = currentSettings;
       this.controller.profiles[editIndex].profileCategory = profileCategory;
-      console.log('Vivideo: Unsaved profile overwrite (edit):', name);
+      console.log('Vivideo: Profile overwrite (edit):', name);
       this.controller.settings.activeProfile = name;
     } else if (editBuiltinIndex !== null && editBuiltinIndex >= 0 && editType === 'builtin') {
       // Edit built-in profile in place
@@ -1127,14 +1033,9 @@ class ProfileManager {
     } else {
       // Create new profile
       this.controller.profiles.push({ name, profileCategory, settings: currentSettings });
-      console.log('Vivideo: Unsaved profile saved:', name);
+      console.log('Vivideo: Profile saved:', name);
       this.controller.settings.activeProfile = name;
       this.updateActiveStatus(name, '');
-    }
-
-    if (!this.profileCategories.includes(profileCategory)) {
-      this.profileCategories.push(profileCategory);
-      this.profileCategories.sort((a, b) => a.localeCompare(b));
     }
 
     this.controller.saveProfiles();
@@ -1145,9 +1046,7 @@ class ProfileManager {
     this.updateProfilesList(container);
     this.updateActiveProfileDisplay(container, this.controller.settings);
 
-    // Hide quick-save panel and clear edit marker
-    const panel = container.querySelector('#unsaved-save-panel');
-    if (panel) panel.style.display = 'none';
+    // Clear edit markers from button
     if (editBtn) {
       delete editBtn.dataset.editIndex;
       delete editBtn.dataset.editBuiltinIndex;
@@ -1472,21 +1371,14 @@ class ProfileManager {
         // Update profile list to show correct active state
         this.controller.updateProfilesList();
 
-        // Hide unsaved quick-save panel if visible — but respect active edit mode
-        const unsavedPanel = container.querySelector('#unsaved-save-panel');
-        const editModePanel = container.querySelector('#edit-mode-panel');
-        if (unsavedPanel && editModePanel) {
-          // If we're currently in edit mode, show unsaved panel; otherwise show edit-mode opener
+        // Ensure profile form panel visible; toggle edit-mode active class
+        const profileFormPanel = container.querySelector('#profile-form-panel');
+        if (profileFormPanel) profileFormPanel.style.display = 'block';
+        if (this.controller && this.controller.container) {
           if (this.isEditingProfile) {
-            unsavedPanel.style.display = 'block';
-            editModePanel.style.display = 'none';
-            if (this.controller && this.controller.container)
-              this.controller.container.classList.add('vivideo-edit-mode-active');
+            this.controller.container.classList.add('vivideo-edit-mode-active');
           } else {
-            unsavedPanel.style.display = 'none';
-            editModePanel.style.display = 'block';
-            if (this.controller && this.controller.container)
-              this.controller.container.classList.remove('vivideo-edit-mode-active');
+            this.controller.container.classList.remove('vivideo-edit-mode-active');
           }
         }
       } else {
@@ -1501,20 +1393,14 @@ class ProfileManager {
           this.controller.saveAppState();
         }
 
-        // Show edit-mode opener by default (unless user already entered edit mode)
-        const unsavedPanel = container.querySelector('#unsaved-save-panel');
-        const editModePanel = container.querySelector('#edit-mode-panel');
-        if (unsavedPanel && editModePanel) {
+        // Ensure profile form panel visible; toggle edit-mode active class
+        const profileFormPanel2 = container.querySelector('#profile-form-panel');
+        if (profileFormPanel2) profileFormPanel2.style.display = 'block';
+        if (this.controller && this.controller.container) {
           if (this.isEditingProfile) {
-            unsavedPanel.style.display = 'block';
-            editModePanel.style.display = 'none';
-            if (this.controller && this.controller.container)
-              this.controller.container.classList.add('vivideo-edit-mode-active');
+            this.controller.container.classList.add('vivideo-edit-mode-active');
           } else {
-            unsavedPanel.style.display = 'none';
-            editModePanel.style.display = 'block';
-            if (this.controller && this.controller.container)
-              this.controller.container.classList.remove('vivideo-edit-mode-active');
+            this.controller.container.classList.remove('vivideo-edit-mode-active');
           }
         }
       }
