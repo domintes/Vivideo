@@ -3,13 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vivideo (removed)</title>
+    <title>Vivideo — Save Profile</title>
     <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding:20px }
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding:18px; width:320px }
+      .row { display:flex; gap:8px; align-items:center }
+      input[type=text] { flex:1; padding:8px; border-radius:6px; border:1px solid rgba(0,191,255,0.12); background:rgba(0,0,0,0.04) }
+      button { padding:8px 10px; border-radius:6px; border:1px solid rgba(0,191,255,0.12); background:#0b6fbf; color:#fff; cursor:pointer }
+      button.secondary { background:#4a4a4a }
+      #message { margin-top:10px; font-size:13px }
     </style>
   </head>
   <body>
-    <h3>Vivideo popup removed</h3>
-    <p>The popup UI has been migrated into the Vivideo in-page info panel. The extension icon now toggles the in-page panel directly.</p>
+    <h3 style="margin:0 0 10px 0">Vivideo — Save Profile</h3>
+
+    <div class="row">
+      <input id="profile-name-popup" type="text" placeholder="Profile name" />
+      <button id="save-profile-btn">💾 Save</button>
+    </div>
+
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button id="save-profile-new-btn" class="secondary">Save as New</button>
+      <button id="cancel-btn" class="secondary">Cancel</button>
+    </div>
+
+    <div id="message" role="status" aria-live="polite"></div>
+
+    <script src="popup.js"></script>
   </body>
 </html>
