@@ -131,7 +131,8 @@ class ProfileManager {
     };
     const out = {};
     Object.keys(defaults).forEach((k) => {
-      const v = settings && Object.prototype.hasOwnProperty.call(settings, k) ? settings[k] : undefined;
+      const v =
+        settings && Object.prototype.hasOwnProperty.call(settings, k) ? settings[k] : undefined;
       // Accept numbers only; fall back to default for missing or invalid values
       out[k] = typeof v === 'number' && !Number.isNaN(v) ? v : defaults[k];
     });
@@ -150,7 +151,8 @@ class ProfileManager {
   findProfileByRef(ref) {
     if (!ref) return null;
     // Try user profiles by id first
-    const users = this.controller && Array.isArray(this.controller.profiles) ? this.controller.profiles : [];
+    const users =
+      this.controller && Array.isArray(this.controller.profiles) ? this.controller.profiles : [];
     let idx = users.findIndex((p) => p.id && p.id === ref);
     if (idx !== -1) return { profile: users[idx], profileType: 'user', index: idx };
     // Fallback to user profiles by name
@@ -435,7 +437,8 @@ class ProfileManager {
                   console.log('Vivideo: Profile overwrite (inline):', val);
                   // Ensure we set activeProfile to the profile id when available
                   const existingProfile = this.controller.profiles[existingIndex];
-                  this.controller.settings.activeProfile = existingProfile.id || existingProfile.name;
+                  this.controller.settings.activeProfile =
+                    existingProfile.id || existingProfile.name;
                   this.controller.saveProfiles();
                   this.controller.saveSettings();
                   this.controller.saveAppState();
@@ -464,7 +467,10 @@ class ProfileManager {
                   id: this.generateProfileId(),
                   name: val,
                   profileCategory: 'General',
-                  settings: this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate })
+                  settings: this.sanitizeSettings({
+                    ...currentSettings,
+                    autoActivate: this.controller.settings.autoActivate
+                  })
                 };
                 this.controller.profiles.push(profile);
                 console.log('Vivideo: Profile saved (as new with same name):', val);
@@ -825,7 +831,6 @@ class ProfileManager {
     if (!profileList) return;
 
     profileList.innerHTML = '';
-    
 
     // Połącz profile built-in i user w jedną tablicę
     const allProfiles = [
@@ -844,7 +849,8 @@ class ProfileManager {
     // Renderuj wszystkie profile w jednej liście
     allProfiles.forEach(({ profile, index, profileType }) => {
       const profileItem = document.createElement('div');
-      const baseClass = profileType === 'builtin' ? 'builtin-profile vivideo-default-profile-item' : 'user-profile';
+      const baseClass =
+        profileType === 'builtin' ? 'builtin-profile vivideo-default-profile-item' : 'user-profile';
       profileItem.className = `vivideo-profile-item ${baseClass}`;
       profileItem.setAttribute('data-index', index);
       profileItem.setAttribute('data-type', profileType);
@@ -906,10 +912,16 @@ class ProfileManager {
             return;
           }
           if (profileType === 'builtin') {
-            this.defaultProfiles[index].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+            this.defaultProfiles[index].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
             this.controller.settings.activeProfile = this.defaultProfiles[index].name;
           } else {
-            this.controller.profiles[index].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+            this.controller.profiles[index].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
             const userProfile = this.controller.profiles[index];
             this.controller.settings.activeProfile = userProfile.id || userProfile.name;
             this.controller.saveProfiles();
@@ -1040,8 +1052,8 @@ class ProfileManager {
             console.log('Vivideo: Profile overwritten:', profileName);
 
             // proceed with save flow (same as new profile path)
-                const existing = this.controller.profiles[existingProfileIndex];
-                this.controller.settings.activeProfile = existing.id || existing.name;
+            const existing = this.controller.profiles[existingProfileIndex];
+            this.controller.settings.activeProfile = existing.id || existing.name;
             this.controller.saveProfiles();
             this.controller.saveSettings();
             this.controller.saveAppState();
@@ -1195,7 +1207,10 @@ class ProfileManager {
 
     if (existingIndex !== -1 && existingIndex !== editIndex) {
       // Will overwrite different existing profile - inform user (orange) and overwrite
-      this.controller.profiles[existingIndex].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+      this.controller.profiles[existingIndex].settings = this.sanitizeSettings({
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      });
       this.controller.profiles[existingIndex].profileCategory = profileCategory;
       console.log('Vivideo: Profile overwrite (existing):', name);
       this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
@@ -1205,7 +1220,10 @@ class ProfileManager {
     } else if (editIndex !== null && editIndex >= 0) {
       // Overwrite the profile we're editing
       this.controller.profiles[editIndex].name = name;
-      this.controller.profiles[editIndex].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+      this.controller.profiles[editIndex].settings = this.sanitizeSettings({
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      });
       this.controller.profiles[editIndex].profileCategory = profileCategory;
       console.log('Vivideo: Profile overwrite (edit):', name);
       this.controller.settings.activeProfile = this.controller.profiles[editIndex].id || name;
@@ -1214,13 +1232,24 @@ class ProfileManager {
       const bp = this.defaultProfiles[editBuiltinIndex];
       if (bp) {
         bp.name = name;
-        bp.settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+        bp.settings = this.sanitizeSettings({
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        });
         console.log('Vivideo: Edited built-in profile:', name);
         this.controller.settings.activeProfile = name;
       }
     } else {
       // Create new profile
-      const newProfile = { id: this.generateProfileId(), name, profileCategory, settings: this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate }) };
+      const newProfile = {
+        id: this.generateProfileId(),
+        name,
+        profileCategory,
+        settings: this.sanitizeSettings({
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        })
+      };
       this.controller.profiles.push(newProfile);
       console.log('Vivideo: Profile saved:', name);
       this.controller.settings.activeProfile = newProfile.id;
@@ -1312,7 +1341,9 @@ class ProfileManager {
     }
     // Check user profiles (match by id first, fallback to name)
     else {
-      selectedProfile = this.controller.profiles.find((p) => (p.id && p.id === profileId) || p.name === profileId);
+      selectedProfile = this.controller.profiles.find(
+        (p) => (p.id && p.id === profileId) || p.name === profileId
+      );
 
       // Check default profiles if not found in user profiles
       if (!selectedProfile) {
@@ -1461,7 +1492,8 @@ class ProfileManager {
 
   isProfileModified(settings, profiles) {
     if (settings.activeProfile) {
-      const activeProfile = profiles.find((p) => p.name === settings.activeProfile);
+      const ref = settings.activeProfile;
+      const activeProfile = (profiles || []).find((p) => (p.id && p.id === ref) || p.name === ref);
       if (activeProfile) {
         return !this.profilesMatch(settings, activeProfile.settings);
       }
@@ -1546,7 +1578,15 @@ class ProfileManager {
         const found = current.find((p) => p.name === canon.name);
         if (!found) return false;
         // Compare key settings including speed and brightness
-        const keys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp', 'sharpness', 'speed'];
+        const keys = [
+          'brightness',
+          'contrast',
+          'saturation',
+          'gamma',
+          'colorTemp',
+          'sharpness',
+          'speed'
+        ];
         for (const k of keys) {
           const a = typeof found.settings[k] === 'number' ? found.settings[k] : null;
           const b = typeof canon.settings[k] === 'number' ? canon.settings[k] : null;
@@ -1566,8 +1606,9 @@ class ProfileManager {
       return this.isDefaultProfile(this.controller.settings);
     }
 
+    const ref = this.controller.settings.activeProfile;
     const defaultProfiles = this.defaultProfiles || this.createDefaultProfiles();
-    return defaultProfiles.some((p) => p.name === this.controller.settings.activeProfile);
+    return defaultProfiles.some((p) => (p.id && p.id === ref) || p.name === ref);
   }
 
   isCurrentProfileUser() {
@@ -1575,7 +1616,8 @@ class ProfileManager {
       return false;
     }
 
-    return this.controller.profiles.some((p) => p.name === this.controller.settings.activeProfile);
+    const ref = this.controller.settings.activeProfile;
+    return this.controller.profiles.some((p) => (p.id && p.id === ref) || p.name === ref);
   }
 
   updateActiveProfileDisplay(container, settings) {
@@ -1705,7 +1747,9 @@ class ProfileManager {
     }
 
     // Find current profile index within combined list (support id or name references)
-    let currentIndex = combined.findIndex((p) => this.getProfileRef(p) === this.controller.settings.activeProfile);
+    let currentIndex = combined.findIndex(
+      (p) => this.getProfileRef(p) === this.controller.settings.activeProfile
+    );
     // If activeProfile not set or not found, try locating DEFAULT
     if (currentIndex === -1) {
       currentIndex = combined.findIndex((p) => p.name === 'DEFAULT');
@@ -1747,7 +1791,9 @@ class ProfileManager {
     }
 
     // Find current profile index within combined list (support id or name references)
-    let currentIndex = combined.findIndex((p) => this.getProfileRef(p) === this.controller.settings.activeProfile);
+    let currentIndex = combined.findIndex(
+      (p) => this.getProfileRef(p) === this.controller.settings.activeProfile
+    );
     // If activeProfile not set or not found, try locating DEFAULT
     if (currentIndex === -1) {
       currentIndex = combined.findIndex((p) => p.name === 'DEFAULT');

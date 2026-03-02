@@ -432,7 +432,9 @@ if (window !== window.top) {
       }
 
       // Set checkbox state based on applyProfileSpeed setting
-      const applyProfileSpeedCheckbox = this.container.querySelector('#apply-profile-speed-checkbox');
+      const applyProfileSpeedCheckbox = this.container.querySelector(
+        '#apply-profile-speed-checkbox'
+      );
       if (applyProfileSpeedCheckbox) {
         applyProfileSpeedCheckbox.checked = !!this.profileManager.applyProfileSpeed;
       }
@@ -1182,8 +1184,20 @@ if (window !== window.top) {
               'speed'
             ];
             keys.forEach((k) => {
-              const v = sanitized && Object.prototype.hasOwnProperty.call(sanitized, k) ? sanitized[k] : undefined;
-              sanitized[k] = typeof v === 'number' && !Number.isNaN(v) ? v : defaults[k] !== undefined ? defaults[k] : k === 'gamma' ? 1 : k === 'speed' ? 1.0 : 0;
+              const v =
+                sanitized && Object.prototype.hasOwnProperty.call(sanitized, k)
+                  ? sanitized[k]
+                  : undefined;
+              sanitized[k] =
+                typeof v === 'number' && !Number.isNaN(v)
+                  ? v
+                  : defaults[k] !== undefined
+                    ? defaults[k]
+                    : k === 'gamma'
+                      ? 1
+                      : k === 'speed'
+                        ? 1.0
+                        : 0;
             });
           }
           Object.keys(sanitized).forEach((key) => {
@@ -1208,7 +1222,10 @@ if (window !== window.top) {
             this.speedController.applySpeedToAllVideos(this.settings.speed);
           } else {
             // Apply currently-set controller speed to videos (do not override from profile)
-            const current = this.speedController.currentSpeed !== undefined ? this.speedController.currentSpeed : this.settings.speed || 1.0;
+            const current =
+              this.speedController.currentSpeed !== undefined
+                ? this.speedController.currentSpeed
+                : this.settings.speed || 1.0;
             this.speedController.applySpeedToAllVideos(current);
           }
         }
@@ -1463,7 +1480,9 @@ if (window !== window.top) {
           this.settings.activeProfile !== 'DEFAULT'
         ) {
           const idx = this.profiles.findIndex(
-            (p) => (p.id && p.id === this.settings.activeProfile) || p.name === this.settings.activeProfile
+            (p) =>
+              (p.id && p.id === this.settings.activeProfile) ||
+              p.name === this.settings.activeProfile
           );
           if (idx !== -1) {
             // Copy only relevant visual settings into profile
@@ -1476,7 +1495,32 @@ if (window !== window.top) {
               sharpness: this.settings.sharpness,
               speed: this.settings.speed
             };
-            this.profiles[idx].settings = profileSettings;
+            // Sanitize settings before persisting
+            let sanitized = profileSettings;
+            if (this.profileManager && typeof this.profileManager.sanitizeSettings === 'function') {
+              sanitized = this.profileManager.sanitizeSettings(profileSettings);
+            } else {
+              // Fallback sanitization
+              const defaults = this.defaultSettings || {
+                brightness: 0,
+                contrast: 0,
+                saturation: 0,
+                gamma: 1,
+                colorTemp: 0,
+                sharpness: 0,
+                speed: 1.0
+              };
+              sanitized = {};
+              Object.keys(defaults).forEach((k) => {
+                const v =
+                  profileSettings && Object.prototype.hasOwnProperty.call(profileSettings, k)
+                    ? profileSettings[k]
+                    : undefined;
+                sanitized[k] = typeof v === 'number' && !Number.isNaN(v) ? v : defaults[k];
+              });
+            }
+
+            this.profiles[idx].settings = sanitized;
             await StorageUtils.saveProfiles(this.profiles);
           }
         }
