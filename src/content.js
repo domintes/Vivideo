@@ -1256,6 +1256,14 @@ if (window !== window.top) {
       this.profiles.splice(index, 1);
       this.saveProfiles();
       this.updateProfilesList();
+      // Refresh duplicate warnings / active profile display after deletion so UI updates immediately
+      if (this.profileManager && typeof this.profileManager.updateActiveProfileDisplay === 'function') {
+        try {
+          this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
+        } catch (e) {
+          console.warn('Vivideo: updateActiveProfileDisplay after delete failed', e);
+        }
+      }
     }
 
     // Theme methods

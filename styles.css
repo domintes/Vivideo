@@ -1435,6 +1435,13 @@ video:-ms-fullscreen .vivideo-container {
   font-size: 12px;
 }
 
+/* Error variant for duplicate warning when shown as an error */
+.vivideo-duplicate-warning.vivideo-duplicate-error {
+  background: #fff0f0;
+  border-left-color: #ff4d4f;
+  color: #8b1e1e;
+}
+
 /* Inline actions shown under the compact profile form input */
 .profile-inline-actions {
   display: flex;

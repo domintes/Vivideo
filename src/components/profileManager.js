@@ -396,112 +396,107 @@ class ProfileManager {
           return;
         }
 
-        const exists = this.controller.profiles.some((p) => p.name === val);
+        const currentSettings = {
+          brightness: this.controller.settings.brightness,
+          contrast: this.controller.settings.contrast,
+          saturation: this.controller.settings.saturation,
+          gamma: this.controller.settings.gamma,
+          colorTemp: this.controller.settings.colorTemp,
+          sharpness: this.controller.settings.sharpness,
+          speed: this.controller.settings.speed
+        };
 
-        // Remove inline actions if value changed to a non-conflicting name
-        if (!exists && inline) {
-          inline.remove();
-          inline = null;
-          // restore main save button visibility when inline removed
-          if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
-        }
+        const existingIndex = this.controller.profiles.findIndex((p) => p.name === val);
+        const defaultNameExists = (this.defaultProfiles || []).some((p) => p.name === val);
+        const matchesBySettings = this.findAllMatchingProfiles(currentSettings) || [];
+        const duplicateByName = val.length > 0 && (existingIndex !== -1 || defaultNameExists);
+        const duplicateBySettings = matchesBySettings.length > 0;
 
-        if (exists && val.length > 0) {
-          // Show inline overwrite / save-as-new actions under the input
-          this.updateActiveStatus(`You will overwrite ${val}`, '#bb531e');
-          if (!inline && grid) {
-            inline = document.createElement('div');
-            inline.id = inlineId;
-            inline.className = 'profile-inline-actions';
-            inline.innerHTML = `
-              <button id="profile-overwrite-btn" class="vivideo-profile-save vivideo-btn vivideo-inline-action">Overwrite</button>
-              <button id="profile-save-new-btn" class="vivideo-profile-save vivideo-btn vivideo-inline-action">Save as new</button>
-            `;
-            grid.appendChild(inline);
-            // hide the main quick-save button while inline actions are shown
-            if (profileFormSaveBtn) profileFormSaveBtn.style.display = 'none';
+        // If there are duplicate names or settings, show the duplicate warning and block quick-save
+        if ((duplicateByName || duplicateBySettings) && val.length > 0) {
+          // Build friendly message
+          if (duplicateByName && existingIndex !== -1) {
+            this.showDuplicateWarning(
+              container,
+              `A profile named "${val}" already exists. Use Overwrite to replace it.`,
+              'warning'
+            );
+          } else if (duplicateBySettings) {
+            const namesText = matchesBySettings
+              .map((m) => (m.profile && m.profile.name) || '')
+              .filter(Boolean)
+              .join(', ');
+            this.showDuplicateWarning(
+              container,
+              `A profile with identical settings already exists: ${namesText}`,
+              'warning'
+            );
+          }
 
-            const overwriteBtn = inline.querySelector('#profile-overwrite-btn');
-            const saveNewBtn = inline.querySelector('#profile-save-new-btn');
+          // Show inline Overwrite if name conflict points to a specific user profile
+          if (duplicateByName && existingIndex !== -1 && grid) {
+            if (!inline) {
+              inline = document.createElement('div');
+              inline.id = inlineId;
+              inline.className = 'profile-inline-actions';
+              inline.innerHTML = `
+                <button id="profile-overwrite-btn" class="vivideo-profile-save vivideo-btn vivideo-inline-action">Overwrite</button>
+              `;
+              grid.appendChild(inline);
+              // hide the main quick-save button while inline actions are shown
+              if (profileFormSaveBtn) profileFormSaveBtn.style.display = 'none';
 
-            // Overwrite existing profile with current settings
-            if (overwriteBtn) {
-              overwriteBtn.onclick = (ev) => {
-                ev.preventDefault();
-                const currentSettings = {
-                  brightness: this.controller.settings.brightness,
-                  contrast: this.controller.settings.contrast,
-                  saturation: this.controller.settings.saturation,
-                  gamma: this.controller.settings.gamma,
-                  colorTemp: this.controller.settings.colorTemp,
-                  sharpness: this.controller.settings.sharpness,
-                  speed: this.controller.settings.speed
+              const overwriteBtn = inline.querySelector('#profile-overwrite-btn');
+              if (overwriteBtn) {
+                overwriteBtn.onclick = (ev) => {
+                  ev.preventDefault();
+                  const existingIndex2 = this.controller.profiles.findIndex((p) => p.name === val);
+                  if (existingIndex2 !== -1) {
+                    this.controller.profiles[existingIndex2].settings = this.sanitizeSettings({
+                      ...currentSettings,
+                      autoActivate: this.controller.settings.autoActivate
+                    });
+                    this.controller.profiles[existingIndex2].profileCategory = 'General';
+                    console.log('Vivideo: Profile overwrite (inline):', val);
+                    const existingProfile = this.controller.profiles[existingIndex2];
+                    this.controller.settings.activeProfile = existingProfile.id || existingProfile.name;
+                    this.controller.saveProfiles();
+                    this.controller.saveSettings();
+                    this.controller.saveAppState();
+                    this.updateProfilesList(container);
+                    this.updateActiveProfileDisplay(container, this.controller.settings);
+                    this.updateActiveStatus('Saved', '');
+                  }
+                  if (inline) {
+                    inline.remove();
+                    if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
+                  }
                 };
-                const existingIndex = this.controller.profiles.findIndex((p) => p.name === val);
-                if (existingIndex !== -1) {
-                  this.controller.profiles[existingIndex].settings = this.sanitizeSettings({
-                    ...currentSettings,
-                    autoActivate: this.controller.settings.autoActivate
-                  });
-                  this.controller.profiles[existingIndex].profileCategory = 'General';
-                  console.log('Vivideo: Profile overwrite (inline):', val);
-                  // Ensure we set activeProfile to the profile id when available
-                  const existingProfile = this.controller.profiles[existingIndex];
-                  this.controller.settings.activeProfile = existingProfile.id || existingProfile.name;
-                  this.controller.saveProfiles();
-                  this.controller.saveSettings();
-                  this.controller.saveAppState();
-                  this.updateProfilesList(container);
-                  this.updateActiveProfileDisplay(container, this.controller.settings);
-                  this.updateActiveStatus('Saved', '');
-                }
-                if (inline) {
-                  inline.remove();
-                  if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
-                }
-              };
+              }
             }
-
-            // Save a new profile with the same name (distinct id)
-            if (saveNewBtn) {
-              saveNewBtn.onclick = (ev) => {
-                ev.preventDefault();
-                const currentSettings = {
-                  brightness: this.controller.settings.brightness,
-                  contrast: this.controller.settings.contrast,
-                  saturation: this.controller.settings.saturation,
-                  gamma: this.controller.settings.gamma,
-                  colorTemp: this.controller.settings.colorTemp,
-                  sharpness: this.controller.settings.sharpness,
-                  speed: this.controller.settings.speed
-                };
-                const profile = {
-                  id: this.generateProfileId(),
-                  name: val,
-                  profileCategory: 'General',
-                  settings: this.sanitizeSettings({
-                    ...currentSettings,
-                    autoActivate: this.controller.settings.autoActivate
-                  })
-                };
-                this.controller.profiles.push(profile);
-                console.log('Vivideo: Profile saved (as new with same name):', val);
-                // Use the generated id as the active profile reference
-                this.controller.settings.activeProfile = profile.id;
-                this.controller.saveProfiles();
-                this.controller.saveSettings();
-                this.controller.saveAppState();
-                this.updateProfilesList(container);
-                this.updateActiveProfileDisplay(container, this.controller.settings);
-                this.updateActiveStatus('Saved', '');
-                if (inline) {
-                  inline.remove();
-                  if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
-                }
-              };
+          } else {
+            // Remove inline if it exists but there's no clear name conflict to overwrite
+            if (inline) {
+              inline.remove();
+              inline = null;
+              if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
             }
           }
+
+          // Always disable the main quick-save button to prevent creating a duplicate
+          if (profileFormSaveBtn) profileFormSaveBtn.disabled = true;
           return;
+        }
+
+        // No duplicates detected - clear any warnings and restore main save
+        this.clearDuplicateWarning(container);
+        if (inline) {
+          inline.remove();
+          inline = null;
+        }
+        if (profileFormSaveBtn) {
+          profileFormSaveBtn.style.display = '';
+          profileFormSaveBtn.disabled = false;
         }
 
         this.updateActiveStatus('EDITING', '');
@@ -525,6 +520,12 @@ class ProfileManager {
               if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
             }
           } catch {
+            // ignore
+          }
+          // Clear any duplicate warning messages when cancelling
+          try {
+            this.clearDuplicateWarning(container);
+          } catch (e) {
             // ignore
           }
 
@@ -560,13 +561,34 @@ class ProfileManager {
           if (saveIcon) saveIcon.textContent = '💾';
           saveBtn.classList.remove('overwrite');
         }
-        // Dynamic validation for max length and duplicate warning
+
+        // Dynamic validation for max length and duplicate detection (name or settings)
+        const matchesBySettings = this.findAllMatchingProfiles(this.controller.settings) || [];
+        const duplicateBySettings = matchesBySettings.length > 0;
+        const defaultNameExists = (this.defaultProfiles || []).some((p) => p.name === name);
+        const duplicateByName = name.length > 0 && (exists || defaultNameExists);
+        const editingIndex =
+          saveBtn && saveBtn.dataset && typeof saveBtn.dataset.editIndex !== 'undefined'
+            ? parseInt(saveBtn.dataset.editIndex)
+            : null;
+
         if (e.target.value.length > 50) {
           this.updateActiveStatus('Profile name cannot exceed 50 characters', '#ff4d4f');
-        } else if (exists && name.length > 0) {
-          this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
+        } else if (!editingIndex && (duplicateByName || duplicateBySettings)) {
+          // Block creating a new profile when there's a name or settings conflict
+          saveBtn.disabled = true;
+          if (duplicateByName) {
+            this.showDuplicateWarning(container, `A profile named \"${name}\" already exists.`, 'warning');
+            this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
+          } else if (duplicateBySettings) {
+            const namesText = matchesBySettings.map((m) => (m.profile && m.profile.name) || '').filter(Boolean).join(', ');
+            this.showDuplicateWarning(container, `A profile with identical settings already exists: ${namesText}`, 'warning');
+            this.updateActiveStatus('Duplicate profile settings detected', '#bb531e');
+          }
         } else {
-          // clear visible validation only if safe
+          // No blocking duplicates detected
+          saveBtn.disabled = false;
+          this.clearDuplicateWarning(container);
           this.updateActiveStatus('EDITING', '');
         }
       });
@@ -1057,6 +1079,12 @@ class ProfileManager {
           if (profileType === 'builtin') {
             this.defaultProfiles.splice(index, 1);
             this.updateProfilesList(this.controller.container);
+            // Refresh duplicate warnings / active profile display after deletion
+            try {
+              this.updateActiveProfileDisplay(this.controller.container, this.controller.settings);
+            } catch (err) {
+              console.warn('Vivideo: updateActiveProfileDisplay after builtin delete failed', err);
+            }
           } else {
             this.controller.deleteProfile(index);
           }
@@ -1145,6 +1173,20 @@ class ProfileManager {
 
     // Check if profile name already exists
     const existingProfileIndex = this.controller.profiles.findIndex((p) => p.name === profileName);
+    // Determine if this save is editing an existing profile (main save button markers)
+    const editIndexMain =
+      mainSaveBtn && mainSaveBtn.dataset && typeof mainSaveBtn.dataset.editIndex !== 'undefined'
+        ? parseInt(mainSaveBtn.dataset.editIndex)
+        : null;
+
+    // Check for duplicate settings (prevent creating a new profile that matches existing settings)
+    const matchingBySettings = this.findAllMatchingProfiles(currentSettings) || [];
+    if (editIndexMain === null && matchingBySettings.length > 0) {
+      const namesText = matchingBySettings.map((m) => (m.profile && m.profile.name) || '').filter(Boolean).join(', ');
+      this.showDuplicateWarning(container, `Cannot create profile: a profile with identical settings already exists: ${namesText}`, 'error');
+      this.updateActiveStatus('Duplicate profile settings', '#ff4d4f');
+      return;
+    }
     // Check if main save button indicates editing a built-in
     const mainSaveBtn = container.querySelector('#save-profile');
     const editBuiltinIndexMain =
@@ -1155,6 +1197,8 @@ class ProfileManager {
         : null;
     const editTypeMain = mainSaveBtn && mainSaveBtn.dataset ? mainSaveBtn.dataset.editType : null;
     if (existingProfileIndex !== -1) {
+      // Show duplicate error in the duplicate warning area and ask user to confirm overwrite
+      this.showDuplicateWarning(container, `A profile named "${profileName}" already exists. Confirm overwrite to proceed.`, 'error');
       // Ask user to confirm overwrite
       this.showOverwriteModal(
         profileName,
@@ -1320,6 +1364,26 @@ class ProfileManager {
 
     // Check duplicate name
     const existingIndex = this.controller.profiles.findIndex((p) => p.name === name);
+
+    // Check for duplicates by settings
+    const matchingBySettings = this.findAllMatchingProfiles(currentSettings) || [];
+
+    // If trying to create a new profile (not editing) and a name or settings duplicate exists, block and show an error
+    const isEditingExisting = editIndex !== null && editIndex >= 0;
+    if (!isEditingExisting && existingIndex !== -1) {
+      // Name collision - refuse to create and show error in duplicate warning
+      this.showDuplicateWarning(container, `Cannot create profile: a profile named "${name}" already exists. Use Overwrite to replace it.`, 'error');
+      this.updateActiveStatus('Duplicate profile name', '#ff4d4f');
+      return;
+    }
+
+    if (!isEditingExisting && matchingBySettings.length > 0) {
+      // Settings collision - refuse to create and show error
+      const namesText = matchingBySettings.map((m) => (m.profile && m.profile.name) || '').filter(Boolean).join(', ');
+      this.showDuplicateWarning(container, `Cannot create profile: a profile with identical settings already exists: ${namesText}`, 'error');
+      this.updateActiveStatus('Duplicate profile settings', '#ff4d4f');
+      return;
+    }
 
     if (existingIndex !== -1 && existingIndex !== editIndex) {
       // Will overwrite different existing profile - inform user (orange) and overwrite
@@ -1597,6 +1661,45 @@ class ProfileManager {
       }
     } catch (e) {
       console.warn('Vivideo: updateActiveStatus failed', e);
+    }
+  }
+
+  // Show or update the duplicate warning element under the compact profile form
+  showDuplicateWarning(container, message, severity = 'warning') {
+    try {
+      const profileForm =
+        container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
+      if (!profileForm) return;
+      let dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
+      if (!dupEl) {
+        dupEl = document.createElement('div');
+        dupEl.id = 'vivideo-duplicate-warning';
+        dupEl.className = 'vivideo-duplicate-warning';
+        const header = profileForm.querySelector('.vivideo-box-header');
+        if (header && header.parentNode) header.parentNode.insertBefore(dupEl, header.nextSibling);
+        else profileForm.insertBefore(dupEl, profileForm.firstChild);
+      }
+      dupEl.textContent = message || '';
+      // Toggle error class
+      if (severity === 'error') {
+        dupEl.classList.add('vivideo-duplicate-error');
+      } else {
+        dupEl.classList.remove('vivideo-duplicate-error');
+      }
+    } catch (e) {
+      console.warn('Vivideo: showDuplicateWarning failed', e);
+    }
+  }
+
+  clearDuplicateWarning(container) {
+    try {
+      const profileForm =
+        container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
+      if (!profileForm) return;
+      const dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
+      if (dupEl) dupEl.remove();
+    } catch (e) {
+      console.warn('Vivideo: clearDuplicateWarning failed', e);
     }
   }
 
