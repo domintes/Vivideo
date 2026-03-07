@@ -10,6 +10,7 @@ class SpeedController {
     this.overwritePlayerSpeed = true; // when true, Vivideo will actively set player playbackRate when Vivideo speed changes
     this.speedObservers = new WeakMap(); // Track speed observers for each video
     this.videoSpeedMap = new WeakMap(); // Track current speed for each video
+    this.isAdjusting = false; // true while user is dragging the UI slider
   }
 
   // Initialize speed controller
@@ -72,6 +73,8 @@ class SpeedController {
 
   // Sync controller with actual video speeds
   syncWithVideoSpeeds() {
+    // If user is currently adjusting the slider, avoid syncing from video elements
+    if (this.isAdjusting) return;
     const videos = this.controller.filterEngine.findVideos();
     if (videos.length === 0) return;
 
@@ -290,6 +293,7 @@ class SpeedController {
 
     const rateChangeHandler = () => {
       // Detect when video speed changes externally
+      if (this.isAdjusting) return;
       const videoSpeed = this.detectCurrentSpeed(video);
       if (Math.abs(videoSpeed - this.currentSpeed) > 0.01) {
         console.log(`Vivideo SpeedController: External speed change detected: ${videoSpeed}x`);
@@ -350,17 +354,7 @@ class SpeedController {
           <span class="vivideo-label">Video Speed</span>
           <span class="vivideo-speed-value">${this.currentSpeed.toFixed(2)}x</span>
         </div>
-        
-        <div class="vivideo-speed-slider-container">
-          <input 
-            type="range" 
-            class="vivideo-speed-slider" 
-            min="0.05" 
-            max="25" 
-            step="0.05" 
-            value="${this.currentSpeed}"
-          >
-        </div>
+        <!-- Slider moved into the main Controls section; buttons/options remain here -->
         
         <div class="vivideo-speed-buttons-block">
           <button class="vivideo-speed-button speed-decrease" data-change="-0.5">-0.50x</button>
@@ -390,12 +384,27 @@ class SpeedController {
   // Bind events to speed control UI
   bindSpeedControlEvents(container) {
     const slider = container.querySelector('.vivideo-speed-slider');
-    const valueDisplay = container.querySelector('.vivideo-speed-value');
+    const valueDisplay = container.querySelector('#speed-value') || container.querySelector('.vivideo-speed-value');
     const speedButtons = container.querySelectorAll('.vivideo-speed-button');
     const autoSpeedCheckbox = container.querySelector('.vivideo-auto-speed-checkbox');
 
-    // Slider events
+    // Slider events (slider may be rendered inside main controls section)
     if (slider) {
+      const startAdjust = () => {
+        this.isAdjusting = true;
+      };
+
+      const finishAdjust = () => {
+        // small debounce so UI settles before re-enabling external sync
+        setTimeout(() => {
+          this.isAdjusting = false;
+        }, 150);
+      };
+
+      slider.addEventListener('pointerdown', startAdjust);
+      slider.addEventListener('mousedown', startAdjust);
+      slider.addEventListener('touchstart', startAdjust, { passive: true });
+
       slider.addEventListener('input', (e) => {
         const speed = parseFloat(e.target.value);
         this.setSpeed(speed);
@@ -403,6 +412,11 @@ class SpeedController {
           valueDisplay.textContent = `${speed.toFixed(2)}x`;
         }
       });
+
+      slider.addEventListener('pointerup', finishAdjust);
+      slider.addEventListener('mouseup', finishAdjust);
+      slider.addEventListener('touchend', finishAdjust);
+      slider.addEventListener('change', finishAdjust);
     }
 
     // Speed control button events
@@ -421,7 +435,7 @@ class SpeedController {
 
         if (newSpeed) {
           this.setSpeed(newSpeed);
-          if (slider) {
+          if (slider && !this.isAdjusting) {
             slider.value = newSpeed;
           }
           if (valueDisplay) {
@@ -457,10 +471,11 @@ class SpeedController {
     if (!container) return;
 
     const slider = container.querySelector('.vivideo-speed-slider');
-    const valueDisplay = container.querySelector('.vivideo-speed-value');
+    const valueDisplay = container.querySelector('#speed-value') || container.querySelector('.vivideo-speed-value');
     const autoSpeedCheckbox = container.querySelector('.vivideo-auto-speed-checkbox');
 
-    if (slider) {
+    // Only update slider value when user is not actively adjusting it
+    if (slider && !this.isAdjusting) {
       slider.value = this.currentSpeed;
     }
 

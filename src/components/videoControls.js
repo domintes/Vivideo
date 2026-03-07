@@ -131,13 +131,28 @@ class VideoControls {
           <span class="vivideo-value" id="video-quality-value">Balanced</span>
         </div>
         <div class="vivideo-slider-container">
-          <span>Soft</span>
+          <span>◄</span>
           <input type="range" class="vivideo-slider" id="video-quality-slider" 
                  min="0" max="100" value="${videoQualityLevel}" step="1">
-          <span>Detail</span>
+          <span>►</span>
           <input type="text" class="vivideo-input" id="video-quality-input" 
                  placeholder="50" maxlength="3">
           <button class="vivideo-reset-single" data-control="targetedQualityLevel" title="Reset targeted quality">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Video Speed</span>
+          <span class="vivideo-value" id="speed-value">1.00x</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider vivideo-speed-slider" id="speed-slider"
+                 min="0.05" max="25" value="${this.controller.settings.speed || 1.0}" step="0.05">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="speed-input" placeholder="1.00" maxlength="5">
+          <button class="vivideo-reset-single" data-control="speed" title="Reset speed">↺</button>
         </div>
       </div>
 
@@ -190,6 +205,18 @@ class VideoControls {
         this.controller.updateControl('targetedQualityLevel', clamped);
         if (videoQualitySlider) videoQualitySlider.value = clamped;
         if (videoQualityValue) videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+      });
+    }
+
+    // Speed input binding (the slider itself is handled by SpeedController)
+    const speedInput = container.querySelector('#speed-input');
+    if (speedInput) {
+      speedInput.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (!isNaN(v)) {
+          // Use controller.updateControl so speed is applied consistently
+          this.controller.updateControl('speed', v);
+        }
       });
     }
 

@@ -391,8 +391,8 @@ class ProfileManager {
         const inlineId = 'profile-inline-actions';
         let inline = panel ? panel.querySelector(`#${inlineId}`) : null;
 
-        if (val.length > 16) {
-          this.updateActiveStatus('Profile name cannot exceed 16 characters', '#ff4d4f');
+        if (val.length > 50) {
+          this.updateActiveStatus('Profile name cannot exceed 50 characters', '#ff4d4f');
           return;
         }
 
@@ -524,7 +524,7 @@ class ProfileManager {
               inline.remove();
               if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
             }
-          } catch (e) {
+          } catch {
             // ignore
           }
 
@@ -561,8 +561,8 @@ class ProfileManager {
           saveBtn.classList.remove('overwrite');
         }
         // Dynamic validation for max length and duplicate warning
-        if (e.target.value.length > 16) {
-          this.updateActiveStatus('Profile name cannot exceed 16 characters', '#ff4d4f');
+        if (e.target.value.length > 50) {
+          this.updateActiveStatus('Profile name cannot exceed 50 characters', '#ff4d4f');
         } else if (exists && name.length > 0) {
           this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
         } else {
@@ -1296,8 +1296,8 @@ class ProfileManager {
     }
 
     // Trim name if too long
-    if (name.length > 16) {
-      this.updateActiveStatus('Profile name cannot exceed 16 characters', '#ff4d4f');
+    if (name.length > 50) {
+      this.updateActiveStatus('Profile name cannot exceed 50 characters', '#ff4d4f');
       return;
     }
 
@@ -1558,7 +1558,7 @@ class ProfileManager {
   // Validate profile name; return {valid,msg}
   validateProfileName(name) {
     if (!name || name.length === 0) return { valid: false, msg: 'Profile name is required' };
-    if (name.length > 16) return { valid: false, msg: 'Profile name cannot exceed 16 characters' };
+    if (name.length > 50) return { valid: false, msg: 'Profile name cannot exceed 50 characters' };
     return { valid: true };
   }
 
@@ -1816,10 +1816,7 @@ class ProfileManager {
         if (matches.length > 1) {
           const namesText = names.join(', ');
           // Prefer to show the warning under the compact profile form header if available
-          const profileForm =
-            container.querySelector(
-              '.vivideo-profile-form.vivideo-profile-form-compact'
-            );
+          const profileForm = container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
           if (profileForm) {
             let dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
             if (!dupEl) {
@@ -1848,10 +1845,7 @@ class ProfileManager {
           }
         } else {
           // Remove duplicate warning if present from profile form or controls section
-          const profileForm =
-            container.querySelector(
-              '.vivideo-profile-form.vivideo-profile-form-compact'
-            );
+          const profileForm = container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
           if (profileForm) {
             const dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
             if (dupEl) dupEl.remove();
