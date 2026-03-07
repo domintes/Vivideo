@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 // Popup script for Vivideo
 document.addEventListener('DOMContentLoaded', function () {
   const openPanelBtn = document.getElementById('open-panel-btn');
@@ -81,7 +80,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Notify content script to update in-page UI
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
               if (tabs && tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, { action: 'profile-saved', profile: newProfile, overwrite: true });
+                chrome.tabs.sendMessage(tabs[0].id, {
+                  action: 'profile-saved',
+                  profile: newProfile,
+                  overwrite: true
+                });
               }
             });
           });
@@ -94,7 +97,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Notify content script to update in-page UI
             chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
               if (tabs && tabs[0]) {
-                chrome.tabs.sendMessage(tabs[0].id, { action: 'profile-saved', profile: newProfile, overwrite: false });
+                chrome.tabs.sendMessage(tabs[0].id, {
+                  action: 'profile-saved',
+                  profile: newProfile,
+                  overwrite: false
+                });
               }
             });
           });
@@ -216,10 +223,7 @@ document.addEventListener('DOMContentLoaded', function () {
       await importSettings(importData);
 
       const profilesCount = importData.profiles ? importData.profiles.length : 0;
-      showMessage(
-        `Settings imported successfully! Imported ${profilesCount} profiles.`,
-        'success'
-      );
+      showMessage(`Settings imported successfully! Imported ${profilesCount} profiles.`, 'success');
 
       // Clear file input
       importFile.value = '';
@@ -365,8 +369,3 @@ function checkVideos() {
 
   return videoCount;
 }
-=======
-// Popup script removed — popup functionality migrated to the in-page Vivideo info panel.
-// This file intentionally left minimal so the repository keeps a stub.
-console.log('Vivideo: popup.js is unused; functionality moved to in-page info panel');
->>>>>>> origin/dev

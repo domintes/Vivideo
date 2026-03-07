@@ -312,14 +312,14 @@ class VideoControls {
           }
         });
 
-    // Auto-save profiles switch
-    const autoSaveSwitch = container.querySelector('#auto-save-profiles-switch');
-    if (autoSaveSwitch) {
-      autoSaveSwitch.addEventListener('change', (e) => {
-        this.controller.settings.autoSaveProfiles = e.target.checked;
-        this.controller.saveSettings();
-      });
-    }
+        // Auto-save profiles switch
+        const autoSaveSwitch = container.querySelector('#auto-save-profiles-switch');
+        if (autoSaveSwitch) {
+          autoSaveSwitch.addEventListener('change', (e) => {
+            this.controller.settings.autoSaveProfiles = e.target.checked;
+            this.controller.saveSettings();
+          });
+        }
       }
 
       input.addEventListener('keypress', (e) => {

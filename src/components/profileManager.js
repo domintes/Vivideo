@@ -839,7 +839,10 @@ class ProfileManager {
       console.log('Vivideo: Auto-saved profile:', activeName);
     } else {
       // If active profile doesn't exist in users list, create it
-      this.controller.profiles.push({ name: activeName, settings: { ...currentSettings, autoActivate: this.controller.settings.autoActivate } });
+      this.controller.profiles.push({
+        name: activeName,
+        settings: { ...currentSettings, autoActivate: this.controller.settings.autoActivate }
+      });
       console.log('Vivideo: Auto-saved new profile:', activeName);
     }
 
@@ -1569,8 +1572,6 @@ class ProfileManager {
       this.updateProfilesList(container);
       this.updateActiveProfileDisplay(container, this.controller.settings);
     }
-  }
-
   }
 
   editProfile(index) {

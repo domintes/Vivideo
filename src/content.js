@@ -42,10 +42,8 @@ if (window !== window.top) {
         speedStep: 0.25, // Configurable speed increment/decrement
         autoApplyPreviousSpeed: false,
         overwritePlayerSpeed: true, // New: when enabled Vivideo will overwrite website player speed when user changes speed here
-        autoSaveProfiles: false,     // New: autosave active profile when settings change
+        autoSaveProfiles: false, // New: autosave active profile when settings change
         autoActivate: true,
-        overwritePlayerSpeed: true,
-        autoSaveProfiles: false,
         workOnImagesActivate: true,
         activeProfile: null,
         extendedLimits: true,
@@ -185,12 +183,10 @@ if (window !== window.top) {
 
       this.createUI();
       this.bindEvents();
-      
       // Initialize speed controller BEFORE observing videos
       if (this.speedController) {
         this.speedController.init();
       }
-      
       this.observeVideos();
 
       if (this.themeManager) {
@@ -867,7 +863,7 @@ if (window !== window.top) {
 
       // Additional periodic check for dynamically loaded content (more aggressive)
       this.startPeriodicMediaCheck();
-      
+
       // Mark that observer is active
       this.videoObserverActive = true;
     }
@@ -875,7 +871,7 @@ if (window !== window.top) {
     startPeriodicMediaCheck() {
       // Use faster interval when autoActivate is enabled (1 second instead of 3)
       const checkInterval = this.settings.autoActivate ? 1000 : 3000;
-      
+
       // Check periodically for new media elements that might have been missed
       this.periodicCheckInterval = setInterval(() => {
         if (this.settings.autoActivate) {
@@ -892,7 +888,7 @@ if (window !== window.top) {
           });
 
           if (needsReapply) {
-            console.log(`Vivideo: Periodic check found ${unprocessedCount} unprocessed video(s), reapplying filters`);
+            console.log(`Periodic check found ${unprocessedCount} unprocessed videos, reapplying`);
             this.applyFilters();
 
             // Apply speed
@@ -911,7 +907,7 @@ if (window !== window.top) {
                 }
               });
             }
-            
+
             // Attach play listeners to new videos
             if (this.filterEngine && typeof this.filterEngine.attachPlayListeners === 'function') {
               this.filterEngine.attachPlayListeners();
@@ -1737,11 +1733,12 @@ if (window !== window.top) {
     if (request.action === 'profile-saved' && request.profile) {
       try {
         const profile = request.profile;
-        const overwrite = !!request.overwrite;
 
         if (window.vivideoController) {
           // Update or add profile in controller.profiles
-          const existingIndex = window.vivideoController.profiles.findIndex((p) => p.name === profile.name);
+          const existingIndex = window.vivideoController.profiles.findIndex(
+            (p) => p.name === profile.name
+          );
           if (existingIndex >= 0) {
             window.vivideoController.profiles[existingIndex] = profile;
           } else {

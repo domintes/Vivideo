@@ -453,10 +453,10 @@ class SpeedController {
       });
     });
 
-    // Overwrite player speed switch
-    const overwriteSwitch = container.querySelector('#overwrite-player-speed-switch');
-    if (overwriteSwitch) {
-      overwriteSwitch.addEventListener('change', (e) => {
+    // Overwrite player speed switch (separate UI element)
+    const overwritePlayerSpeedSwitch = container.querySelector('#overwrite-player-speed-switch');
+    if (overwritePlayerSpeedSwitch) {
+      overwritePlayerSpeedSwitch.addEventListener('change', (e) => {
         this.setOverwritePlayerSpeed(e.target.checked);
       });
     }
@@ -469,10 +469,10 @@ class SpeedController {
       });
     }
 
-    // Overwrite player speed switch
-    const overwriteSwitch = container.querySelector('#overwrite-player-speed');
-    if (overwriteSwitch) {
-      overwriteSwitch.addEventListener('change', (e) => {
+    // Overwrite player speed checkbox
+    const overwritePlayerSpeedCheckbox = container.querySelector('#overwrite-player-speed');
+    if (overwritePlayerSpeedCheckbox) {
+      overwritePlayerSpeedCheckbox.addEventListener('change', (e) => {
         this.overwritePlayerSpeed = !!e.target.checked;
         this.saveSpeedSettings();
         console.log(
