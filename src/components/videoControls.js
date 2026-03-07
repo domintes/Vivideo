@@ -7,8 +7,29 @@ class VideoControls {
   }
 
   createControlsHTML() {
+    const limits = {
+      brightness: UIHelper.getControlLimits('brightness', this.controller.settings.extendedLimits),
+      contrast: UIHelper.getControlLimits('contrast', this.controller.settings.extendedLimits),
+      saturation: UIHelper.getControlLimits('saturation', this.controller.settings.extendedLimits),
+      gamma: UIHelper.getControlLimits('gamma', this.controller.settings.extendedLimits),
+      colortemp: UIHelper.getControlLimits('colortemp', this.controller.settings.extendedLimits),
+      sharpness: UIHelper.getControlLimits('sharpness', this.controller.settings.extendedLimits)
+    };
+
+    const inputMaxLength = this.controller.settings.extendedLimits ? '5' : '4';
+    const gammaInputMaxLength = '4';
+    const videoQualityLevel =
+      typeof this.controller.settings.targetedQualityLevel === 'number'
+        ? this.controller.settings.targetedQualityLevel
+        : this.controller.settings.videoQualityMode === 'soft'
+        ? 0
+        : this.controller.settings.videoQualityMode === 'detail'
+        ? 100
+        : 50;
+
     return /*html*/ `
-      <div class="vivideo-control">
+      <div class="vivideo-controls-section">
+        <div class="vivideo-control">
         <div class="vivideo-label">
           <span>Brightness</span>
           <span class="vivideo-value" id="brightness-value">0%</span>
@@ -16,10 +37,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="brightness-slider" 
-                 min="-100" max="100" value="0" step="1">
+                 min="${limits.brightness.min}" max="${limits.brightness.max}" value="0" step="${limits.brightness.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="brightness-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="brightness" title="Reset brightness">↺</button>
         </div>
       </div>
@@ -32,10 +53,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="contrast-slider" 
-                 min="-100" max="100" value="0" step="1">
+                 min="${limits.contrast.min}" max="${limits.contrast.max}" value="0" step="${limits.contrast.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="contrast-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="contrast" title="Reset contrast">↺</button>
         </div>
       </div>
@@ -48,10 +69,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="saturation-slider" 
-                 min="-90" max="100" value="0" step="1">
+                 min="${limits.saturation.min}" max="${limits.saturation.max}" value="0" step="${limits.saturation.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="saturation-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="saturation" title="Reset saturation">↺</button>
         </div>
       </div>
@@ -64,10 +85,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="gamma-slider" 
-                 min="0.1" max="3" value="1" step="0.01">
+                 min="${limits.gamma.min}" max="${limits.gamma.max}" value="1" step="${limits.gamma.step}">
           <span>►</span>
           <input type="text" class="vivideo-input gamma-input" id="gamma-input" 
-                 placeholder="1.00" maxlength="4">
+                 placeholder="1.00" maxlength="${gammaInputMaxLength}">
           <button class="vivideo-reset-single" data-control="gamma" title="Reset gamma">↺</button>
         </div>
       </div>
@@ -80,10 +101,10 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="colortemp-slider" 
-                 min="-100" max="100" value="0" step="1">
+                 min="${limits.colortemp.min}" max="${limits.colortemp.max}" value="0" step="${limits.colortemp.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="colortemp-input" 
-                 placeholder="0" maxlength="4">
+                 placeholder="0" maxlength="${inputMaxLength}">
           <button class="vivideo-reset-single" data-control="colortemp" title="Reset color temperature">↺</button>
         </div>
       </div>
@@ -96,7 +117,7 @@ class VideoControls {
         <div class="vivideo-slider-container">
           <span>◄</span>
           <input type="range" class="vivideo-slider" id="sharpness-slider" 
-                 min="0" max="100" value="0" step="1">
+                 min="${limits.sharpness.min}" max="${limits.sharpness.max}" value="0" step="${limits.sharpness.step}">
           <span>►</span>
           <input type="text" class="vivideo-input" id="sharpness-input" 
                  placeholder="0" maxlength="4">
@@ -104,56 +125,133 @@ class VideoControls {
         </div>
       </div>
 
-      <button class="vivideo-reset" id="reset-button">Reset all values ⟳</button>
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Targeted Quality</span>
+          <span class="vivideo-value" id="video-quality-value">Balanced</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="video-quality-slider" 
+                 min="0" max="100" value="${videoQualityLevel}" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="video-quality-input" 
+                 placeholder="50" maxlength="3">
+          <button class="vivideo-reset-single" data-control="targetedQualityLevel" title="Reset targeted quality">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Video Speed</span>
+          <span class="vivideo-value" id="speed-value">1.00x</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider vivideo-speed-slider" id="speed-slider"
+                 min="0.05" max="25" value="${this.controller.settings.speed || 1.0}" step="0.05">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="speed-input" placeholder="1.00" maxlength="5">
+          <button class="vivideo-reset-single" data-control="speed" title="Reset speed">↺</button>
+        </div>
+      </div>
+
+
+      </div>
     `;
   }
 
   bindEvents(container) {
-    // Reset all button
-    container.querySelector('#reset-button').addEventListener('click', () => {
-      this.controller.resetAll();
-    });
-
     // Single reset buttons
-    container.querySelectorAll('.vivideo-reset-single').forEach(btn => {
+    container.querySelectorAll('.vivideo-reset-single').forEach((btn) => {
       btn.addEventListener('click', (e) => {
         const control = e.target.getAttribute('data-control');
         this.controller.resetSingle(control);
       });
     });
 
+    // Targeted Quality slider bindings
+    const videoQualitySlider = container.querySelector('#video-quality-slider');
+    const videoQualityInput = container.querySelector('#video-quality-input');
+    const videoQualityValue = container.querySelector('#video-quality-value');
+
+    const mapLevelToMode = (val) => {
+      const v = Number(val);
+      if (isNaN(v)) return 'balanced';
+      if (v <= 25) return 'soft';
+      if (v >= 75) return 'detail';
+      return 'balanced';
+    };
+
+    if (videoQualitySlider) {
+      videoQualitySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        // map to string mode for backward compatibility
+        const mode = mapLevelToMode(val);
+        this.controller.settings.videoQualityMode = mode;
+        this.controller.updateControl('targetedQualityLevel', val);
+        if (videoQualityValue) videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+        if (videoQualityInput) videoQualityInput.value = val;
+      });
+    }
+
+    if (videoQualityInput) {
+      videoQualityInput.addEventListener('input', (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (isNaN(v)) return;
+        const clamped = Math.max(0, Math.min(100, v));
+        const mode = mapLevelToMode(clamped);
+        this.controller.settings.videoQualityMode = mode;
+        this.controller.updateControl('targetedQualityLevel', clamped);
+        if (videoQualitySlider) videoQualitySlider.value = clamped;
+        if (videoQualityValue) videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+      });
+    }
+
+    // Speed input binding (the slider itself is handled by SpeedController)
+    const speedInput = container.querySelector('#speed-input');
+    if (speedInput) {
+      speedInput.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (!isNaN(v)) {
+          // Use controller.updateControl so speed is applied consistently
+          this.controller.updateControl('speed', v);
+        }
+      });
+    }
+
     this.bindControlEvents(container);
   }
 
   bindControlEvents(container) {
     const controls = ['brightness', 'contrast', 'saturation', 'gamma', 'colortemp', 'sharpness'];
-    
-    controls.forEach(control => {
+
+    controls.forEach((control) => {
       const slider = container.querySelector(`#${control}-slider`);
       const input = container.querySelector(`#${control}-input`);
-      
+
       slider.addEventListener('input', (e) => {
         this.controller.updateControl(control, parseFloat(e.target.value));
       });
-      
+
       // Specjalna obsługa dla gamma input z lepszą nawigacją
       if (control === 'gamma') {
         let cursorPosition = 0;
-        
+
         input.addEventListener('focus', (e) => {
           // Zapisz pozycję kursora przy fokusie
           setTimeout(() => {
             cursorPosition = e.target.selectionStart;
           }, 10);
         });
-        
+
         input.addEventListener('keydown', (e) => {
           if (e.key >= '0' && e.key <= '9') {
             e.preventDefault();
             const currentValue = input.value;
             const newValue = this.insertDigitAtPosition(currentValue, e.key, cursorPosition);
             const numValue = parseFloat(newValue);
-            
+
             if (!isNaN(numValue) && numValue >= 0.1 && numValue <= 3.0) {
               input.value = newValue;
               this.controller.updateControl(control, numValue);
@@ -184,7 +282,7 @@ class VideoControls {
             }
           }
         });
-        
+
         input.addEventListener('click', (e) => {
           cursorPosition = e.target.selectionStart;
           // Dostosuj pozycję kursora aby ominąć przecinek
@@ -204,7 +302,7 @@ class VideoControls {
           }
         });
       }
-      
+
       input.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           e.target.blur();
@@ -218,7 +316,7 @@ class VideoControls {
     const parts = currentValue.split('.');
     let wholePart = parts[0] || '1';
     let decimalPart = parts[1] || '00';
-    
+
     if (position === 0) {
       // Pierwsza pozycja - cyfra jedności
       wholePart = digit;
@@ -229,7 +327,7 @@ class VideoControls {
       // Druga pozycja po przecinku
       decimalPart = (decimalPart[0] || '0') + digit;
     }
-    
+
     return wholePart + '.' + decimalPart.padEnd(2, '0');
   }
 
@@ -238,10 +336,12 @@ class VideoControls {
     const brightnessSlider = container.querySelector('#brightness-slider');
     const brightnessInput = container.querySelector('#brightness-input');
     const brightnessValue = container.querySelector('#brightness-value');
-    
-    if (brightnessSlider) {
+
+    if (brightnessSlider && brightnessInput && brightnessValue) {
       brightnessSlider.value = settings.brightness;
       brightnessInput.value = settings.brightness;
+      brightnessInput.style.color = ''; // Remove gray placeholder color
+      brightnessInput.removeAttribute('placeholder');
       brightnessValue.textContent = `${settings.brightness}%`;
     }
 
@@ -249,10 +349,12 @@ class VideoControls {
     const contrastSlider = container.querySelector('#contrast-slider');
     const contrastInput = container.querySelector('#contrast-input');
     const contrastValue = container.querySelector('#contrast-value');
-    
-    if (contrastSlider) {
+
+    if (contrastSlider && contrastInput && contrastValue) {
       contrastSlider.value = settings.contrast;
       contrastInput.value = settings.contrast;
+      contrastInput.style.color = '';
+      contrastInput.removeAttribute('placeholder');
       contrastValue.textContent = `${settings.contrast}%`;
     }
 
@@ -260,10 +362,12 @@ class VideoControls {
     const saturationSlider = container.querySelector('#saturation-slider');
     const saturationInput = container.querySelector('#saturation-input');
     const saturationValue = container.querySelector('#saturation-value');
-    
-    if (saturationSlider) {
+
+    if (saturationSlider && saturationInput && saturationValue) {
       saturationSlider.value = settings.saturation;
       saturationInput.value = settings.saturation;
+      saturationInput.style.color = '';
+      saturationInput.removeAttribute('placeholder');
       saturationValue.textContent = `${settings.saturation}%`;
     }
 
@@ -271,10 +375,12 @@ class VideoControls {
     const gammaSlider = container.querySelector('#gamma-slider');
     const gammaInput = container.querySelector('#gamma-input');
     const gammaValue = container.querySelector('#gamma-value');
-    
-    if (gammaSlider) {
+
+    if (gammaSlider && gammaInput && gammaValue) {
       gammaSlider.value = settings.gamma;
       gammaInput.value = settings.gamma.toFixed(2);
+      gammaInput.style.color = '';
+      gammaInput.removeAttribute('placeholder');
       gammaValue.textContent = settings.gamma.toFixed(2);
     }
 
@@ -282,11 +388,13 @@ class VideoControls {
     const colorTempSlider = container.querySelector('#colortemp-slider');
     const colorTempInput = container.querySelector('#colortemp-input');
     const colorTempValue = container.querySelector('#colortemp-value');
-    
-    if (colorTempSlider) {
+
+    if (colorTempSlider && colorTempInput && colorTempValue) {
       colorTempSlider.value = settings.colorTemp;
       colorTempInput.value = settings.colorTemp;
-      
+      colorTempInput.style.color = '';
+      colorTempInput.removeAttribute('placeholder');
+
       let tempText = 'Neutral';
       if (settings.colorTemp < -75) tempText = 'Very Cold';
       else if (settings.colorTemp < -40) tempText = 'Cold';
@@ -296,7 +404,7 @@ class VideoControls {
       else if (settings.colorTemp > 40) tempText = 'Warm';
       else if (settings.colorTemp > 15) tempText = 'Cozy';
       else if (settings.colorTemp > 5) tempText = 'Slightly Warm';
-      
+
       colorTempValue.textContent = tempText;
     }
 
@@ -304,11 +412,42 @@ class VideoControls {
     const sharpnessSlider = container.querySelector('#sharpness-slider');
     const sharpnessInput = container.querySelector('#sharpness-input');
     const sharpnessValue = container.querySelector('#sharpness-value');
-    
-    if (sharpnessSlider) {
+
+    if (sharpnessSlider && sharpnessInput && sharpnessValue) {
       sharpnessSlider.value = settings.sharpness;
       sharpnessInput.value = settings.sharpness;
+      sharpnessInput.style.color = '';
+      sharpnessInput.removeAttribute('placeholder');
       sharpnessValue.textContent = `${settings.sharpness}%`;
+    }
+
+    // Update targeted quality
+    const videoQualitySlider = container.querySelector('#video-quality-slider');
+    const videoQualityInput = container.querySelector('#video-quality-input');
+    const videoQualityValue = container.querySelector('#video-quality-value');
+
+    if (videoQualitySlider && videoQualityInput && videoQualityValue) {
+      let level = settings.targetedQualityLevel;
+      if (typeof level !== 'number') {
+        if (settings.videoQualityMode === 'soft') level = 0;
+        else if (settings.videoQualityMode === 'detail') level = 100;
+        else level = 50;
+      }
+      videoQualitySlider.value = level;
+      videoQualityInput.value = level;
+      const label = level <= 25 ? 'Soft' : level >= 75 ? 'Detail' : 'Balanced';
+      videoQualityValue.textContent = label;
+    }
+
+    // Update speed
+    const speedSlider = container.querySelector('#speed-slider');
+    const speedInput = container.querySelector('#speed-input');
+    const speedValue = container.querySelector('#speed-value');
+
+    if (speedSlider) {
+      speedSlider.value = settings.speed || 1.0;
+      speedInput.value = (settings.speed || 1.0).toFixed(2);
+      speedValue.textContent = `${(settings.speed || 1.0).toFixed(2)}x`;
     }
   }
 }

@@ -3,20 +3,15 @@
   "description": "Real-time video enhancement with brightness, contrast, saturation, gamma, and color temperature controls",
   "version": "1.0.0",
   "manifest_version": 3,
+  "author": "domintes",
   "icons": {
     "16": "src/assets/icon/icon_16.png",
-    "32": "src/assets/icon/icon_32.png", 
+    "32": "src/assets/icon/icon_32.png",
     "48": "src/assets/icon/icon_48.png",
     "128": "src/assets/icon/icon_128.png"
   },
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting"
-  ],
-  "host_permissions": [
-    "<all_urls>"
-  ],
+  "permissions": ["storage", "activeTab", "scripting", "downloads"],
+  "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"
   },
@@ -26,11 +21,13 @@
       "js": [
         "src/config.js",
         "src/utils/storage.js",
-        "src/utils/uiHelper.js", 
+        "src/utils/uiHelper.js",
         "src/components/videoControls.js",
         "src/components/profileManager.js",
         "src/components/themeManager.js",
+        "src/components/settingsManager.js",
         "src/components/videoFilterEngine.js",
+        "src/components/speedController.js",
         "src/content.js"
       ],
       "css": ["styles.css"],
@@ -39,7 +36,13 @@
     }
   ],
   "action": {
-    "default_title": "Vivideo Controls"
+    "default_title": "Vivideo Controls",
+    "default_icon": {
+      "16": "src/assets/icon/icon_16.png",
+      "32": "src/assets/icon/icon_32.png",
+      "48": "src/assets/icon/icon_48.png",
+      "128": "src/assets/icon/icon_128.png"
+    }
   },
   "commands": {
     "toggle-vivideo": {
@@ -50,15 +53,15 @@
     },
     "next-profile": {
       "suggested_key": {
-        "default": "Alt+N"
-      },
-      "description": "Next profile"
-    },
-    "previous-profile": {
-      "suggested_key": {
         "default": "Alt+B"
       },
-      "description": "Previous profile"
+      "description": "Switch to next profile"
+    },
+    "prev-profile": {
+      "suggested_key": {
+        "default": "Alt+C"
+      },
+      "description": "Switch to previous profile"
     }
   }
 }

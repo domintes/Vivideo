@@ -1,3 +1,6 @@
 {
     "css.lint.boxModel": "ignore",
+    "chat.tools.terminal.autoApprove": {
+        "npm audit": true
+    },
 }

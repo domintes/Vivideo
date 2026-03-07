@@ -1,8 +1,18 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { crx } from 'vite-plugin-chrome-extension'
-import manifest from './manifest.json'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-    plugins: [crx({ manifest })],
-})
+  plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: {
+        popup: 'popup.html',
+        privacy: 'privacy/index.html'
+      },
+      output: {
+        // Output to dist directory
+        dir: 'dist'
+      }
+    }
+  }
+});
