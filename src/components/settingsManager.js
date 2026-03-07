@@ -220,7 +220,7 @@ class SettingsManager {
             <p>📝 Export includes:</p>
             <ul>
               <li>✅ All filter settings</li>
-              <li>✅ Saved user profiles</li>
+              <li>✅ Saved profiles</li>
               <li>✅ Theme selection</li>
               <li>✅ Theme colors</li>
             </ul>

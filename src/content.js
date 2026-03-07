@@ -122,7 +122,7 @@ if (window !== window.top) {
         if (response && response.vivideoProfiles) {
           this.profiles = response.vivideoProfiles;
         }
-        // User profiles stay empty by default. Built-ins are rendered from ProfileManager.
+        // Saved Profiles stay empty by default. Built-ins are rendered from ProfileManager.
         if (!this.profiles || this.profiles.length === 0) {
           this.profiles = [];
         }
@@ -183,7 +183,7 @@ if (window !== window.top) {
 
       this.updateUI();
 
-      // Initialize default profile button state (User profiles active by default)
+      // Initialize default profile button state (Saved Profiles active by default)
       if (this.profileManager && this.container) {
         this.profileManager.showUserProfiles(this.container);
       }
@@ -1163,7 +1163,7 @@ if (window !== window.top) {
             }
           });
         } else {
-          // Use id for user profiles when available (migrate activeProfile to id)
+          // Use id for Saved Profiles when available (migrate activeProfile to id)
           this.settings.activeProfile = profile.id || profile.name;
           // Sanitize profile settings to avoid missing/invalid values
           let sanitized = profile.settings || {};

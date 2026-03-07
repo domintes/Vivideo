@@ -257,18 +257,18 @@ class ThemeManager {
         border-color: ${fontColor};
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profile-item {
+      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profiles-list-item {
         background: ${fontColor}1A;
         border-color: ${fontColor}33;
         color: ${fontColor};
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profile-item:hover {
+      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profiles-list-item:hover {
         background: ${fontColor}33;
         border-color: ${fontColor}66;
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profile-item.vivideo-profile-active {
+      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profiles-list-item.vivideo-profile-active {
         background: ${fontColor}4D;
         border-color: ${fontColor};
       }
@@ -291,7 +291,7 @@ class ThemeManager {
         box-shadow: 0 0 8px ${fontColor}4D;
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .active-profile-status.active {
+      .vivideo-container.vivideo-theme-${currentTheme} .active-item-status-warning.active {
         background: ${fontColor}33;
         color: ${fontColor};
         border-color: ${fontColor}66;

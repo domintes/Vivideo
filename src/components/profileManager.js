@@ -13,7 +13,7 @@ class ProfileManager {
     this.applyProfileSpeed = false; // When true, apply profile.speed to video playback
     // Collapsible state for sections
     this.builtinCollapsed = true; // Default Built-in collapsed by default
-    this.userCollapsed = true; // User Profiles collapsed by default
+    this.userCollapsed = true; // Saved Profiles collapsed by default
     this.isEditingBuiltin = false; // track editing built-in profile
     this.profileCategories = [];
     this.workOnEverything = false; // apply filters to whole page when enabled
@@ -113,7 +113,7 @@ class ProfileManager {
     return (categoryName || '').trim();
   }
 
-  // Generate a short unique id for user profiles
+  // Generate a short unique id for saved profiles
   generateProfileId() {
     return 'p_' + Math.random().toString(36).substr(2, 9);
   }
@@ -149,11 +149,11 @@ class ProfileManager {
   // Find a profile (user or builtin) by a stored reference (id or name)
   findProfileByRef(ref) {
     if (!ref) return null;
-    // Try user profiles by id first
+    // Try saved profiles by id first
     const users = this.controller && Array.isArray(this.controller.profiles) ? this.controller.profiles : [];
     let idx = users.findIndex((p) => p.id && p.id === ref);
     if (idx !== -1) return { profile: users[idx], profileType: 'user', index: idx };
-    // Fallback to user profiles by name
+    // Fallback to saved profiles by name
     idx = users.findIndex((p) => p.name === ref);
     if (idx !== -1) return { profile: users[idx], profileType: 'user', index: idx };
 
@@ -188,9 +188,11 @@ class ProfileManager {
     return /*html*/ `
       <!-- Profiles Section -->
       <div class="vivideo-bottom-controls">
+            <div class="vivideo-active-item-section">
+              <div class="vivideo-box-header profile-panel-header">➤ Active Profile</div>
+              <div class="active-item-status" id="active-profile-display">DEFAULT</div>
+            </div> 
             <div class="vivideo-bottom-controls-right">
-              <div class="active-item-status active-profile-status" id="active-profile-display">DEFAULT</div>
-
             <!-- Profile form (always visible) -->
             <div id="profile-form-panel" class="vivideo-profile-form vivideo-profile-form-compact vivideo-profile-form-panel">
               <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
@@ -206,7 +208,7 @@ class ProfileManager {
       <!-- Profiles Panel -->
       <div class="vivideo-profiles vivideo-border-box" id="profiles-panel">
         <div class="vivideo-box-header profile-panel-header">
-          🎥 Video Profiles
+          🎥 Saved Profiles
             <!-- removed "Display default profiles" option - simplified single default profile model -->
         </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
@@ -844,8 +846,7 @@ class ProfileManager {
     // Renderuj wszystkie profile w jednej liście
     allProfiles.forEach(({ profile, index, profileType }) => {
       const profileItem = document.createElement('div');
-      const baseClass = profileType === 'builtin' ? 'builtin-profile vivideo-default-profile-item' : 'user-profile';
-      profileItem.className = `vivideo-profile-item ${baseClass}`;
+      profileItem.className = `vivideo-profiles-list-item`;
       profileItem.setAttribute('data-index', index);
       profileItem.setAttribute('data-type', profileType);
       // Determine active status by comparing the stored activeProfile ref (id or name)
@@ -862,15 +863,15 @@ class ProfileManager {
         profile.name.length > 20 ? profile.name.substring(0, 17) + '...' : profile.name;
 
       profileItem.innerHTML = `
-        <span class="vivideo-profile-name" title="${profile.name}">${displayName}</span>
-        <button class="vivideo-profile-edit vivideo-btn vivideo-profile-overwrite" title="Overwrite profile with current values">💾</button>
-        <button class="vivideo-profile-delete vivideo-btn vivideo-profile-delete-btn" title="Delete profile">✖</button>
+        <div class="vivideo-profile-name" title="${profile.name}">${displayName}</div>
+        <button class="vivideo-profile-edit-btn vivideo-btn vivideo-profile-overwrite" title="Overwrite profile with current values">💾</button>
+        <button class="vivideo-profile-remove-btn vivideo-btn vivideo-profile-remove-btn-btn" title="Delete profile">✖</button>
       `;
 
       profileItem.addEventListener('click', (e) => {
         if (
-          e.target.classList.contains('vivideo-profile-delete') ||
-          e.target.classList.contains('vivideo-profile-edit') ||
+          e.target.classList.contains('vivideo-profile-remove-btn') ||
+          e.target.classList.contains('vivideo-profile-edit-btn') ||
           profileItem.classList.contains('editing')
         ) {
           return;
@@ -878,7 +879,7 @@ class ProfileManager {
         e.preventDefault();
         e.stopPropagation();
         container
-          .querySelectorAll('.vivideo-profile-item')
+          .querySelectorAll('.vivideo-profiles-list-item')
           .forEach((item) => item.classList.remove('vivideo-profile-active'));
         profileItem.classList.add('vivideo-profile-active');
         if (profileType === 'builtin' && profile.name === 'DEFAULT') {
@@ -888,7 +889,7 @@ class ProfileManager {
         }
       });
 
-      const editBtn = profileItem.querySelector('.vivideo-profile-edit');
+      const editBtn = profileItem.querySelector('.vivideo-profile-edit-btn');
       if (editBtn) {
         editBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -922,7 +923,7 @@ class ProfileManager {
         });
       }
 
-      const deleteBtn = profileItem.querySelector('.vivideo-profile-delete');
+      const deleteBtn = profileItem.querySelector('.vivideo-profile-remove-btn');
       if (deleteBtn) {
         deleteBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -960,7 +961,7 @@ class ProfileManager {
     this.refreshCategorySelectors(container);
   }
 
-  // Show user profiles panel (compat for controller calls)
+  // Show saved profiles panel (compat for controller calls)
   showUserProfiles(container) {
     this.showingProfiles = true;
     if (container) {
@@ -1310,11 +1311,11 @@ class ProfileManager {
     if (profileId === 'DEFAULT') {
       selectedProfile = this.controller.defaultProfile;
     }
-    // Check user profiles (match by id first, fallback to name)
+    // Check saved profiles (match by id first, fallback to name)
     else {
       selectedProfile = this.controller.profiles.find((p) => (p.id && p.id === profileId) || p.name === profileId);
 
-      // Check default profiles if not found in user profiles
+      // Check default profiles if not found in saved profiles
       if (!selectedProfile) {
         const defaultProfiles = this.defaultProfiles || this.createDefaultProfiles();
         selectedProfile = defaultProfiles.find((p) => p.name === profileId);
@@ -1340,7 +1341,7 @@ class ProfileManager {
     defaultOption.textContent = 'DEFAULT';
     selectElement.appendChild(defaultOption);
 
-    // Add user profiles
+    // Add saved profiles
     if (this.controller.profiles.length > 0) {
       const groupedProfiles = {};
       this.controller.profiles.forEach((profile) => {
@@ -1423,21 +1424,21 @@ class ProfileManager {
 
       // normalize and remove warning/error/editing classes first
       el.classList.remove(
-        'active-profile-status-warning',
-        'active-profile-status-error',
-        'active-profile-status-editing'
+        'active-item-status active-item-status-warning-warning',
+        'active-item-status active-item-status-warning-error',
+        'active-item-status active-item-status-warning-editing'
       );
 
       // Interpret color parameter as either a hex color or a semantic type
       const param = color || '';
       if (param === '#bb531e' || param === 'warning') {
-        el.classList.add('active-profile-status-warning');
+        el.classList.add('active-item-status active-item-status-warning-warning');
         el.style.color = '';
       } else if (param === '#ff4d4f' || param === 'error') {
-        el.classList.add('active-profile-status-error');
+        el.classList.add('active-item-status active-item-status-warning-error');
         el.style.color = '';
       } else if (message === 'EDITING') {
-        el.classList.add('active-profile-status-editing');
+        el.classList.add('active-item-status active-item-status-warning-editing');
         el.style.color = '';
       } else {
         // clear inline color and leave visual state to other classes
@@ -1485,7 +1486,7 @@ class ProfileManager {
       }
     }
 
-    // Then check user profiles
+    // Then check saved profiles
     for (const profile of this.controller.profiles) {
       if (this.profilesMatch(settings, profile.settings)) {
         console.log('Vivideo: Auto-detected user profile:', profile.name);
@@ -1522,7 +1523,7 @@ class ProfileManager {
       }
     }
 
-    // Check user profiles
+    // Check saved profiles
     for (const profile of this.controller.profiles || []) {
       if (this.profilesMatch(settings, profile.settings)) {
         matches.push({ profile, isDefault: false });
@@ -1595,8 +1596,8 @@ class ProfileManager {
         if (matches.length > 1) {
           // Multiple matching profiles - show duplicate warning
           const namesText = names.join(', ');
-          profileDisplay.textContent = `Duplicate profiles detected:: ${namesText}`;
-          profileDisplay.className = 'active-item-status active-profile-status-warning';
+          profileDisplay.textContent = `Duplicated (${namesText})`;
+          profileDisplay.className = 'active-item-status-warning';
 
           // Ensure activeProfile remains set to the primary match for compatibility
           const primary = matches[0].profile;
@@ -1637,8 +1638,8 @@ class ProfileManager {
               : detected.name;
           profileDisplay.className =
             typeof detected.name === 'string' && detected.name.toUpperCase() === 'DEFAULT'
-              ? 'active-item-status active-profile-status default'
-              : 'active-item-status active-profile-status active';
+              ? 'active-item-status-default'
+              : 'active-item-status-active';
 
           // Remove duplicate warning if present
           const controlsSection = container.querySelector('.vivideo-controls-section');
@@ -1663,7 +1664,7 @@ class ProfileManager {
       } else {
         // Settings don't match any existing profile
         profileDisplay.textContent = 'NOT SAVED';
-        profileDisplay.className = 'active-item-status active-profile-status modified';
+        profileDisplay.className = 'active-item-status-modified';
 
         // Clear active profile since settings don't match any profile
         if (settings.activeProfile) {
@@ -1696,7 +1697,7 @@ class ProfileManager {
   // Profile switching methods for keyboard shortcuts
   nextProfile() {
     console.log('Vivideo: Next profile shortcut (Alt+B)');
-    // Build combined list of profiles: built-in defaults first, then user profiles
+    // Build combined list of profiles: built-in defaults first, then saved profiles
     const combined = [...this.defaultProfiles, ...(this.controller.profiles || [])];
 
     if (!Array.isArray(combined) || combined.length === 0) {
@@ -1738,7 +1739,7 @@ class ProfileManager {
   previousProfile() {
     console.log('Vivideo: Previous profile shortcut (Alt+C)');
 
-    // Build combined list of profiles: built-in defaults first, then user profiles
+    // Build combined list of profiles: built-in defaults first, then saved profiles
     const combined = [...this.defaultProfiles, ...(this.controller.profiles || [])];
 
     if (!Array.isArray(combined) || combined.length === 0) {

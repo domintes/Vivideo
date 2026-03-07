@@ -1032,25 +1032,25 @@
   background: rgba(0, 200, 80, 0.8);
 }
 
-.vivideo-profile-item {
+.vivideo-profiles-list-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  margin-bottom: 2px;
+  padding: 0;
+  margin: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
   background: transparent;
-  border: none;
-  border-radius: 6px;
+  border-radius: 0;
+  border-bottom: 1px solid #273a6b;
 }
 
-.vivideo-profile-item:hover {
+.vivideo-profiles-list-item:hover {
   background: rgba(255, 255, 255, 0.08);
   transform: translateX(2px);
 }
 
-.vivideo-profile-item.vivideo-profile-active {
+.vivideo-profiles-list-item.vivideo-profile-active {
   background: rgba(255, 255, 0, 0.15);
   border: 2px solid #ffff00;
   box-shadow:
@@ -1060,7 +1060,7 @@
   position: relative;
 }
 
-.vivideo-profile-item.vivideo-profile-active::before {
+.vivideo-profiles-list-item.vivideo-profile-active::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1076,22 +1076,16 @@
   z-index: 1;
 }
 
-.vivideo-profile-item.vivideo-profile-active .vivideo-profile-name {
+.vivideo-profiles-list-item.vivideo-profile-active .vivideo-profile-name {
   font-weight: 600;
   position: relative;
   z-index: 2;
 }
 
-.vivideo-profile-item.vivideo-profile-active .vivideo-profile-description {
+.vivideo-profiles-list-item.vivideo-profile-active .vivideo-profile-description {
   color: rgba(255, 255, 0, 0.8);
   position: relative;
   z-index: 2;
-}
-
-.vivideo-profile-name {
-  font-size: 14px;
-  font-weight: 500;
-  flex: 1;
 }
 
 /* Profile Section Styles */
@@ -1140,17 +1134,10 @@
   letter-spacing: 0.5px;
 }
 
-.vivideo-profile-delete {
-  background: none;
-  border: none;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 4px;
-  transition: all 0.2s ease;
-}
 
-.vivideo-profile-edit {
-  background: #007bff;
+/* <--- Vivideo Saved Profiles  ---> Edit Button */
+.vivideo-profile-edit-btn {
+  background: none;
   color: #fff;
   border: none;
   font-size: 12px;
@@ -1161,9 +1148,19 @@
   transition: all 0.15s ease;
 }
 
-.vivideo-profile-edit:hover {
-  transform: scale(1.05);
-  background: #0069d9;
+.vivideo-profile-edit-btn:hover {
+  opacity: 0.7;
+  transition: 0.3s;
+}
+
+/* <--- Vivideo Saved Profiles  ---> Delete Button */
+.vivideo-profile-remove-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+  transition: all 0.2s ease;
 }
 
 /* Theme Options */
@@ -1329,20 +1326,20 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 /* Profile status styles */
-.active-profile-status.default {
+.active-item-status-warning.default {
   background: rgba(128, 128, 128, 0.2);
   color: #aaa;
   border-color: rgba(128, 128, 128, 0.3);
 }
 
-.active-profile-status.active {
+.active-item-status-warning.active {
   background: rgba(0, 255, 0, 0.2);
   color: #00ff00;
   border-color: rgba(0, 255, 0, 0.4);
   box-shadow: 0 0 8px rgba(0, 255, 0, 0.3);
 }
 
-.active-profile-status.modified {
+.active-item-status-warning.modified {
   background: rgba(255, 165, 0, 0.2);
   color: #ffa500;
   border-color: rgba(255, 165, 0, 0.4);
@@ -1351,7 +1348,7 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 /* Warning state for active profile display (duplicate/name conflict) */
-.active-item-status.active-profile-status-warning {
+.active-item-status-warning-warning {
   background: #fff6ed;
   border: 1px solid #bb531e;
   color: #7a2f11;
@@ -1359,7 +1356,7 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 /* Error state for active profile display (invalid value/error) */
-.active-item-status.active-profile-status-error {
+.active-item-status-warning-error {
   background: #ffecec;
   border: 1px solid #ff4d4f;
   color: #a10000;
@@ -1367,10 +1364,41 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 /* Editing state for active profile display (neutral) */
-.active-item-status.active-profile-status-editing {
+.active-item-status-warning-editing {
   background: rgba(255,255,255,0.02);
   border: 1px dashed rgba(255,255,255,0.04);
   color: inherit;
+}
+
+
+.active-item-status-active {
+  padding: 8px 16px;
+  border-radius: 25px;
+  color: #c9f5ff;
+  background: #ffffff1c;
+  text-shadow: 1px 1px #000000d2;
+  border: 1px solid #ffffff29;
+  font-weight: bold;
+}
+
+.active-item-status-modified {
+  padding: 8px 16px;
+  border-radius: 25px;
+  text-shadow: 1px 1px #000000d2;
+  color: #b393ef;
+  background: #b393ef8a;
+  border: 1px solid #b393ef8a;
+  font-weight: bold;
+}
+
+.active-item-status-warning {
+  padding: 8px 16px;
+  border-radius: 25px;
+  color: #ff6e6e;
+  background: #ff6e6e3b;
+  text-shadow: 1px 1px #000000d2;
+  border: 1px solid #ff6e6e;
+  font-weight: bold;
 }
 
 /* Duplicate warning box inside controls section */
@@ -1420,7 +1448,7 @@ video:-ms-fullscreen .vivideo-container {
 }
 
 /* Cybernetic theme overrides for status */
-.vivideo-theme-cybernetic .active-profile-status.active {
+.vivideo-theme-cybernetic .active-item-status-warning.active {
   background: rgba(0, 255, 65, 0.2);
   color: #00ff41;
   border-color: rgba(0, 255, 65, 0.4);
@@ -1577,9 +1605,12 @@ video:-ms-fullscreen .vivideo-container {
   overflow: hidden;
   white-space: nowrap;
   margin-right: 10px;
+  font-weight: 500;
+  padding: 0;
 }
 
-.vivideo-profile-delete {
+
+.vivideo-profile-remove-btn {
   color: #ff4757;
   border-radius: 4px;
   width: 24px;
@@ -1594,7 +1625,7 @@ video:-ms-fullscreen .vivideo-container {
   flex-shrink: 0;
 }
 
-.vivideo-profile-delete:hover {
+.vivideo-profile-remove-btn:hover {
   background: rgba(255, 71, 87, 0.4);
   border-color: #ff4757;
   box-shadow: 0 0 10px rgba(255, 71, 87, 0.3);
@@ -1866,10 +1897,7 @@ button.vivideo-close {
 .vivideo-modal-confirm { padding:6px 10px; border-radius:6px; background:#bb531e; border:none; color:#fff; }
 .vivideo-btn { padding:6px 8px; border-radius:6px; cursor:pointer; }
 .vivideo-restore-default-profiles-btn { background: transparent; border: 1px solid rgba(255,255,255,0.06); }
-.vivideo-profile-overwrite { background: #1a3488a1; border: none; color: #fff; display: inline-block; }
-/* Previously overwrite button was shown only in edit-mode; now visible always for better UX */
-.vivideo-edit-mode-active .vivideo-profile-overwrite { display: inline-block; }
-.vivideo-profile-delete-btn { background: transparent; border: none; color: #ff6b6b; }
+.vivideo-profile-remove-btn-btn { background: transparent; border: none; color: #ff6b6b; }
 .vivideo-compare-controls { display: none; }
 
 .vivideo-open-edit-mode { background: #2b7cff; color: #fff; border: none; padding: 8px 12px; }
@@ -2098,7 +2126,7 @@ button.vivideo-close {
   grid-template-columns: 1fr 1fr;
 }
 
-.vivideo-profile-edit {
+.vivideo-profile-edit-btn {
   color: white;
 }
 
@@ -2541,9 +2569,7 @@ div .vivideo-container,
   padding: 6px 8px;
   font-size: 13px;
 }
-.vivideo-profile-item {
-  padding: 6px 8px;
-}
+
 .vivideo-quality-section {
   display: grid;
   gap: 8px;
@@ -2662,7 +2688,7 @@ div .vivideo-container,
 
 .profile-section-header,
 .vivideo-user-category-header,
-.vivideo-profile-item,
+.vivideo-profiles-list-item,
 .vivideo-btn,
 .vivideo-control-btn,
 .vivideo-reset-single {
@@ -2688,7 +2714,7 @@ div .vivideo-container,
   outline-offset: 1px;
 }
 
-.vivideo-profile-item .vivideo-profile-name {
+.vivideo-profiles-list-item .vivideo-profile-name {
   min-width: 0;
 }
 
@@ -2820,10 +2846,6 @@ div .vivideo-container,
 .vivideo-profile-list {
   overflow-x: hidden;
   min-height: 100%;
-}
-
-div.user-profile {
-  overflow-x: hidden;
 }
 
 div.vivideo-border-box {
