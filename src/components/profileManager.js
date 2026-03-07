@@ -442,7 +442,7 @@ class ProfileManager {
               inline.id = inlineId;
               inline.className = 'profile-inline-actions';
               inline.innerHTML = `
-                <button id="profile-overwrite-btn" class="vivideo-profile-save vivideo-btn vivideo-inline-action">Overwrite</button>
+                <button id="profile-overwrite-btn" class="vivideo-btn vivideo-profile-save vivideo-overwrite-button">Overwrite</button>
               `;
               grid.appendChild(inline);
               // hide the main quick-save button while inline actions are shown

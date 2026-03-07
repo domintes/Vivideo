@@ -1415,27 +1415,6 @@ video:-ms-fullscreen .vivideo-container {
   color: #8b1e1e;
 }
 
-/* Inline actions shown under the compact profile form input */
-.profile-inline-actions {
-  display: flex;
-  gap: 8px;
-  /* place inline actions in the middle grid column where the main save button sits */
-  grid-column: 2 / 3;
-  align-items: center;
-  margin-top: 0;
-}
-.profile-inline-actions .vivideo-inline-action {
-  /* match main save button sizing/style */
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-.profile-inline-actions .vivideo-profile-save {
-  /* ensure theme-specific colors from .vivideo-profile-save apply */
-  display: inline-block;
-}
-
 /* Simple modal styling for overwrite confirmation */
 .vivideo-modal {
   position: fixed;
