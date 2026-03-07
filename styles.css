@@ -2012,7 +2012,7 @@ button.vivideo-close {
 .vivideo-switch-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  padding-left: 8px;
   font-size: 13px;
   font-weight: 500;
 }
@@ -2315,29 +2315,6 @@ button.vivideo-close {
   background: rgba(50, 255, 50, 0.25);
   box-shadow: 0 0 8px rgba(100, 255, 100, 0.4);
   color: #99ff99;
-}
-
-.vivideo-speed-options {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(0, 191, 255, 0.08);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Make switches more compact in speed options */
-.vivideo-speed-options .vivideo-switch-container {
-  padding: 4px 0;
-}
-
-.vivideo-speed-options .vivideo-switch {
-  width: 36px;
-  height: 18px;
-}
-
-.vivideo-speed-options .vivideo-switch:checked {
-  color: #00bfff;
 }
 
 .vivideo-switch-label .vivideo-short-label {
