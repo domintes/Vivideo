@@ -31,6 +31,12 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        keepQuality: true,
+        videoQualityMode: 'balanced',
+        targetedQualityLevel: 50,
+        upscaleQualityBoost: false,
+        linearColorPipeline: true,
+        forceHighQualityScaling: true,
         speed: 1.0,
         previousSpeed: 1.0,
         speedStep: 0.25, // Configurable speed increment/decrement
@@ -38,12 +44,15 @@ if (window !== window.top) {
         overwritePlayerSpeed: true, // New: when enabled Vivideo will overwrite website player speed when user changes speed here
         autoSaveProfiles: false,     // New: autosave active profile when settings change
         autoActivate: true,
+        overwritePlayerSpeed: true,
+        autoSaveProfiles: false,
         workOnImagesActivate: true,
         activeProfile: null,
         extendedLimits: true,
         toggleWithoutAlt: false,
         compareMode: false,
-        compareProfile: null
+        compareProfile: null,
+        workOnEverything: false
       };
       this.defaultSettings = { ...this.settings };
       this.profiles = [];
@@ -108,6 +117,13 @@ if (window !== window.top) {
 
         if (response && response.vivideoSettings) {
           this.settings = { ...this.settings, ...response.vivideoSettings };
+          // Backwards compatibility: derive numeric targetedQualityLevel from videoQualityMode
+          if (this.settings.targetedQualityLevel === undefined) {
+            if (this.settings.videoQualityMode === 'soft') this.settings.targetedQualityLevel = 0;
+            else if (this.settings.videoQualityMode === 'detail')
+              this.settings.targetedQualityLevel = 100;
+            else this.settings.targetedQualityLevel = 50;
+          }
           // Ensure preferredSpeed has a default value
           if (this.settings.preferredSpeed === undefined) {
             this.settings.preferredSpeed = 1.72;
@@ -116,82 +132,9 @@ if (window !== window.top) {
         if (response && response.vivideoProfiles) {
           this.profiles = response.vivideoProfiles;
         }
-        // If no user profiles exist (fresh install or cleared), add helpful built-in profiles
+        // Profile List stay empty by default. Built-ins are rendered from ProfileManager.
         if (!this.profiles || this.profiles.length === 0) {
-          this.profiles = [
-            // These are user-visible bonus profiles to help users understand effects; users can edit/remove/reorder them
-            {
-              name: 'Vivid Colors',
-              description: 'High saturation and contrast for vivid playback',
-              settings: {
-                contrast: 27,
-                colorTemp: 0,
-                saturation: 27,
-                gamma: 1,
-                sharpness: 7,
-                brightness: 0,
-                speed: 1.0
-              }
-            },
-            // {
-            //   name: 'Black & White',
-            //   description: 'Desaturate to create a black & white effect',
-            //   settings: {
-            //     contrast: 0,
-            //     colorTemp: 0,
-            //     saturation: -100,
-            //     gamma: 1,
-            //     sharpness: 0,
-            //     brightness: 0,
-            //     speed: 1.0
-            //   }
-            // },
-            // {
-            //   name: 'High Gamma / Low Contrast',
-            //   description: 'Brighter midtones with reduced contrast',
-            //   settings: {
-            //     contrast: -15,
-            //     gamma: 1.6,
-            //     saturation: 0,
-            //     colorTemp: 0,
-            //     sharpness: 0,
-            //     brightness: 0,
-            //     speed: 1.0
-            //   }
-            // },
-            // {
-            //   name: 'Low Gamma / High Contrast',
-            //   description: 'Deeper tones with stronger contrast',
-            //   settings: {
-            //     contrast: 25,
-            //     gamma: 0.8,
-            //     saturation: 0,
-            //     colorTemp: 0,
-            //     sharpness: 0,
-            //     brightness: 0,
-            //     speed: 1.0
-            //   }
-            // },
-            {
-              name: 'Matrix (Sharp)',
-              description: 'Sharpness boost only (matrix-like)',
-              settings: {
-                contrast: 0,
-                gamma: 1,
-                saturation: 0,
-                colorTemp: 0,
-                sharpness: 31,
-                brightness: 0,
-                speed: 1.0
-              }
-            }
-          ];
-          // persist built-in profiles so they're available in UI immediately
-          try {
-            await StorageUtils.saveProfiles(this.profiles);
-          } catch (e) {
-            console.warn('Vivideo: Could not save built-in profiles', e);
-          }
+          this.profiles = [];
         }
         if (response && response.vivideoTheme) {
           this.currentTheme = response.vivideoTheme;
@@ -209,9 +152,23 @@ if (window !== window.top) {
           if (response.vivideoAppState.showProfileAfterChange !== undefined) {
             this.tempShowProfileAfterChange = response.vivideoAppState.showProfileAfterChange;
           }
+          // Load applyProfileSpeed setting
+          if (response.vivideoAppState.applyProfileSpeed !== undefined) {
+            this.tempApplyProfileSpeed = response.vivideoAppState.applyProfileSpeed;
+          }
           // Load workOnAllSites setting
           if (response.vivideoAppState.workOnAllSites !== undefined) {
             this.tempWorkOnAllSites = response.vivideoAppState.workOnAllSites;
+          }
+          // Load workOnEverything setting
+          if (response.vivideoAppState.workOnEverything !== undefined) {
+            this.tempWorkOnEverything = response.vivideoAppState.workOnEverything;
+          }
+          if (Array.isArray(response.vivideoAppState.profileCategories)) {
+            this.tempProfileCategories = response.vivideoAppState.profileCategories;
+          }
+          if (Array.isArray(response.vivideoAppState.builtinProfiles)) {
+            this.tempBuiltinProfiles = response.vivideoAppState.builtinProfiles;
           }
         }
       } catch (error) {
@@ -242,7 +199,7 @@ if (window !== window.top) {
 
       this.updateUI();
 
-      // Initialize default profile button state (User profiles active by default)
+      // Initialize default profile button state (Profile List active by default)
       if (this.profileManager && this.container) {
         this.profileManager.showUserProfiles(this.container);
       }
@@ -300,17 +257,82 @@ if (window !== window.top) {
         this.profileManager.workOnAllSites = this.tempWorkOnAllSites;
         delete this.tempWorkOnAllSites;
       }
+      if (this.tempWorkOnEverything !== undefined) {
+        this.profileManager.workOnEverything = this.tempWorkOnEverything;
+        delete this.tempWorkOnEverything;
+      }
+      // Apply saved applyProfileSpeed setting if available
+      if (this.tempApplyProfileSpeed !== undefined) {
+        this.profileManager.applyProfileSpeed = this.tempApplyProfileSpeed;
+        delete this.tempApplyProfileSpeed;
+      }
+      if (Array.isArray(this.tempProfileCategories)) {
+        this.profileManager.profileCategories = [...this.tempProfileCategories];
+        delete this.tempProfileCategories;
+      }
+      if (Array.isArray(this.tempBuiltinProfiles) && this.tempBuiltinProfiles.length > 0) {
+        this.profileManager.defaultProfiles = [...this.tempBuiltinProfiles];
+        delete this.tempBuiltinProfiles;
+      }
 
       console.log('Vivideo: All components initialized successfully');
       return true;
     }
 
-    loadActiveProfile(profileName) {
-      if (profileName && this.profiles.length > 0) {
-        const profile = this.profiles.find((p) => p.name === profileName);
+    ensureFilterEngine() {
+      if (this.filterEngine) return true;
+      if (typeof VideoFilterEngine === 'undefined') {
+        console.warn('Vivideo: VideoFilterEngine class not available for lazy init');
+        return false;
+      }
+      try {
+        this.filterEngine = new VideoFilterEngine(this);
+        console.log('Vivideo: FilterEngine lazy-initialized');
+        return true;
+      } catch (e) {
+        console.error('Vivideo: Failed to lazy-initialize FilterEngine', e);
+        return false;
+      }
+    }
+
+    safeAppend(node) {
+      if (!node) return;
+      if (document && document.body) {
+        try {
+          document.body.appendChild(node);
+        } catch (e) {
+          console.warn('Vivideo: safeAppend failed', e);
+        }
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          if (document && document.body) {
+            try {
+              document.body.appendChild(node);
+            } catch (e) {
+              console.warn('Vivideo: safeAppend failed on DOMContentLoaded', e);
+            }
+          }
+        });
+      }
+    }
+
+    loadActiveProfile(profileRef) {
+      if (!profileRef) return;
+
+      // If saved ref is 'DEFAULT', keep default behavior
+      if (profileRef === 'DEFAULT') {
+        this.settings.activeProfile = 'DEFAULT';
+        return;
+      }
+
+      // Try to find user profile by id first, then by name
+      if (this.profiles && this.profiles.length > 0) {
+        const byId = this.profiles.find((p) => p.id && p.id === profileRef);
+        const byName = this.profiles.find((p) => p.name === profileRef);
+        const profile = byId || byName;
         if (profile) {
           this.settings = { ...this.settings, ...profile.settings };
-          this.settings.activeProfile = profileName;
+          this.settings.activeProfile = profile.id || profile.name;
         }
       }
     }
@@ -368,7 +390,7 @@ if (window !== window.top) {
           ${UIHelper.createCheckboxesHTML(this.settings)}
           ${UIHelper.createInfoHTML()}
         `;
-        
+
         htmlContent = htmlContent.replace(
           /(<div class="vivideo-profile-section">)([\s\S]*?)(<\/div>)/,
           `$1${profileSectionContent}$3`
@@ -377,11 +399,7 @@ if (window !== window.top) {
 
       this.container.innerHTML = htmlContent;
 
-      document.body.appendChild(this.container);
-
-      // Initialize small behaviors (tooltips for switch info icons)
-      UIHelper.initInfoTooltips(this.container);
-
+      this.safeAppend(this.container);
       this.updateProfilesList();
 
       // Initialize checkbox and button states based on showDefaultProfiles setting
@@ -418,6 +436,20 @@ if (window !== window.top) {
         workOnAllSitesCheckbox.checked = this.profileManager.workOnAllSites;
       }
 
+      // Set checkbox state based on workOnEverything setting
+      const workOnEverythingCheckbox = this.container.querySelector('#work-on-everything-checkbox');
+      if (workOnEverythingCheckbox) {
+        workOnEverythingCheckbox.checked = !!this.profileManager.workOnEverything;
+      }
+
+      // Set checkbox state based on applyProfileSpeed setting
+      const applyProfileSpeedCheckbox = this.container.querySelector(
+        '#apply-profile-speed-checkbox'
+      );
+      if (applyProfileSpeedCheckbox) {
+        applyProfileSpeedCheckbox.checked = !!this.profileManager.applyProfileSpeed;
+      }
+
       // Set preferred speed input value
       const preferredSpeedInput = this.container.querySelector('#preferred-speed-input');
       if (preferredSpeedInput) {
@@ -427,7 +459,8 @@ if (window !== window.top) {
       console.log('Vivideo: Profiles UI initialized with settings:', {
         displayDefaultProfiles: this.profileManager.displayDefaultProfiles,
         showProfileAfterChange: this.profileManager.showProfileAfterChange,
-        workOnAllSites: this.profileManager.workOnAllSites
+        workOnAllSites: this.profileManager.workOnAllSites,
+        workOnEverything: this.profileManager.workOnEverything
       });
     }
 
@@ -447,7 +480,7 @@ if (window !== window.top) {
       this.videoControls.bindEvents(this.container);
       this.profileManager.bindEvents(this.container);
       this.settingsManager.bindEvents(this.container);
-      
+
       // Bind speed controller events
       if (this.speedController) {
         this.speedController.bindSpeedControlEvents(this.container);
@@ -481,6 +514,8 @@ if (window !== window.top) {
 
       // Dragging functionality
       this.dragHandlers = UIHelper.setupDragging(this.container, this);
+      // Resizing functionality (left edge: ew-resize, top edge: ns-resize)
+      this.resizeHandlers = UIHelper.setupResizing(this.container);
 
       // Handle fullscreen changes
       document.addEventListener('fullscreenchange', () => {
@@ -527,8 +562,13 @@ if (window !== window.top) {
       // Move panel to fullscreen element to make it visible
       try {
         if (fullscreenElement && fullscreenElement.appendChild) {
-          fullscreenElement.appendChild(this.container);
-          console.log('Vivideo: Panel moved to fullscreen element');
+          try {
+            fullscreenElement.appendChild(this.container);
+            console.log('Vivideo: Panel moved to fullscreen element');
+          } catch (e) {
+            console.warn('Vivideo: Could not append to fullscreenElement', e);
+            UIHelper.safeAppend(this.container);
+          }
         }
       } catch (error) {
         console.warn('Vivideo: Could not move panel to fullscreen element:', error);
@@ -546,12 +586,17 @@ if (window !== window.top) {
 
       // Restore panel to original parent
       try {
-        if (this.originalParent && this.originalParent.appendChild) {
-          this.originalParent.appendChild(this.container);
-          console.log('Vivideo: Panel restored to original position');
-        } else if (document.body) {
-          // Fallback: move to body
-          document.body.appendChild(this.container);
+        if (this.originalParent && typeof this.originalParent.appendChild === 'function') {
+          try {
+            this.originalParent.appendChild(this.container);
+            console.log('Vivideo: Panel restored to original position');
+          } catch (e) {
+            console.warn('Vivideo: Could not restore to originalParent', e);
+            UIHelper.safeAppend(this.container);
+            console.log('Vivideo: Panel restored to document body');
+          }
+        } else {
+          UIHelper.safeAppend(this.container);
           console.log('Vivideo: Panel restored to document body');
         }
       } catch (error) {
@@ -628,7 +673,7 @@ if (window !== window.top) {
         pointer-events: none;
         transition: opacity 0.3s ease;
       `;
-        document.body.appendChild(overlay);
+        this.safeAppend(overlay);
       }
 
       overlay.textContent = `${speed.toFixed(2)}x`;
@@ -650,7 +695,7 @@ if (window !== window.top) {
       UIHelper.updateCheckboxes(this.container, this.settings);
       this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
       this.themeManager.updateActiveThemeDisplay(this.container, this.currentTheme);
-      
+
       // Update speed controller UI
       if (this.speedController) {
         this.speedController.updateUI(this.container);
@@ -658,7 +703,7 @@ if (window !== window.top) {
     }
 
     applyFilters() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
@@ -673,10 +718,21 @@ if (window !== window.top) {
           this.filterEngine.attachPlayListeners();
         }
       }
+
+      // Apply global page filters when requested by profile manager
+      try {
+        if (this.profileManager && this.profileManager.workOnEverything) {
+          this.applyGlobalPageFilters();
+        } else {
+          this.removeGlobalPageFilters();
+        }
+      } catch (e) {
+        console.warn('Vivideo: applyGlobalPageFilters failed', e);
+      }
     }
 
     applyCompareFilters() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
@@ -689,15 +745,72 @@ if (window !== window.top) {
     }
 
     removeFilters() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
-      this.filterEngine.removeFilters();
+      if (this.filterEngine && typeof this.filterEngine.removeFilters === 'function') {
+        this.filterEngine.removeFilters();
+      }
+      try {
+        this.removeGlobalPageFilters();
+      } catch (e) {
+        console.warn('Vivideo: removeGlobalPageFilters failed', e);
+      }
+    }
+
+    applyGlobalPageFilters() {
+      try {
+        // Compute CSS filter values similar to VideoFilterEngine.applyFilterToElement
+        const adjusted = this.filterEngine
+          ? this.filterEngine.getAdjustedSettings(this.settings)
+          : this.settings;
+        const brightness = 1 + (adjusted.brightness || 0) / 100;
+        const contrast = 1 + (adjusted.contrast || 0) / 100;
+        const saturate = Math.max(0, 1 + (adjusted.saturation || 0) / 100);
+
+        let cssFilter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturate})`;
+
+        // If advanced filters would be used (gamma/colorTemp/sharpness), note in comment
+        const advancedExists =
+          (adjusted.gamma && adjusted.gamma !== 1) ||
+          (adjusted.colorTemp && adjusted.colorTemp !== 0) ||
+          (adjusted.sharpness && adjusted.sharpness > 0);
+        if (advancedExists) {
+          // Add a CSS comment indicating advanced SVG filter usage (SVG not applied globally here)
+          cssFilter += ' /* advanced-filter-present */';
+        }
+
+        const selector = 'body:not(.vivideo-container), body:not(.vivideo-container) *';
+        let styleEl = document.getElementById('vivideo-global-filter');
+        const rule = `${selector} { filter: ${cssFilter} !important; backdrop-filter: ${cssFilter} !important; }`;
+        if (!styleEl) {
+          styleEl = document.createElement('style');
+          styleEl.id = 'vivideo-global-filter';
+          styleEl.type = 'text/css';
+          styleEl.appendChild(document.createTextNode(rule));
+          document.head.appendChild(styleEl);
+        } else {
+          // Replace content
+          if (styleEl.firstChild) styleEl.firstChild.nodeValue = rule;
+          else styleEl.textContent = rule;
+        }
+      } catch (e) {
+        console.warn('Vivideo: applyGlobalPageFilters error', e);
+      }
+    }
+
+    removeGlobalPageFilters() {
+      try {
+        const existing = document.getElementById('vivideo-global-filter');
+        if (existing) existing.remove();
+      } catch (e) {
+        console.warn('Vivideo: removeGlobalPageFilters error', e);
+      }
     }
 
     observeVideos() {
-      if (!this.filterEngine) {
+      if (!this.ensureFilterEngine()) {
         console.warn('Vivideo: FilterEngine not initialized yet');
         return;
       }
@@ -706,27 +819,38 @@ if (window !== window.top) {
 
       // Main observer for DOM changes
       this.filterEngine.observeVideos(() => {
-        console.log('Vivideo: New media detected, autoActivate:', this.settings.autoActivate, 'isVisible:', this.isVisible);
-        
+        console.log(
+          'Vivideo: New media detected, autoActivate:',
+          this.settings.autoActivate,
+          'isVisible:',
+          this.isVisible
+        );
+
         // Always apply filters and speed if autoActivate is enabled
         if (this.settings.autoActivate) {
           // Apply filters immediately
           this.applyFilters();
-          
+
           // Apply speed through speed controller
           if (this.speedController) {
             setTimeout(() => {
               const videos = this.filterEngine.findVideos();
-              videos.forEach(video => {
-                if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
-                  this.speedController.applySpeedToVideo(video, this.speedController.getPreviousSpeed());
+              videos.forEach((video) => {
+                if (
+                  this.speedController.isAutoApplyPreviousSpeedEnabled() &&
+                  this.speedController.getPreviousSpeed() !== 1.0
+                ) {
+                  this.speedController.applySpeedToVideo(
+                    video,
+                    this.speedController.getPreviousSpeed()
+                  );
                 } else {
                   this.speedController.applySpeedToVideo(video, this.speedController.getSpeed());
                 }
               });
             }, 100);
           }
-          
+
           // Attach play listeners
           if (this.filterEngine && typeof this.filterEngine.attachPlayListeners === 'function') {
             this.filterEngine.attachPlayListeners();
@@ -756,13 +880,11 @@ if (window !== window.top) {
       this.periodicCheckInterval = setInterval(() => {
         if (this.settings.autoActivate) {
           const videos = this.filterEngine.findVideos();
-          const images = this.filterEngine.findImages();
-          
+          this.filterEngine.findImages();
+
           // Check if any videos don't have filters applied
           let needsReapply = false;
-          let unprocessedCount = 0;
-          
-          videos.forEach(video => {
+          videos.forEach((video) => {
             if (!video.style.filter || video.style.filter === 'none' || video.style.filter === '') {
               needsReapply = true;
               unprocessedCount++;
@@ -772,12 +894,18 @@ if (window !== window.top) {
           if (needsReapply) {
             console.log(`Vivideo: Periodic check found ${unprocessedCount} unprocessed video(s), reapplying filters`);
             this.applyFilters();
-            
-            // Apply speed to all videos
+
+            // Apply speed
             if (this.speedController) {
-              videos.forEach(video => {
-                if (this.speedController.isAutoApplyPreviousSpeedEnabled() && this.speedController.getPreviousSpeed() !== 1.0) {
-                  this.speedController.applySpeedToVideo(video, this.speedController.getPreviousSpeed());
+              videos.forEach((video) => {
+                if (
+                  this.speedController.isAutoApplyPreviousSpeedEnabled() &&
+                  this.speedController.getPreviousSpeed() !== 1.0
+                ) {
+                  this.speedController.applySpeedToVideo(
+                    video,
+                    this.speedController.getPreviousSpeed()
+                  );
                 } else {
                   this.speedController.applySpeedToVideo(video, this.speedController.getSpeed());
                 }
@@ -801,6 +929,12 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        keepQuality: this.settings.keepQuality,
+        videoQualityMode: this.settings.videoQualityMode,
+        upscaleQualityBoost: this.settings.upscaleQualityBoost,
+        linearColorPipeline: this.settings.linearColorPipeline,
+        forceHighQualityScaling: this.settings.forceHighQualityScaling,
+        targetedQualityLevel: this.settings.targetedQualityLevel,
         speed: 1.0,
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
@@ -809,13 +943,13 @@ if (window !== window.top) {
       };
 
       this.filterEngine.removeFilters();
-      
+
       // Sync speed controller with reset settings
       if (this.speedController) {
         this.speedController.currentSpeed = 1.0; // Default speed
         this.speedController.applySpeedToAllVideos(1.0);
       }
-      
+
       this.updateUI();
       this.applyFilters();
       this.saveSettings();
@@ -839,6 +973,11 @@ if (window !== window.top) {
         gamma: 1,
         colorTemp: 0,
         sharpness: 0,
+        keepQuality: this.settings.keepQuality,
+        videoQualityMode: this.settings.videoQualityMode,
+        upscaleQualityBoost: this.settings.upscaleQualityBoost,
+        linearColorPipeline: this.settings.linearColorPipeline,
+        forceHighQualityScaling: this.settings.forceHighQualityScaling,
         speed: 1.0,
         speedStep: this.settings.speedStep || 0.25, // Keep user's speed step setting
         autoActivate: this.settings.autoActivate,
@@ -986,6 +1125,12 @@ if (window !== window.top) {
           this.themesVisible = true;
         } else if (panelType === 'info') {
           this.infoVisible = true;
+          // Update info panel content whenever it's opened
+          try {
+            this.updateInfoPanel();
+          } catch (e) {
+            console.warn('Vivideo: Failed to update info panel', e);
+          }
         } else if (panelType === 'settingsManagement') {
           this.settingsManagementVisible = true;
         }
@@ -1029,22 +1174,65 @@ if (window !== window.top) {
       }
 
       try {
+        const profileScopedExclusions = [
+          'autoActivate',
+          'workOnImagesActivate',
+          'keepQuality',
+          'videoQualityMode',
+          'upscaleQualityBoost',
+          'linearColorPipeline',
+          'forceHighQualityScaling'
+        ];
         if (profile.name === 'DEFAULT') {
           this.settings.activeProfile = null;
           Object.keys(this.defaultSettings).forEach((key) => {
-            if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
+            if (!profileScopedExclusions.includes(key)) {
               this.settings[key] = this.defaultSettings[key];
             }
           });
         } else {
-          this.settings.activeProfile = profile.name;
-          Object.keys(profile.settings).forEach((key) => {
-            if (key !== 'autoActivate' && key !== 'workOnImagesActivate') {
-              this.settings[key] = profile.settings[key];
+          // Use id for Profile List when available (migrate activeProfile to id)
+          this.settings.activeProfile = profile.id || profile.name;
+          // Sanitize profile settings to avoid missing/invalid values
+          let sanitized = profile.settings || {};
+          if (this.profileManager && typeof this.profileManager.sanitizeSettings === 'function') {
+            sanitized = this.profileManager.sanitizeSettings(profile.settings || {});
+          } else {
+            // Fallback sanitization
+            const defaults = this.defaultSettings || {};
+            const keys = [
+              'brightness',
+              'contrast',
+              'saturation',
+              'gamma',
+              'colorTemp',
+              'sharpness',
+              'speed'
+            ];
+            keys.forEach((k) => {
+              const v =
+                sanitized && Object.prototype.hasOwnProperty.call(sanitized, k)
+                  ? sanitized[k]
+                  : undefined;
+              sanitized[k] =
+                typeof v === 'number' && !Number.isNaN(v)
+                  ? v
+                  : defaults[k] !== undefined
+                    ? defaults[k]
+                    : k === 'gamma'
+                      ? 1
+                      : k === 'speed'
+                        ? 1.0
+                        : 0;
+            });
+          }
+          Object.keys(sanitized).forEach((key) => {
+            if (!profileScopedExclusions.includes(key)) {
+              this.settings[key] = sanitized[key];
             }
           });
-          if (profile.settings.autoActivate !== undefined) {
-            this.settings.autoActivate = profile.settings.autoActivate;
+          if (sanitized.autoActivate !== undefined) {
+            this.settings.autoActivate = sanitized.autoActivate;
           }
         }
 
@@ -1055,8 +1243,17 @@ if (window !== window.top) {
 
         // Sync speed controller with loaded profile settings
         if (this.speedController && this.settings.speed !== undefined) {
-          this.speedController.currentSpeed = this.settings.speed;
-          this.speedController.applySpeedToAllVideos(this.settings.speed);
+          if (this.profileManager && this.profileManager.applyProfileSpeed) {
+            this.speedController.currentSpeed = this.settings.speed;
+            this.speedController.applySpeedToAllVideos(this.settings.speed);
+          } else {
+            // Apply currently-set controller speed to videos (do not override from profile)
+            const current =
+              this.speedController.currentSpeed !== undefined
+                ? this.speedController.currentSpeed
+                : this.settings.speed || 1.0;
+            this.speedController.applySpeedToAllVideos(current);
+          }
         }
 
         // Force immediate UI update with delay to ensure DOM is ready
@@ -1083,7 +1280,10 @@ if (window !== window.top) {
 
     deleteProfile(index) {
       const deletedProfile = this.profiles[index];
-      if (this.settings.activeProfile === deletedProfile.name) {
+      if (
+        this.settings.activeProfile === deletedProfile.name ||
+        (deletedProfile.id && this.settings.activeProfile === deletedProfile.id)
+      ) {
         this.settings.activeProfile = null;
         this.saveAppState();
       }
@@ -1091,6 +1291,17 @@ if (window !== window.top) {
       this.profiles.splice(index, 1);
       this.saveProfiles();
       this.updateProfilesList();
+      // Refresh duplicate warnings / active profile display after deletion so UI updates immediately
+      if (
+        this.profileManager &&
+        typeof this.profileManager.updateActiveProfileDisplay === 'function'
+      ) {
+        try {
+          this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
+        } catch (e) {
+          console.warn('Vivideo: updateActiveProfileDisplay after delete failed', e);
+        }
+      }
     }
 
     // Theme methods
@@ -1161,6 +1372,44 @@ if (window !== window.top) {
       this.saveThemeColors();
     }
 
+    // Update info panel dynamic content (video count and enhancement status)
+    updateInfoPanel() {
+      if (!this.container) return;
+      const infoPanel = this.container.querySelector('#info-panel');
+      if (!infoPanel) return;
+
+      const videoCountDiv = infoPanel.querySelector('#vivideo-video-count');
+      const enhancementStatusDiv = infoPanel.querySelector('#vivideo-enhancement-status');
+
+      let videoCount = 0;
+      try {
+        if (this.filterEngine && typeof this.filterEngine.findVideos === 'function') {
+          videoCount = this.filterEngine.findVideos().length;
+        } else {
+          videoCount = document.querySelectorAll('video').length;
+        }
+      } catch (e) {
+        console.warn('Vivideo: Could not determine video count', e);
+      }
+
+      if (videoCountDiv) {
+        videoCountDiv.textContent = `${videoCount} ${videoCount === 1 ? 'video found' : 'videos found'}`;
+      }
+
+      const hasChanges =
+        this.settings.brightness !== 0 ||
+        this.settings.contrast !== 0 ||
+        this.settings.saturation !== 0 ||
+        this.settings.gamma !== 1 ||
+        this.settings.colorTemp !== 0 ||
+        this.settings.sharpness !== 0 ||
+        (this.settings.speed !== undefined && this.settings.speed !== 1.0);
+
+      if (enhancementStatusDiv) {
+        enhancementStatusDiv.textContent = `Enhancement: ${hasChanges ? 'Modified' : 'None'}`;
+      }
+    }
+
     // Main visibility controls
     toggle() {
       console.log('Vivideo: Toggle called, isVisible:', this.isVisible, 'timestamp:', Date.now());
@@ -1208,7 +1457,22 @@ if (window !== window.top) {
 
       this.updateActiveStates();
       this.updateProfilesList(); // Update profiles list when showing panel
+      // Sync speed controller with actual player speeds immediately when panel opens
+      if (this.speedController && typeof this.speedController.syncWithVideoSpeeds === 'function') {
+        try {
+          this.speedController.syncWithVideoSpeeds();
+        } catch (e) {
+          console.warn('Vivideo: Failed to sync speed controller on show', e);
+        }
+      }
       this.applyFilters();
+      // Update info panel status while showing
+      try {
+        this.updateInfoPanel();
+      } catch (e) {
+        // Non-fatal: log and continue
+        console.warn('Vivideo: updateInfoPanel failed on show', e);
+      }
     }
 
     hide() {
@@ -1229,6 +1493,15 @@ if (window !== window.top) {
         this.themesVisible = false;
         this.infoVisible = false;
         this.updateActiveStates();
+        // Clear any profile edit flags to avoid leaving UI in edit state
+        if (this.profileManager) {
+          try {
+            this.profileManager.isEditingProfile = false;
+            this.profileManager.editingIndex = null;
+          } catch (e) {
+            console.warn('Vivideo: Failed to clear profile edit state on hide', e);
+          }
+        }
       }, 300);
     }
 
@@ -1236,9 +1509,35 @@ if (window !== window.top) {
     async saveSettings() {
       await StorageUtils.saveSettings(this.settings);
 
-      // If auto-save profiles is enabled, update active profile automatically
-      if (this.profileManager && this.settings.autoSaveProfiles) {
-        this.profileManager.autoSaveActiveProfile();
+      // If auto-save profiles is enabled, update the active user profile with current settings
+      try {
+        if (
+          this.settings.autoSaveProfiles &&
+          this.settings.activeProfile &&
+          this.settings.activeProfile !== 'DEFAULT'
+        ) {
+          const idx = this.profiles.findIndex(
+            (p) =>
+              (p.id && p.id === this.settings.activeProfile) ||
+              p.name === this.settings.activeProfile
+          );
+          if (idx !== -1) {
+            // Copy only relevant visual settings into profile
+            const profileSettings = {
+              brightness: this.settings.brightness,
+              contrast: this.settings.contrast,
+              saturation: this.settings.saturation,
+              gamma: this.settings.gamma,
+              colorTemp: this.settings.colorTemp,
+              sharpness: this.settings.sharpness,
+              speed: this.settings.speed
+            };
+            this.profiles[idx].settings = profileSettings;
+            await StorageUtils.saveProfiles(this.profiles);
+          }
+        }
+      } catch (e) {
+        console.warn('Vivideo: Auto-save profile failed', e);
       }
     }
 
@@ -1261,7 +1560,11 @@ if (window !== window.top) {
         showProfileAfterChange: this.profileManager
           ? this.profileManager.showProfileAfterChange
           : true,
-        workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false
+        applyProfileSpeed: this.profileManager ? this.profileManager.applyProfileSpeed : false,
+        workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false,
+        workOnEverything: this.profileManager ? this.profileManager.workOnEverything : false,
+        profileCategories: this.profileManager ? this.profileManager.profileCategories : [],
+        builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : []
       });
     }
 
@@ -1393,6 +1696,12 @@ if (window !== window.top) {
       sendResponse({ success: true });
     }
 
+    if (request.action === 'ensure-vivideo') {
+      // Sent from background when tab is activated or updated
+      tryEnsureInitializedAndApply();
+      sendResponse({ success: true });
+    }
+
     if (request.action === 'default-profile') {
       // Simple toggle to default profile
       if (window.vivideoController) {
@@ -1470,6 +1779,65 @@ if (window !== window.top) {
     return true;
   });
 
+  // Additional automatic re-checks to improve auto-activation reliability
+  function tryEnsureInitializedAndApply() {
+    try {
+      if (!window.vivideoController) {
+        initializeVivideo();
+        setTimeout(() => {
+          if (window.vivideoController) window.vivideoController.applyFilters();
+        }, 150);
+      } else {
+        // Controller exists - ensure filters are applied and videos observed
+        try {
+          window.vivideoController.applyFilters();
+          if (
+            window.vivideoController.filterEngine &&
+            typeof window.vivideoController.filterEngine.observeVideos === 'function'
+          ) {
+            // Re-attach observers if needed
+            // observeVideos already sets up observers; calling ensure doesn't duplicate heavy work
+          }
+        } catch (e) {
+          console.warn('Vivideo: Error during auto apply', e);
+        }
+      }
+    } catch (e) {
+      console.warn('Vivideo: tryEnsureInitializedAndApply failed', e);
+    }
+  }
+
+  // Visibility and navigation events: re-check on tab switch, back/forward, pageshow and focus
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      tryEnsureInitializedAndApply();
+    }
+  });
+
+  window.addEventListener('pageshow', () => {
+    tryEnsureInitializedAndApply();
+  });
+
+  window.addEventListener('focus', () => {
+    tryEnsureInitializedAndApply();
+  });
+
+  // Listen for media play events globally to ensure filters apply to newly started media
+  document.addEventListener(
+    'play',
+    () => {
+      try {
+        // Only apply filters if our controller exists and is fully initialized
+        if (window.vivideoController && window.vivideoController.isInitialized) {
+          window.vivideoController.applyFilters();
+        }
+      } catch (err) {
+        console.warn('Vivideo: play handler error', err);
+      }
+    },
+    true
+  );
+
   // Initialization
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeVivideo);
@@ -1487,24 +1855,26 @@ if (window !== window.top) {
   document.addEventListener('keydown', (e) => {
     const controller = window.vivideoController;
     // Always get fresh toggleWithoutAlt setting
-    const toggleWithoutAlt = controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
+    const toggleWithoutAlt =
+      controller && controller.settings ? controller.settings.toggleWithoutAlt : false;
 
     // Handle V key for panel toggle
-    if (shouldHandleKeyboardShortcuts && e.key.toLowerCase() === 'v') {
+    // Guard access to `e.key` in case it's undefined in some environments
+    if (shouldHandleKeyboardShortcuts && typeof e.key === 'string' && e.key.toLowerCase() === 'v') {
       // Check if we should handle V without Alt or Alt+V
-      const shouldToggle = toggleWithoutAlt ? 
-        (!e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey) : 
-        (e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey);
+      const shouldToggle = toggleWithoutAlt
+        ? !e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey
+        : e.altKey && !e.ctrlKey && !e.shiftKey && !e.metaKey;
 
       if (shouldToggle) {
         // Additional check to avoid conflicts with input fields
         const activeElement = document.activeElement;
-        const isInputField = activeElement && (
-          activeElement.tagName === 'INPUT' || 
-          activeElement.tagName === 'TEXTAREA' || 
-          activeElement.contentEditable === 'true' ||
-          activeElement.isContentEditable
-        );
+        const isInputField =
+          activeElement &&
+          (activeElement.tagName === 'INPUT' ||
+            activeElement.tagName === 'TEXTAREA' ||
+            activeElement.contentEditable === 'true' ||
+            activeElement.isContentEditable);
 
         // If toggle without Alt is enabled, be extra careful about input fields
         if (toggleWithoutAlt && isInputField) {
@@ -1515,7 +1885,7 @@ if (window !== window.top) {
         e.preventDefault();
         e.stopPropagation();
         console.log(`Vivideo: ${toggleWithoutAlt ? 'V' : 'Alt+V'} keyboard shortcut detected`);
-        
+
         if (controller) {
           controller.toggle();
         } else {
@@ -1536,9 +1906,10 @@ if (window !== window.top) {
     // Profile control shortcuts - Alt+B/C only
     if (window.vivideoController) {
       const controller = window.vivideoController;
+      const key = typeof e.key === 'string' ? e.key.toLowerCase() : '';
 
       // Alt + C: Previous Profile
-      if (e.key === 'c') {
+      if (key === 'c') {
         e.preventDefault();
         if (controller.profileManager) {
           controller.profileManager.previousProfile();
@@ -1547,7 +1918,7 @@ if (window !== window.top) {
       }
 
       // Alt + B: Next Profile
-      else if (e.key === 'b') {
+      else if (key === 'b') {
         e.preventDefault();
         if (controller.profileManager) {
           controller.profileManager.nextProfile();
@@ -1557,11 +1928,17 @@ if (window !== window.top) {
     }
 
     // Handle B and C keys for profile switching when toggleWithoutAlt is enabled
-    if (controller && controller.settings && controller.settings.toggleWithoutAlt && 
-        !e.altKey && !e.ctrlKey && !e.shiftKey) {
-      
+    if (
+      controller &&
+      controller.settings &&
+      controller.settings.toggleWithoutAlt &&
+      !e.altKey &&
+      !e.ctrlKey &&
+      !e.shiftKey
+    ) {
+      const keyNoAlt = typeof e.key === 'string' ? e.key.toLowerCase() : '';
       // C: Previous Profile (without Alt)
-      if (e.key === 'c') {
+      if (keyNoAlt === 'c') {
         e.preventDefault();
         e.stopPropagation();
         if (controller.profileManager) {
@@ -1572,7 +1949,7 @@ if (window !== window.top) {
       }
 
       // B: Next Profile (without Alt)
-      else if (e.key === 'b') {
+      else if (keyNoAlt === 'b') {
         e.preventDefault();
         e.stopPropagation();
         if (controller.profileManager) {

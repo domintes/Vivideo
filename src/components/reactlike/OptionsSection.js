@@ -16,43 +16,69 @@ const OptionsSection = ({
   return (
     <div className="vivideo-options-section">
       <div className="vivideo-option">
-        <label>
+        <label className="vivideo-switch-container">
           <input
             type="checkbox"
+            className="vivideo-switch-input"
             checked={extendedLimits}
             onChange={(e) => onExtendedLimitsChange && onExtendedLimitsChange(e.target.checked)}
           />
-          Extended Limits
+          <span className="vivideo-switch-track" />
+          <span className="vivideo-switch-label">Extended</span>
+          <button className="vivideo-info-icon" title="Enable extended technical ranges">
+            ❔
+          </button>
         </label>
       </div>
+
       <div className="vivideo-option">
-        <label>
+        <label className="vivideo-switch-container">
           <input
             type="checkbox"
+            className="vivideo-switch-input"
             checked={autoActivate}
             onChange={(e) => onAutoActivateChange && onAutoActivateChange(e.target.checked)}
           />
-          Auto Activate
+          <span className="vivideo-switch-track" />
+          <span className="vivideo-switch-label">Auto</span>
+          <button
+            className="vivideo-info-icon"
+            title="Auto-activate extension when videos are detected"
+          >
+            ❔
+          </button>
         </label>
       </div>
+
       <div className="vivideo-option">
-        <label>
+        <label className="vivideo-switch-container">
           <input
             type="checkbox"
+            className="vivideo-switch-input"
             checked={workOnImages}
             onChange={(e) => onWorkOnImagesChange && onWorkOnImagesChange(e.target.checked)}
           />
-          Work on Images
+          <span className="vivideo-switch-track" />
+          <span className="vivideo-switch-label">Images</span>
+          <button className="vivideo-info-icon" title="Apply filters to images as well">
+            ❔
+          </button>
         </label>
       </div>
+
       <div className="vivideo-option">
-        <label>
+        <label className="vivideo-switch-container">
           <input
             type="checkbox"
+            className="vivideo-switch-input"
             checked={compareMode}
             onChange={(e) => onCompareModeChange && onCompareModeChange(e.target.checked)}
           />
-          Compare Mode
+          <span className="vivideo-switch-track" />
+          <span className="vivideo-switch-label">Compare</span>
+          <button className="vivideo-info-icon" title="Split-screen profile comparison">
+            ❔
+          </button>
         </label>
       </div>
       <div className="vivideo-option">

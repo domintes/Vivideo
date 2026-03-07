@@ -18,6 +18,14 @@ class VideoControls {
 
     const inputMaxLength = this.controller.settings.extendedLimits ? '5' : '4';
     const gammaInputMaxLength = '4';
+    const videoQualityLevel =
+      typeof this.controller.settings.targetedQualityLevel === 'number'
+        ? this.controller.settings.targetedQualityLevel
+        : this.controller.settings.videoQualityMode === 'soft'
+          ? 0
+          : this.controller.settings.videoQualityMode === 'detail'
+            ? 100
+            : 50;
 
     return /*html*/ `
       <div class="vivideo-controls-section">
@@ -125,6 +133,37 @@ class VideoControls {
         </div>
       </div>
 
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Targeted Quality</span>
+          <span class="vivideo-value" id="video-quality-value">Balanced</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider" id="video-quality-slider" 
+                 min="0" max="100" value="${videoQualityLevel}" step="1">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="video-quality-input" 
+                 placeholder="50" maxlength="3">
+          <button class="vivideo-reset-single" data-control="targetedQualityLevel" title="Reset targeted quality">↺</button>
+        </div>
+      </div>
+
+      <div class="vivideo-control">
+        <div class="vivideo-label">
+          <span>Video Speed</span>
+          <span class="vivideo-value" id="speed-value">1.00x</span>
+        </div>
+        <div class="vivideo-slider-container">
+          <span>◄</span>
+          <input type="range" class="vivideo-slider vivideo-speed-slider" id="speed-slider"
+                 min="0.05" max="25" value="${this.controller.settings.speed || 1.0}" step="0.05">
+          <span>►</span>
+          <input type="text" class="vivideo-input" id="speed-input" placeholder="1.00" maxlength="5">
+          <button class="vivideo-reset-single" data-control="speed" title="Reset speed">↺</button>
+        </div>
+      </div>
+
 
       </div>
     `;
@@ -139,18 +178,63 @@ class VideoControls {
       });
     });
 
+    // Targeted Quality slider bindings
+    const videoQualitySlider = container.querySelector('#video-quality-slider');
+    const videoQualityInput = container.querySelector('#video-quality-input');
+    const videoQualityValue = container.querySelector('#video-quality-value');
+
+    const mapLevelToMode = (val) => {
+      const v = Number(val);
+      if (isNaN(v)) return 'balanced';
+      if (v <= 25) return 'soft';
+      if (v >= 75) return 'detail';
+      return 'balanced';
+    };
+
+    if (videoQualitySlider) {
+      videoQualitySlider.addEventListener('input', (e) => {
+        const val = parseInt(e.target.value, 10) || 0;
+        // map to string mode for backward compatibility
+        const mode = mapLevelToMode(val);
+        this.controller.settings.videoQualityMode = mode;
+        this.controller.updateControl('targetedQualityLevel', val);
+        if (videoQualityValue)
+          videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+        if (videoQualityInput) videoQualityInput.value = val;
+      });
+    }
+
+    if (videoQualityInput) {
+      videoQualityInput.addEventListener('input', (e) => {
+        const v = parseInt(e.target.value, 10);
+        if (isNaN(v)) return;
+        const clamped = Math.max(0, Math.min(100, v));
+        const mode = mapLevelToMode(clamped);
+        this.controller.settings.videoQualityMode = mode;
+        this.controller.updateControl('targetedQualityLevel', clamped);
+        if (videoQualitySlider) videoQualitySlider.value = clamped;
+        if (videoQualityValue)
+          videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+      });
+    }
+
+    // Speed input binding (the slider itself is handled by SpeedController)
+    const speedInput = container.querySelector('#speed-input');
+    if (speedInput) {
+      speedInput.addEventListener('input', (e) => {
+        const v = parseFloat(e.target.value);
+        if (!isNaN(v)) {
+          // Use controller.updateControl so speed is applied consistently
+          this.controller.updateControl('speed', v);
+        }
+      });
+    }
+
     this.bindControlEvents(container);
   }
 
   bindControlEvents(container) {
-    const controls = [
-      'brightness',
-      'contrast',
-      'saturation',
-      'gamma',
-      'colortemp',
-      'sharpness'
-    ];
+    const controls = ['brightness', 'contrast', 'saturation', 'gamma', 'colortemp', 'sharpness'];
 
     controls.forEach((control) => {
       const slider = container.querySelector(`#${control}-slider`);
@@ -358,6 +442,24 @@ class VideoControls {
       sharpnessInput.style.color = '';
       sharpnessInput.removeAttribute('placeholder');
       sharpnessValue.textContent = `${settings.sharpness}%`;
+    }
+
+    // Update targeted quality
+    const videoQualitySlider = container.querySelector('#video-quality-slider');
+    const videoQualityInput = container.querySelector('#video-quality-input');
+    const videoQualityValue = container.querySelector('#video-quality-value');
+
+    if (videoQualitySlider && videoQualityInput && videoQualityValue) {
+      let level = settings.targetedQualityLevel;
+      if (typeof level !== 'number') {
+        if (settings.videoQualityMode === 'soft') level = 0;
+        else if (settings.videoQualityMode === 'detail') level = 100;
+        else level = 50;
+      }
+      videoQualitySlider.value = level;
+      videoQualityInput.value = level;
+      const label = level <= 25 ? 'Soft' : level >= 75 ? 'Detail' : 'Balanced';
+      videoQualityValue.textContent = label;
     }
 
     // Update speed

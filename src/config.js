@@ -14,7 +14,7 @@ const VivideoConfig = {
 
   // Feature flags
   features: {
-    themesPanel: false, // Controlled by testMode
+    themesPanel: true, // Theme panel visible by default
     profileAnimations: true,
     panelAnimations: true,
     keyboardShortcuts: true

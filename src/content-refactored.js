@@ -162,7 +162,7 @@ if (window !== window.top) {
             if (stored) {
               try {
                 data[key] = JSON.parse(stored);
-              } catch (e) {
+              } catch {
                 console.warn('Failed to parse stored data for', key);
               }
             }
@@ -217,7 +217,7 @@ if (window !== window.top) {
       // Create the main panel using React
       const panelContainer = document.createElement('div');
       panelContainer.id = 'vivideo-react-root';
-      document.body.appendChild(panelContainer);
+      UIHelper.safeAppend(panelContainer);
 
       // Import React components
       import('./components/reactlike/VivideoMainPanel.js').then(({ default: VivideoMainPanel }) => {
@@ -603,7 +603,7 @@ if (window !== window.top) {
       const a = document.createElement('a');
       a.href = url;
       a.download = `vivideo-settings-${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}.json`;
-      document.body.appendChild(a);
+      UIHelper.safeAppend(a);
       a.click();
       document.body.removeChild(a);
 

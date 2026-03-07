@@ -41,27 +41,47 @@ class ThemeManager {
 
   bindEvents(container) {
     // Theme controls
-    container.querySelector('#themes-btn').addEventListener('click', () => {
-      this.controller.toggleThemes();
-    });
-
-    container.querySelectorAll('.vivideo-theme-option').forEach((option) => {
-      option.addEventListener('click', (e) => {
-        const theme = e.currentTarget.getAttribute('data-theme');
-        this.controller.changeTheme(theme);
+    const themesBtn = UIHelper.safeQuery(container, '#themes-btn');
+    if (themesBtn) {
+      themesBtn.addEventListener('click', () => {
+        this.controller.toggleThemes();
       });
-    });
+    }
+
+    const themeOptions = UIHelper.safeQueryAll(container, '.vivideo-theme-option');
+    if (themeOptions && themeOptions.length) {
+      themeOptions.forEach((option) => {
+        option.addEventListener('click', (e) => {
+          const theme = e.currentTarget.getAttribute('data-theme');
+          this.controller.changeTheme(theme);
+        });
+      });
+    }
 
     // Theme color pickers
-    container.querySelector('#font-theme-color-slider').addEventListener('input', (e) => {
-      const hue = parseInt(e.target.value);
-      this.controller.updateFontThemeColor(hue);
-    });
+    const fontSlider = UIHelper.safeQuery(container, '#font-theme-color-slider');
+    if (fontSlider) {
+      fontSlider.addEventListener('input', (e) => {
+        const hue = parseInt(e.target.value);
+        this.controller.updateFontThemeColor(hue);
+      });
+    }
 
-    container.querySelector('#background-theme-color-slider').addEventListener('input', (e) => {
-      const hue = parseInt(e.target.value);
-      this.controller.updateBackgroundThemeColor(hue);
-    });
+    const backgroundSlider = UIHelper.safeQuery(container, '#background-theme-color-slider');
+    if (backgroundSlider) {
+      backgroundSlider.addEventListener('input', (e) => {
+        const hue = parseInt(e.target.value);
+        this.controller.updateBackgroundThemeColor(hue);
+      });
+    }
+  }
+
+  updateThemesList(container, currentTheme) {
+    this.updateThemeSelection(container, currentTheme);
+    this.updateThemeColorSliders(container, currentTheme);
+    this.updateColorPreviews(container, currentTheme);
+    this.updateActiveThemeDisplay(container, currentTheme);
+    this.applyThemeColors(currentTheme, this.controller.themeColors, container);
   }
 
   updateThemeSelection(container, currentTheme) {
@@ -141,7 +161,7 @@ class ThemeManager {
     const fontDarkColor = `hsl(${fontHue}, ${saturation}%, ${Math.max(lightness - 20, 10)}%)`;
 
     const bgColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.max(lightness - 30, 10)}%)`;
-    const bgLightColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.min(lightness - 15, 25)}%)`;
+    // bgLightColor was calculated previously but is unused in this implementation
     const bgDarkColor = `hsl(${backgroundHue}, ${saturation}%, ${Math.max(lightness - 45, 5)}%)`;
 
     style.textContent = /*css*/ `
@@ -237,18 +257,18 @@ class ThemeManager {
         border-color: ${fontColor};
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profile-item {
+      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profiles-list-item {
         background: ${fontColor}1A;
         border-color: ${fontColor}33;
         color: ${fontColor};
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profile-item:hover {
+      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profiles-list-item:hover {
         background: ${fontColor}33;
         border-color: ${fontColor}66;
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profile-item.vivideo-profile-active {
+      .vivideo-container.vivideo-theme-${currentTheme} .vivideo-profiles-list-item.vivideo-profile-active {
         background: ${fontColor}4D;
         border-color: ${fontColor};
       }
@@ -271,7 +291,7 @@ class ThemeManager {
         box-shadow: 0 0 8px ${fontColor}4D;
       }
       
-      .vivideo-container.vivideo-theme-${currentTheme} .active-profile-status.active {
+      .vivideo-container.vivideo-theme-${currentTheme} .active-item-status-warning.active {
         background: ${fontColor}33;
         color: ${fontColor};
         border-color: ${fontColor}66;
@@ -279,7 +299,7 @@ class ThemeManager {
       }
     `;
 
-    document.head.appendChild(style);
+    UIHelper.safeAppendTo(document.head, style);
     container.className = `vivideo-container vivideo-theme-${currentTheme}`;
     if (container.classList.contains('vivideo-visible')) {
       container.classList.add('vivideo-visible');

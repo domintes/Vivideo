@@ -39,7 +39,7 @@
         console.error('Vivideo: Failed to load component:', src);
         reject(new Error(`Failed to load ${src}`));
       };
-      document.head.appendChild(script);
+      UIHelper.safeAppendTo(document.head, script);
     });
   }
 
@@ -57,7 +57,7 @@
         console.error('Vivideo: Failed to load CSS:', href);
         reject(new Error(`Failed to load ${href}`));
       };
-      document.head.appendChild(link);
+      UIHelper.safeAppendTo(document.head, link);
     });
   }
 

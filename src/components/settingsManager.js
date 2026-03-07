@@ -47,7 +47,7 @@ class SettingsManager {
         const a = document.createElement('a');
         a.href = url;
         a.download = fileName;
-        document.body.appendChild(a);
+        UIHelper.safeAppend(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
@@ -56,7 +56,7 @@ class SettingsManager {
       return { success: true, message: 'Settings exported successfully!' };
     } catch (error) {
       console.error('Export error:', error);
-      return { success: false, message: 'Error during export: ' + error.message };
+      return { success: false, message: 'Export error: ' + error.message };
     }
   }
 
@@ -102,7 +102,7 @@ class SettingsManager {
           });
         } catch (error) {
           console.error('Import error:', error);
-          reject(new Error('Error during import: ' + error.message));
+          reject(new Error('Import error: ' + error.message));
         }
       };
 
@@ -199,19 +199,19 @@ class SettingsManager {
   // Create import/export HTML interface
   createImportExportHTML() {
     return /*html*/ `
-      <div class="vivideo-settings-management" style="display: none;" id="settings-management">
-        <div class="vivideo-settings-section">
-          <h3>⚙️ Settings Management</h3>
+      <div class="vivideo-settings-management" style="display: block;" id="settings-management">
+        <div>
+            <div class="vivideo-box-header vivideo-settings-box-header">🔄 Import/Export Settings</div>
           
           <div class="settings-actions">
             <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Export all settings and profiles">
-              📤 Export settings
+            📤 Export settings
             </button>
             
             <div class="import-section">
               <input type="file" id="import-settings-file" accept=".json" style="display: none;">
               <button class="vivideo-control-btn import-btn" id="import-settings-btn" title="Import settings from file">
-                📥 Import settings
+              📥 Import settings
               </button>
             </div>
           </div>
@@ -220,8 +220,8 @@ class SettingsManager {
             <p>📝 Export includes:</p>
             <ul>
               <li>✅ All filter settings</li>
-              <li>✅ Saved user profiles</li>
-              <li>✅ Theme settings</li>
+              <li>✅ Profile List</li>
+              <li>✅ Theme selection</li>
               <li>✅ Theme colors</li>
             </ul>
           </div>
@@ -255,14 +255,14 @@ class SettingsManager {
       fileInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
-            this.showMessage(messageDiv, 'Importing settings...', 'info');
+          this.showMessage(messageDiv, 'Importing settings...', 'info');
           try {
             const result = await this.importSettings(file);
-              this.showMessage(
-                messageDiv,
-                `${result.message} Imported ${result.profilesCount} profiles.`,
-                'success'
-              );
+            this.showMessage(
+              messageDiv,
+              `${result.message} Imported ${result.profilesCount} profiles.`,
+              'success'
+            );
             // Clear file input
             fileInput.value = '';
           } catch (error) {
@@ -307,7 +307,7 @@ class SettingsManager {
       return { success: true, message: 'Previous settings restored' };
     } catch (error) {
       console.error('Restore error:', error);
-      return { success: false, message: 'Error during restore: ' + error.message };
+      return { success: false, message: 'Restore error: ' + error.message };
     }
   }
 }

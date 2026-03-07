@@ -23,7 +23,9 @@ const VivideoMainPanel = ({
     extendedLimits: false,
     autoActivate: true,
     workOnImages: false,
-    compareMode: false
+    compareMode: false,
+    overwritePlayerSpeed: true,
+    autoApplyPreviousSpeed: false
   },
   profiles: initialProfiles = [],
   activeProfile: initialActiveProfile = 'DEFAULT',
@@ -98,6 +100,74 @@ const VivideoMainPanel = ({
       }
     };
   }, []);
+
+  // Bind info-icon popovers for react-rendered icons inside panel
+  useEffect(() => {
+    const root = panelRef.current;
+    if (!root) return;
+
+    const icons = root.querySelectorAll('.vivideo-info-icon');
+    const handlers = [];
+
+    icons.forEach((icon) => {
+      let hoverTimer = null;
+      let popup = null;
+
+      const showPopup = () => {
+        const text = icon.getAttribute('title') || icon.getAttribute('data-info') || '';
+        if (!text) return;
+        popup = document.createElement('div');
+        popup.className = 'vivideo-info-popup';
+        popup.textContent = text;
+        UIHelper.safeAppend(popup);
+        const rect = icon.getBoundingClientRect();
+        popup.style.position = 'absolute';
+        popup.style.left = rect.right + 8 + 'px';
+        popup.style.top = rect.top + 'px';
+        popup.style.zIndex = 2147483647;
+      };
+
+      const hidePopup = () => {
+        if (hoverTimer) {
+          clearTimeout(hoverTimer);
+          hoverTimer = null;
+        }
+        if (popup && popup.parentNode) {
+          popup.parentNode.removeChild(popup);
+          popup = null;
+        }
+      };
+
+      const enter = () => {
+        hoverTimer = setTimeout(showPopup, 500);
+      };
+      const leave = () => {
+        hidePopup();
+      };
+      const click = (e) => {
+        e.stopPropagation();
+        if (popup) hidePopup();
+        else {
+          showPopup();
+          setTimeout(hidePopup, 2500);
+        }
+      };
+
+      icon.addEventListener('mouseenter', enter);
+      icon.addEventListener('mouseleave', leave);
+      icon.addEventListener('click', click);
+
+      handlers.push({ icon, enter, leave, click });
+    });
+
+    return () => {
+      handlers.forEach(({ icon, enter, leave, click }) => {
+        icon.removeEventListener('mouseenter', enter);
+        icon.removeEventListener('mouseleave', leave);
+        icon.removeEventListener('click', click);
+      });
+    };
+  }, [panelRef.current]);
 
   useEffect(() => {
     if (panelRef.current) {
@@ -252,6 +322,10 @@ const VivideoMainPanel = ({
           speed={settings.speed}
           speedStep={settings.speedStep || 0.25}
           onSpeedChange={handleSpeedChange}
+          overwritePlayerSpeed={settings.overwritePlayerSpeed}
+          autoApplyPreviousSpeed={settings.autoApplyPreviousSpeed}
+          onToggleOverwrite={(enabled) => handleOptionsChange('overwritePlayerSpeed', enabled)}
+          onToggleAutoApply={(enabled) => handleOptionsChange('autoApplyPreviousSpeed', enabled)}
         />
 
         <OptionsSection
@@ -309,69 +383,10 @@ const VivideoMainPanel = ({
           onTabChange={setActiveTab}
           onProfileSelect={handleProfileSelect}
           onThemeSelect={handleThemeSelect}
-          onCreateProfile={(profileName) => {
-            const newProfile = {
-              name: profileName,
-              description: `Created on ${new Date().toLocaleDateString()}`,
-              settings: { ...settings }
-            };
-            const updatedProfiles = [...profiles, newProfile];
-            setProfiles(updatedProfiles);
-            console.log('Profile created:', profileName);
-          }}
-          onDeleteProfile={(profileName) => {
-            if (profileName !== 'DEFAULT') {
-              const updatedProfiles = profiles.filter((p) => p.name !== profileName);
-              setProfiles(updatedProfiles);
-              if (activeProfile === profileName) {
-                handleProfileSelect('DEFAULT');
-              }
-              console.log('Profile deleted:', profileName);
-            }
-          }}
-          onImportSettings={() => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = (e) => {
-              const file = e.target.files[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                  try {
-                    const data = JSON.parse(event.target.result);
-                    if (data.profiles) {
-                      setProfiles(data.profiles);
-                    }
-                    if (data.settings) {
-                      setSettings(data.settings);
-                    }
-                    console.log('Settings imported successfully');
-                  } catch (error) {
-                    console.error('Error importing settings:', error);
-                  }
-                };
-                reader.readAsText(file);
-              }
-            };
-            input.click();
-          }}
-          onExportSettings={() => {
-            const dataToExport = {
-              profiles: profiles,
-              settings: settings,
-              exportDate: new Date().toISOString()
-            };
-            const dataStr = JSON.stringify(dataToExport, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `vivideo-profiles-${Date.now()}.json`;
-            link.click();
-            URL.revokeObjectURL(url);
-            console.log('Settings exported successfully');
-          }}
+          onCreateProfile={() => console.log('Save profile')}
+          onDeleteProfile={(profileName) => console.log('Delete profile', profileName)}
+          onImportSettings={() => console.log('Import settings')}
+          onExportSettings={() => console.log('Export settings')}
         />
       </div>
     </div>

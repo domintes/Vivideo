@@ -6,6 +6,101 @@ class VideoFilterEngine {
     this.controller = controller;
   }
 
+  getQualityProfileSettings(mode) {
+    const soft = { tone: 0.72, chroma: 0.68, gamma: 0.75 };
+    const balanced = { tone: 0.82, chroma: 0.78, gamma: 0.84 };
+    const detail = { tone: 0.94, chroma: 0.9, gamma: 0.92 };
+
+    // Numeric mode (0-100) -> interpolate between profiles
+    if (typeof mode === 'number') {
+      const v = Math.max(0, Math.min(100, mode));
+      const t = v / 100;
+      if (t <= 0.5) {
+        const alpha = t / 0.5;
+        return {
+          tone: soft.tone * (1 - alpha) + balanced.tone * alpha,
+          chroma: soft.chroma * (1 - alpha) + balanced.chroma * alpha,
+          gamma: soft.gamma * (1 - alpha) + balanced.gamma * alpha
+        };
+      }
+      const alpha = (t - 0.5) / 0.5;
+      return {
+        tone: balanced.tone * (1 - alpha) + detail.tone * alpha,
+        chroma: balanced.chroma * (1 - alpha) + detail.chroma * alpha,
+        gamma: balanced.gamma * (1 - alpha) + detail.gamma * alpha
+      };
+    }
+
+    switch (mode) {
+      case 'soft':
+        return soft;
+      case 'detail':
+        return detail;
+      case 'balanced':
+      default:
+        return balanced;
+    }
+  }
+
+  getAdjustedSettings(settings, element) {
+    const adjusted = {
+      brightness: settings.brightness,
+      contrast: settings.contrast,
+      saturation: settings.saturation,
+      gamma: settings.gamma,
+      colorTemp: settings.colorTemp,
+      sharpness: settings.sharpness
+    };
+
+    if (settings.keepQuality) {
+      const qualityMode =
+        typeof settings.targetedQualityLevel === 'number'
+          ? settings.targetedQualityLevel
+          : settings.videoQualityMode;
+      const qualityProfile = this.getQualityProfileSettings(qualityMode);
+      adjusted.brightness *= qualityProfile.tone;
+      adjusted.contrast *= qualityProfile.tone;
+      adjusted.saturation *= qualityProfile.chroma;
+      adjusted.colorTemp *= qualityProfile.chroma;
+      adjusted.gamma = 1 + (adjusted.gamma - 1) * qualityProfile.gamma;
+      if (adjusted.contrast > 0) {
+        adjusted.brightness -= Math.min(14, adjusted.contrast * 0.08);
+      }
+      if (adjusted.saturation > 0) {
+        adjusted.brightness -= Math.min(8, adjusted.saturation * 0.05);
+      }
+    }
+
+    if (settings.upscaleQualityBoost && element && element.tagName === 'VIDEO') {
+      const sourceWidth = element.videoWidth || element.clientWidth;
+      const renderWidth = element.clientWidth || sourceWidth;
+      if (sourceWidth > 0 && renderWidth > sourceWidth) {
+        const upscaleRatio = renderWidth / sourceWidth;
+        adjusted.sharpness += Math.min(24, Math.round((upscaleRatio - 1) * 28));
+      }
+    }
+
+    adjusted.gamma = Math.max(0.1, Math.min(4.0, adjusted.gamma));
+    adjusted.sharpness = Math.max(0, Math.min(120, adjusted.sharpness));
+    return adjusted;
+  }
+
+  applyRenderQualityOptions(element, settings) {
+    if (!element || !element.style) return;
+    element.style.imageRendering = settings.forceHighQualityScaling ? 'auto' : '';
+    element.style.backfaceVisibility = settings.forceHighQualityScaling ? 'hidden' : '';
+    element.style.transform = settings.forceHighQualityScaling ? 'translateZ(0)' : '';
+    element.style.willChange = settings.forceHighQualityScaling ? 'filter, transform' : '';
+  }
+
+  clearRenderQualityOptions(element) {
+    if (!element || !element.style) return;
+    element.style.imageRendering = '';
+    element.style.backfaceVisibility = '';
+    element.style.transform = '';
+    element.style.willChange = '';
+  }
+
   findVideos() {
     const videos = [];
     videos.push(...document.querySelectorAll('video'));
@@ -57,13 +152,15 @@ class VideoFilterEngine {
   removeFiltersFromImages() {
     this.findImages().forEach((image) => {
       image.style.filter = '';
+      this.clearRenderQualityOptions(image);
     });
   }
 
   applyFilterToElement(element, settings) {
-    const brightness = 1 + settings.brightness / 100;
-    const contrast = 1 + settings.contrast / 100;
-    const saturation = Math.max(0, 1 + settings.saturation / 100);
+    const adjusted = this.getAdjustedSettings(settings, element);
+    const brightness = 1 + adjusted.brightness / 100;
+    const contrast = 1 + adjusted.contrast / 100;
+    const saturation = Math.max(0, 1 + adjusted.saturation / 100);
 
     let cssFilters = `
       brightness(${brightness})
@@ -72,20 +169,21 @@ class VideoFilterEngine {
     `;
 
     // Apply advanced filters if needed
-    this.applyAdvancedFilters(settings);
+    this.applyAdvancedFilters(settings, adjusted);
     const advancedFilterExists =
-      settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
+      adjusted.gamma !== 1 || adjusted.colorTemp !== 0 || adjusted.sharpness > 0;
     if (advancedFilterExists) {
       cssFilters += ` url(#vivideo-advanced-filter)`;
     }
 
     element.style.filter = cssFilters.trim();
+    this.applyRenderQualityOptions(element, settings);
   }
 
-  applyAdvancedFilters(settings) {
-    const gamma = settings.gamma;
-    const colorTemp = settings.colorTemp;
-    const sharpness = settings.sharpness;
+  applyAdvancedFilters(settings, adjustedSettings) {
+    const gamma = adjustedSettings.gamma;
+    const colorTemp = adjustedSettings.colorTemp;
+    const sharpness = adjustedSettings.sharpness;
 
     // Remove existing SVG
     const existingSvg = document.querySelector('#vivideo-svg-container');
@@ -154,18 +252,20 @@ class VideoFilterEngine {
       </feComponentTransfer>
     `;
 
+    const colorInterpolation = settings.linearColorPipeline ? 'linearRGB' : 'sRGB';
     svg.innerHTML = `
-      <filter id="vivideo-advanced-filter" x="0%" y="0%" width="100%" height="100%">
+      <filter id="vivideo-advanced-filter" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="${colorInterpolation}">
         ${filterContent}
       </filter>
     `;
 
-    document.body.appendChild(svg);
+    UIHelper.safeAppend(svg);
   }
 
   removeFilters() {
     this.findVideos().forEach((video) => {
       video.style.filter = '';
+      this.clearRenderQualityOptions(video);
     });
     this.removeFiltersFromImages();
 
@@ -183,7 +283,7 @@ class VideoFilterEngine {
     const observer = new MutationObserver((mutations) => {
       let hasNewVideos = false;
       let hasNewImages = false;
-      
+
       mutations.forEach((mutation) => {
         // Check added nodes
         mutation.addedNodes.forEach((node) => {
@@ -243,6 +343,25 @@ class VideoFilterEngine {
       attributeFilter: ['src', 'srcset', 'poster']
     });
 
+    // If document.body is not yet available (rare), retry safely
+    if (!document.body) {
+      const retryObserver = new MutationObserver(() => {
+        if (document.body) {
+          observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['src', 'srcset', 'poster']
+          });
+          retryObserver.disconnect();
+        }
+      });
+      retryObserver.observe(document.documentElement || document, {
+        childList: true,
+        subtree: true
+      });
+    }
+
     return observer;
   }
 
@@ -284,6 +403,7 @@ class VideoFilterEngine {
 
     // Reset element's direct filters
     element.style.filter = '';
+    this.applyRenderQualityOptions(element, leftSettings);
 
     // Create container if needed
     let container = element.parentNode.querySelector('.vivideo-split-container');
@@ -301,28 +421,29 @@ class VideoFilterEngine {
 
       // Wrap the video element
       element.parentNode.insertBefore(container, element);
-      container.appendChild(element);
+      UIHelper.safeAppendTo(container, element);
     }
 
     // Create left overlay (current profile)
     const leftOverlay = document.createElement('div');
     leftOverlay.className = 'vivideo-left-overlay';
     this.setupSplitOverlay(leftOverlay, 'left', leftSettings);
-    container.appendChild(leftOverlay);
+    UIHelper.safeAppendTo(container, leftOverlay);
 
     // Create right overlay (compare profile)
     const rightOverlay = document.createElement('div');
     rightOverlay.className = 'vivideo-right-overlay';
     this.setupSplitOverlay(rightOverlay, 'right', rightSettings);
-    container.appendChild(rightOverlay);
+    UIHelper.safeAppendTo(container, rightOverlay);
 
     console.log('Vivideo: Split filters applied to video element');
   }
 
   setupSplitOverlay(overlay, side, settings) {
-    const brightness = 1 + settings.brightness / 100;
-    const contrast = 1 + settings.contrast / 100;
-    const saturation = Math.max(0, 1 + settings.saturation / 100);
+    const adjusted = this.getAdjustedSettings(settings, null);
+    const brightness = 1 + adjusted.brightness / 100;
+    const contrast = 1 + adjusted.contrast / 100;
+    const saturation = Math.max(0, 1 + adjusted.saturation / 100);
 
     let cssFilters = `
       brightness(${brightness})
@@ -332,12 +453,12 @@ class VideoFilterEngine {
 
     // Apply advanced filters if needed
     const advancedFilterExists =
-      settings.gamma !== 1 || settings.colorTemp !== 0 || settings.sharpness > 0;
+      adjusted.gamma !== 1 || adjusted.colorTemp !== 0 || adjusted.sharpness > 0;
     if (advancedFilterExists) {
       // For split mode, we'll use a simplified approach without SVG filters
       // as SVG filters are complex to implement for split-screen
-      const gamma = Math.max(0.1, Math.min(3.0, settings.gamma));
-      const tempFactor = settings.colorTemp / 100;
+      const gamma = Math.max(0.1, Math.min(3.0, adjusted.gamma));
+      const tempFactor = adjusted.colorTemp / 100;
 
       // Approximate gamma with CSS filters
       if (gamma !== 1) {
@@ -381,7 +502,7 @@ class VideoFilterEngine {
 
     const profileName = settings.name || (side === 'left' ? 'Current' : 'Compare');
     indicator.textContent = `${side.toUpperCase()}: ${profileName}`;
-    overlay.appendChild(indicator);
+    UIHelper.safeAppendTo(overlay, indicator);
   }
 
   applySplitFiltersToImages(leftSettings, rightSettings) {

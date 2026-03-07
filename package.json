@@ -1,19 +1,50 @@
 {
+  "name": "vivideo-video-filters",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Vivideo – real-time video color/grain/sharpness/temp filters & custom profiles for the real chads",
+  "author": "Domintes",
+  "license": "MIT",
+  "homepage": "https://github.com/domintes/Vivideo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/domintes/Vivideo.git"
+  },
   "scripts": {
-    "build": "node build.js",
-    "dev": "echo 'Development mode - no build needed for Chrome extension'",
-    "lint": "eslint . --ext .js",
-    "format": "prettier --write ."
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings 0",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "zip": "cd dist && bestzip ../vivideo-v$npm_package_version.zip *"
   },
   "dependencies": {
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@eslint-community/eslint-utils": "^4.9.1",
+    "@eslint/eslintrc": "^3.3.3",
+    "@types/chrome": "^0.0.280",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^5.0.2",
-    "eslint": "^9.12.0",
+    "ajv": "^8.18.0",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
-    "prettier": "^3.3.3"
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "vite": "^6.0.0",
+    "vite-plugin-static-copy": "^2.2.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
