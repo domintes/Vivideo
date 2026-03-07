@@ -1619,7 +1619,7 @@ class ProfileManager {
               dupEl.className = 'vivideo-duplicate-warning';
               controlsSection.insertBefore(dupEl, controlsSection.firstChild);
             }
-            dupEl.textContent = `Matching profiles: ${namesText}`;
+            dupEl.textContent = `Duplicated profiles: ${namesText}`;
           }
         } else {
           // Single match - behave as before
