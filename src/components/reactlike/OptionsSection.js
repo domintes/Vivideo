@@ -24,7 +24,7 @@ const OptionsSection = ({
           <span className="vivideo-switch-track" />
           <span className="vivideo-switch-label">Extended</span>
           <button className="vivideo-info-icon" title="Enable extended technical ranges">
-            i
+            ❔
           </button>
         </label>
       </div>
@@ -43,7 +43,7 @@ const OptionsSection = ({
             className="vivideo-info-icon"
             title="Auto-activate extension when videos are detected"
           >
-            i
+            ❔
           </button>
         </label>
       </div>
@@ -59,7 +59,7 @@ const OptionsSection = ({
           <span className="vivideo-switch-track" />
           <span className="vivideo-switch-label">Images</span>
           <button className="vivideo-info-icon" title="Apply filters to images as well">
-            i
+            ❔
           </button>
         </label>
       </div>
@@ -75,7 +75,7 @@ const OptionsSection = ({
           <span className="vivideo-switch-track" />
           <span className="vivideo-switch-label">Compare</span>
           <button className="vivideo-info-icon" title="Split-screen profile comparison">
-            i
+            ❔
           </button>
         </label>
       </div>

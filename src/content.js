@@ -33,6 +33,7 @@ if (window !== window.top) {
         sharpness: 0,
         keepQuality: true,
         videoQualityMode: 'balanced',
+        targetedQualityLevel: 50,
         upscaleQualityBoost: false,
         linearColorPipeline: true,
         forceHighQualityScaling: true,
@@ -114,6 +115,12 @@ if (window !== window.top) {
 
         if (response && response.vivideoSettings) {
           this.settings = { ...this.settings, ...response.vivideoSettings };
+            // Backwards compatibility: derive numeric targetedQualityLevel from videoQualityMode
+            if (this.settings.targetedQualityLevel === undefined) {
+              if (this.settings.videoQualityMode === 'soft') this.settings.targetedQualityLevel = 0;
+              else if (this.settings.videoQualityMode === 'detail') this.settings.targetedQualityLevel = 100;
+              else this.settings.targetedQualityLevel = 50;
+            }
           // Ensure preferredSpeed has a default value
           if (this.settings.preferredSpeed === undefined) {
             this.settings.preferredSpeed = 1.72;
@@ -122,7 +129,7 @@ if (window !== window.top) {
         if (response && response.vivideoProfiles) {
           this.profiles = response.vivideoProfiles;
         }
-        // Saved Profiles stay empty by default. Built-ins are rendered from ProfileManager.
+        // Profile List stay empty by default. Built-ins are rendered from ProfileManager.
         if (!this.profiles || this.profiles.length === 0) {
           this.profiles = [];
         }
@@ -183,7 +190,7 @@ if (window !== window.top) {
 
       this.updateUI();
 
-      // Initialize default profile button state (Saved Profiles active by default)
+      // Initialize default profile button state (Profile List active by default)
       if (this.profileManager && this.container) {
         this.profileManager.showUserProfiles(this.container);
       }
@@ -907,6 +914,7 @@ if (window !== window.top) {
         upscaleQualityBoost: this.settings.upscaleQualityBoost,
         linearColorPipeline: this.settings.linearColorPipeline,
         forceHighQualityScaling: this.settings.forceHighQualityScaling,
+        targetedQualityLevel: this.settings.targetedQualityLevel,
         speed: 1.0,
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
@@ -1163,7 +1171,7 @@ if (window !== window.top) {
             }
           });
         } else {
-          // Use id for Saved Profiles when available (migrate activeProfile to id)
+          // Use id for Profile List when available (migrate activeProfile to id)
           this.settings.activeProfile = profile.id || profile.name;
           // Sanitize profile settings to avoid missing/invalid values
           let sanitized = profile.settings || {};

@@ -13,7 +13,7 @@ class ProfileManager {
     this.applyProfileSpeed = false; // When true, apply profile.speed to video playback
     // Collapsible state for sections
     this.builtinCollapsed = true; // Default Built-in collapsed by default
-    this.userCollapsed = true; // Saved Profiles collapsed by default
+    this.userCollapsed = true; // Profile List collapsed by default
     this.isEditingBuiltin = false; // track editing built-in profile
     this.profileCategories = [];
     this.workOnEverything = false; // apply filters to whole page when enabled
@@ -113,7 +113,7 @@ class ProfileManager {
     return (categoryName || '').trim();
   }
 
-  // Generate a short unique id for saved profiles
+  // Generate a short unique id for profile list
   generateProfileId() {
     return 'p_' + Math.random().toString(36).substr(2, 9);
   }
@@ -149,11 +149,11 @@ class ProfileManager {
   // Find a profile (user or builtin) by a stored reference (id or name)
   findProfileByRef(ref) {
     if (!ref) return null;
-    // Try saved profiles by id first
+    // Try profile list by id first
     const users = this.controller && Array.isArray(this.controller.profiles) ? this.controller.profiles : [];
     let idx = users.findIndex((p) => p.id && p.id === ref);
     if (idx !== -1) return { profile: users[idx], profileType: 'user', index: idx };
-    // Fallback to saved profiles by name
+    // Fallback to profile list by name
     idx = users.findIndex((p) => p.name === ref);
     if (idx !== -1) return { profile: users[idx], profileType: 'user', index: idx };
 
@@ -190,12 +190,18 @@ class ProfileManager {
       <div class="vivideo-bottom-controls">
             <div class="vivideo-active-item-section">
               <div class="vivideo-box-header profile-panel-header">➤ Active Profile</div>
-              <div class="active-item-status" id="active-profile-display">DEFAULT</div>
-            </div> 
+              <div class="vivideo-active-item-row">
+                <div class="active-item-status" id="active-profile-display">DEFAULT</div>
+                <div class="vivideo-active-item-actions">
+                  <button class="vivideo-profile-edit-btn vivideo-btn" title="Overwrite active profile with current values">💾</button>
+                  <button class="vivideo-profile-remove-btn vivideo-btn" title="Delete active profile">✖</button>
+                </div>
+              </div>
+            </div>
             <div class="vivideo-bottom-controls-right">
             <!-- Profile form (always visible) -->
             <div id="profile-form-panel" class="vivideo-profile-form vivideo-profile-form-compact vivideo-profile-form-panel">
-              <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
+              <div class="vivideo-box-header profile-panel-header">💾 Save Profile</div>
               <div class="vivideo-grid-1-3-1">
                 <input type="text" id="profile-display-name-input" class="vivideo-profile-input profile-display-name-input" placeholder="New profile">
                 <button id="profile-form-save-button" class="vivideo-profile-save vivideo-btn profile-form-save-button" data-overwrite="false">💾</button>
@@ -208,14 +214,14 @@ class ProfileManager {
       <!-- Profiles Panel -->
       <div class="vivideo-profiles vivideo-border-box" id="profiles-panel">
         <div class="vivideo-box-header profile-panel-header">
-          🎥 Saved Profiles
+          🎥 Profile List
             <!-- removed "Display default profiles" option - simplified single default profile model -->
         </div>
         <div class="vivideo-profile-list" id="profile-list"></div>
         <!-- Profile Save Form -->
         <div class="vivideo-profile-save-section">
           <div class="vivideo-profile-form vivideo-profile-form-compact">
-            <div class="vivideo-box-header profile-panel-header">🛠️ Create Profile</div>
+            <div class="vivideo-box-header profile-panel-header">💾 Save Profile</div>
             <div class="vivideo-grid-3-1">
               <input type="text" class="vivideo-profile-input" id="profile-name" placeholder="Profile_1">
               <button class="vivideo-profile-save vivideo-btn" id="save-profile" data-overwrite="false">💾</button>
@@ -236,7 +242,7 @@ class ProfileManager {
             <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-switch-input" checked>
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-label">Show profile after change</span>
-            <button class="vivideo-info-icon" data-info="Display profile name for 3 seconds after switching">i</button>
+            <button class="vivideo-info-icon" data-info="Display profile name for 3 seconds after switching">❔</button>
           </label>
         </div>
 
@@ -245,7 +251,7 @@ class ProfileManager {
             <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-switch-input">
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-label">Work on all websites</span>
-            <button class="vivideo-info-icon" data-info="Apply video filters to all websites, not just YouTube">i</button>
+            <button class="vivideo-info-icon" data-info="Apply video filters to all websites, not just YouTube">❔</button>
           </label>
         </div>
 
@@ -254,7 +260,7 @@ class ProfileManager {
             <input type="checkbox" id="work-on-everything-checkbox" class="vivideo-switch-input">
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-label">Work on everything on website</span>
-            <button class="vivideo-info-icon" data-info="Apply filters to whole page except Vivideo UI">i</button>
+            <button class="vivideo-info-icon" data-info="Apply filters to whole page except Vivideo UI">❔</button>
           </label>
         </div>
 
@@ -264,7 +270,7 @@ class ProfileManager {
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-knob"></span>
             <span class="vivideo-switch-label">Apply Profile Video Speed</span>
-            <button class="vivideo-info-icon" data-info="When enabled, Vivideo will set video playback speed from the profile's speed value">i</button>
+            <button class="vivideo-info-icon" data-info="When enabled, Vivideo will set video playback speed from the profile's speed value">❔</button>
           </label>
         </div>
 
@@ -278,7 +284,7 @@ class ProfileManager {
             <input type="checkbox" id="compare-mode-checkbox" class="vivideo-switch-input">
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-label">Compare Mode</span>
-            <button class="vivideo-info-icon" data-info="Split-screen profile comparison">i</button>
+            <button class="vivideo-info-icon" data-info="Split-screen profile comparison">❔</button>
           </label>
         </div>
         
@@ -396,6 +402,8 @@ class ProfileManager {
         if (!exists && inline) {
           inline.remove();
           inline = null;
+          // restore main save button visibility when inline removed
+          if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
         }
 
         if (exists && val.length > 0) {
@@ -406,10 +414,12 @@ class ProfileManager {
             inline.id = inlineId;
             inline.className = 'profile-inline-actions';
             inline.innerHTML = `
-              <button id="profile-overwrite-btn" class="vivideo-btn vivideo-inline-action">Overwrite Profile</button>
-              <button id="profile-save-new-btn" class="vivideo-btn vivideo-inline-action">Save as New Profile</button>
+              <button id="profile-overwrite-btn" class="vivideo-profile-save vivideo-btn vivideo-inline-action">Overwrite</button>
+              <button id="profile-save-new-btn" class="vivideo-profile-save vivideo-btn vivideo-inline-action">Save as new</button>
             `;
             grid.appendChild(inline);
+            // hide the main quick-save button while inline actions are shown
+            if (profileFormSaveBtn) profileFormSaveBtn.style.display = 'none';
 
             const overwriteBtn = inline.querySelector('#profile-overwrite-btn');
             const saveNewBtn = inline.querySelector('#profile-save-new-btn');
@@ -445,7 +455,10 @@ class ProfileManager {
                   this.updateActiveProfileDisplay(container, this.controller.settings);
                   this.updateActiveStatus('Saved', '');
                 }
-                if (inline) inline.remove();
+                if (inline) {
+                  inline.remove();
+                  if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
+                }
               };
             }
 
@@ -466,7 +479,10 @@ class ProfileManager {
                   id: this.generateProfileId(),
                   name: val,
                   profileCategory: 'General',
-                  settings: this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate })
+                  settings: this.sanitizeSettings({
+                    ...currentSettings,
+                    autoActivate: this.controller.settings.autoActivate
+                  })
                 };
                 this.controller.profiles.push(profile);
                 console.log('Vivideo: Profile saved (as new with same name):', val);
@@ -478,7 +494,10 @@ class ProfileManager {
                 this.updateProfilesList(container);
                 this.updateActiveProfileDisplay(container, this.controller.settings);
                 this.updateActiveStatus('Saved', '');
-                if (inline) inline.remove();
+                if (inline) {
+                  inline.remove();
+                  if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
+                }
               };
             }
           }
@@ -497,6 +516,18 @@ class ProfileManager {
           this.isEditingProfile = false;
           if (this.controller && this.controller.container)
             this.controller.container.classList.remove('vivideo-edit-mode-active');
+          // remove inline actions if present and restore main save button
+          try {
+            const panel = container.querySelector('#profile-form-panel');
+            const inline = panel ? panel.querySelector('#profile-inline-actions') : null;
+            if (inline) {
+              inline.remove();
+              if (profileFormSaveBtn) profileFormSaveBtn.style.display = '';
+            }
+          } catch (e) {
+            // ignore
+          }
+
           this.updateProfilesList(container);
           this.updateActiveStatus('NOT SAVED', '');
         });
@@ -640,6 +671,97 @@ class ProfileManager {
     if (compareProfileSelect) {
       compareProfileSelect.addEventListener('change', (e) => {
         this.selectCompareProfile(container, e.target.value);
+      });
+    }
+
+    // Active profile edit/remove buttons in the top active-item section
+    const activeEditBtn = UIHelper.safeQuery(
+      container,
+      '.vivideo-active-item-section .vivideo-profile-edit-btn'
+    );
+    const activeRemoveBtn = UIHelper.safeQuery(
+      container,
+      '.vivideo-active-item-section .vivideo-profile-remove-btn'
+    );
+
+    if (activeEditBtn) {
+      activeEditBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const currentSettings = {
+          brightness: this.controller.settings.brightness,
+          contrast: this.controller.settings.contrast,
+          saturation: this.controller.settings.saturation,
+          gamma: this.controller.settings.gamma,
+          colorTemp: this.controller.settings.colorTemp,
+          sharpness: this.controller.settings.sharpness,
+          speed: this.controller.settings.speed
+        };
+        if (this.validateSettings(currentSettings)) {
+          this.updateActiveStatus('Invalid value entered', '#bb531e');
+          return;
+        }
+
+        const activeRef = this.controller.settings.activeProfile;
+        const found = this.findProfileByRef(activeRef);
+        if (found) {
+          if (found.profileType === 'builtin') {
+            this.defaultProfiles[found.index].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
+            this.controller.settings.activeProfile = this.defaultProfiles[found.index].name;
+          } else {
+            this.controller.profiles[found.index].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
+            const userProfile = this.controller.profiles[found.index];
+            this.controller.settings.activeProfile = userProfile.id || userProfile.name;
+            this.controller.saveProfiles();
+          }
+        } else {
+          // No matching profile - create a new user profile and activate it
+          const profile = {
+            id: this.generateProfileId(),
+            name: `Profile_${this.controller.profiles.length + 1}`,
+            profileCategory: 'General',
+            settings: this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            })
+          };
+          this.controller.profiles.push(profile);
+          this.controller.settings.activeProfile = profile.id;
+          this.controller.saveProfiles();
+        }
+
+        this.controller.saveSettings();
+        this.controller.saveAppState();
+        this.updateProfilesList(container);
+        this.updateActiveProfileDisplay(container, this.controller.settings);
+        this.updateActiveStatus('Saved', '');
+      });
+    }
+
+    if (activeRemoveBtn) {
+      activeRemoveBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const activeRef = this.controller.settings.activeProfile;
+        const found = this.findProfileByRef(activeRef);
+        if (found) {
+          if (found.profileType === 'builtin') {
+            this.defaultProfiles.splice(found.index, 1);
+            this.updateProfilesList(this.controller.container);
+          } else {
+            this.controller.deleteProfile(found.index);
+          }
+          this.controller.saveProfiles();
+          this.updateProfilesList(container);
+          this.updateActiveProfileDisplay(container, this.controller.settings);
+          this.updateActiveStatus('Deleted', '');
+        }
       });
     }
 
@@ -827,7 +949,6 @@ class ProfileManager {
     if (!profileList) return;
 
     profileList.innerHTML = '';
-    
 
     // Połącz profile built-in i user w jedną tablicę
     const allProfiles = [
@@ -907,10 +1028,16 @@ class ProfileManager {
             return;
           }
           if (profileType === 'builtin') {
-            this.defaultProfiles[index].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+            this.defaultProfiles[index].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
             this.controller.settings.activeProfile = this.defaultProfiles[index].name;
           } else {
-            this.controller.profiles[index].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+            this.controller.profiles[index].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
             const userProfile = this.controller.profiles[index];
             this.controller.settings.activeProfile = userProfile.id || userProfile.name;
             this.controller.saveProfiles();
@@ -961,7 +1088,7 @@ class ProfileManager {
     this.refreshCategorySelectors(container);
   }
 
-  // Show saved profiles panel (compat for controller calls)
+  // Show profile list panel (compat for controller calls)
   showUserProfiles(container) {
     this.showingProfiles = true;
     if (container) {
@@ -1041,8 +1168,8 @@ class ProfileManager {
             console.log('Vivideo: Profile overwritten:', profileName);
 
             // proceed with save flow (same as new profile path)
-                const existing = this.controller.profiles[existingProfileIndex];
-                this.controller.settings.activeProfile = existing.id || existing.name;
+            const existing = this.controller.profiles[existingProfileIndex];
+            this.controller.settings.activeProfile = existing.id || existing.name;
             this.controller.saveProfiles();
             this.controller.saveSettings();
             this.controller.saveAppState();
@@ -1196,7 +1323,10 @@ class ProfileManager {
 
     if (existingIndex !== -1 && existingIndex !== editIndex) {
       // Will overwrite different existing profile - inform user (orange) and overwrite
-      this.controller.profiles[existingIndex].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+      this.controller.profiles[existingIndex].settings = this.sanitizeSettings({
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      });
       this.controller.profiles[existingIndex].profileCategory = profileCategory;
       console.log('Vivideo: Profile overwrite (existing):', name);
       this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
@@ -1206,7 +1336,10 @@ class ProfileManager {
     } else if (editIndex !== null && editIndex >= 0) {
       // Overwrite the profile we're editing
       this.controller.profiles[editIndex].name = name;
-      this.controller.profiles[editIndex].settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+      this.controller.profiles[editIndex].settings = this.sanitizeSettings({
+        ...currentSettings,
+        autoActivate: this.controller.settings.autoActivate
+      });
       this.controller.profiles[editIndex].profileCategory = profileCategory;
       console.log('Vivideo: Profile overwrite (edit):', name);
       this.controller.settings.activeProfile = this.controller.profiles[editIndex].id || name;
@@ -1215,13 +1348,24 @@ class ProfileManager {
       const bp = this.defaultProfiles[editBuiltinIndex];
       if (bp) {
         bp.name = name;
-        bp.settings = this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate });
+        bp.settings = this.sanitizeSettings({
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        });
         console.log('Vivideo: Edited built-in profile:', name);
         this.controller.settings.activeProfile = name;
       }
     } else {
       // Create new profile
-      const newProfile = { id: this.generateProfileId(), name, profileCategory, settings: this.sanitizeSettings({ ...currentSettings, autoActivate: this.controller.settings.autoActivate }) };
+      const newProfile = {
+        id: this.generateProfileId(),
+        name,
+        profileCategory,
+        settings: this.sanitizeSettings({
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        })
+      };
       this.controller.profiles.push(newProfile);
       console.log('Vivideo: Profile saved:', name);
       this.controller.settings.activeProfile = newProfile.id;
@@ -1311,11 +1455,18 @@ class ProfileManager {
     if (profileId === 'DEFAULT') {
       selectedProfile = this.controller.defaultProfile;
     }
-    // Check saved profiles (match by id first, fallback to name)
+    // Check profile list (match by id first, fallback to name)
     else {
-      selectedProfile = this.controller.profiles.find((p) => (p.id && p.id === profileId) || p.name === profileId);
+      // Use a simple loop to avoid formatting/lint issues with inline arrow functions
+      for (let i = 0; i < (this.controller.profiles || []).length; i++) {
+        const p = this.controller.profiles[i];
+        if ((p.id && p.id === profileId) || p.name === profileId) {
+          selectedProfile = p;
+          break;
+        }
+      }
 
-      // Check default profiles if not found in saved profiles
+      // Check default profiles if not found in profile list
       if (!selectedProfile) {
         const defaultProfiles = this.defaultProfiles || this.createDefaultProfiles();
         selectedProfile = defaultProfiles.find((p) => p.name === profileId);
@@ -1341,7 +1492,7 @@ class ProfileManager {
     defaultOption.textContent = 'DEFAULT';
     selectElement.appendChild(defaultOption);
 
-    // Add saved profiles
+    // Add profile list
     if (this.controller.profiles.length > 0) {
       const groupedProfiles = {};
       this.controller.profiles.forEach((profile) => {
@@ -1471,7 +1622,15 @@ class ProfileManager {
   }
 
   profilesMatch(settings1, settings2) {
-    const keys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp', 'sharpness'];
+    const keys = [
+      'brightness',
+      'contrast',
+      'saturation',
+      'gamma',
+      'colorTemp',
+      'sharpness',
+      'speed'
+    ];
     return keys.every((key) => settings1[key] === settings2[key]);
   }
 
@@ -1486,7 +1645,7 @@ class ProfileManager {
       }
     }
 
-    // Then check saved profiles
+    // Then check profile list
     for (const profile of this.controller.profiles) {
       if (this.profilesMatch(settings, profile.settings)) {
         console.log('Vivideo: Auto-detected user profile:', profile.name);
@@ -1523,19 +1682,37 @@ class ProfileManager {
       }
     }
 
-    // Check saved profiles
+    // Check profile list
     for (const profile of this.controller.profiles || []) {
       if (this.profilesMatch(settings, profile.settings)) {
         matches.push({ profile, isDefault: false });
       }
     }
 
-    // If settings are neutral and DEFAULT exists, include DEFAULT
-    if (this.isDefaultProfile(settings)) {
-      matches.push({ profile: this.controller.defaultProfile, isDefault: true });
+    // If settings are neutral and controller.defaultProfile exists, include it only if not already present
+    if (this.isDefaultProfile(settings) && this.controller && this.controller.defaultProfile) {
+      const ref = this.controller.defaultProfile.id
+        ? this.controller.defaultProfile.id
+        : this.controller.defaultProfile.name;
+      const already = matches.some((m) => {
+        const r = m.profile && (m.profile.id ? m.profile.id : m.profile.name);
+        return r === ref;
+      });
+      if (!already) matches.push({ profile: this.controller.defaultProfile, isDefault: true });
     }
 
-    return matches;
+    // Remove duplicates by profile ref (id or name)
+    const unique = [];
+    const seen = new Set();
+    for (const m of matches) {
+      const ref = m.profile && (m.profile.id ? m.profile.id : m.profile.name);
+      if (!seen.has(ref)) {
+        seen.add(ref);
+        unique.push(m);
+      }
+    }
+
+    return unique;
   }
 
   // Check whether current built-in default profiles exactly match canonical defaults
@@ -1547,7 +1724,15 @@ class ProfileManager {
         const found = current.find((p) => p.name === canon.name);
         if (!found) return false;
         // Compare key settings including speed and brightness
-        const keys = ['brightness', 'contrast', 'saturation', 'gamma', 'colorTemp', 'sharpness', 'speed'];
+        const keys = [
+          'brightness',
+          'contrast',
+          'saturation',
+          'gamma',
+          'colorTemp',
+          'sharpness',
+          'speed'
+        ];
         for (const k of keys) {
           const a = typeof found.settings[k] === 'number' ? found.settings[k] : null;
           const b = typeof canon.settings[k] === 'number' ? canon.settings[k] : null;
@@ -1593,65 +1778,93 @@ class ProfileManager {
           Boolean
         );
 
+        // Prefer the match that corresponds to the current activeProfile ref (if present)
+        let primaryIndex = 0;
+        if (settings && settings.activeProfile) {
+          const idx = matches.findIndex((m) => {
+            const ref = m.profile && (m.profile.id ? m.profile.id : m.profile.name);
+            return ref === settings.activeProfile;
+          });
+          if (idx !== -1) primaryIndex = idx;
+        }
+
+        const primary = matches[primaryIndex].profile;
+        const primaryRef = primary && (primary.id ? primary.id : primary.name);
+
+        // If there was no activeProfile or it didn't match any found profile, set it to the primary
+        const activeRefMatches = matches.some((m) => {
+          const ref = m.profile && (m.profile.id ? m.profile.id : m.profile.name);
+          return ref === settings.activeProfile;
+        });
+        if (!activeRefMatches) {
+          this.controller.settings.activeProfile = primaryRef;
+          this.controller.saveSettings();
+          this.controller.saveAppState();
+        }
+
+        // Show primary profile in the active-item section (do not display duplicate text here)
+        profileDisplay.textContent =
+          typeof primary.name === 'string' && primary.name.toUpperCase() === 'DEFAULT'
+            ? 'DEFAULT'
+            : primary.name;
+        profileDisplay.className =
+          typeof primary.name === 'string' && primary.name.toUpperCase() === 'DEFAULT'
+            ? 'active-item-status-default'
+            : 'active-item-status-active';
+
+        // If there are multiple matches, show duplicate warning under the profile form header
         if (matches.length > 1) {
-          // Multiple matching profiles - show duplicate warning
           const namesText = names.join(', ');
-          profileDisplay.textContent = `Duplicated (${namesText})`;
-          profileDisplay.className = 'active-item-status-warning';
-
-          // Ensure activeProfile remains set to the primary match for compatibility
-          const primary = matches[0].profile;
-          const primaryRef = primary && (primary.id ? primary.id : primary.name);
-          if (settings.activeProfile !== primaryRef) {
-            this.controller.settings.activeProfile = primaryRef;
-            this.controller.saveSettings();
-            this.controller.saveAppState();
-          }
-
-          // Update profile list and show details in controls section
-          this.controller.updateProfilesList();
-          const controlsSection = container.querySelector('.vivideo-controls-section');
-          if (controlsSection) {
-            let dupEl = controlsSection.querySelector('#vivideo-duplicate-warning');
+          // Prefer to show the warning under the compact profile form header if available
+          const profileForm =
+            container.querySelector(
+              '.vivideo-profile-form.vivideo-profile-form-compact'
+            );
+          if (profileForm) {
+            let dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
             if (!dupEl) {
               dupEl = document.createElement('div');
               dupEl.id = 'vivideo-duplicate-warning';
               dupEl.className = 'vivideo-duplicate-warning';
-              controlsSection.insertBefore(dupEl, controlsSection.firstChild);
+              const header = profileForm.querySelector('.vivideo-box-header');
+              if (header && header.parentNode)
+                header.parentNode.insertBefore(dupEl, header.nextSibling);
+              else profileForm.insertBefore(dupEl, profileForm.firstChild);
             }
             dupEl.textContent = `Duplicated profiles: ${namesText}`;
+          } else {
+            // Fallback: place in controls section
+            const controlsSection = container.querySelector('.vivideo-controls-section');
+            if (controlsSection) {
+              let dupEl = controlsSection.querySelector('#vivideo-duplicate-warning');
+              if (!dupEl) {
+                dupEl = document.createElement('div');
+                dupEl.id = 'vivideo-duplicate-warning';
+                dupEl.className = 'vivideo-duplicate-warning';
+                controlsSection.insertBefore(dupEl, controlsSection.firstChild);
+              }
+              dupEl.textContent = `Duplicated profiles: ${namesText}`;
+            }
           }
         } else {
-          // Single match - behave as before
-          const detected = matches[0].profile;
-          const detectedRef = detected && (detected.id ? detected.id : detected.name);
-          if (settings.activeProfile !== detectedRef) {
-            console.log('Vivideo: Auto-switching to detected profile:', detected.name);
-            this.controller.settings.activeProfile = detectedRef;
-            this.controller.saveSettings();
-            this.controller.saveAppState();
+          // Remove duplicate warning if present from profile form or controls section
+          const profileForm =
+            container.querySelector(
+              '.vivideo-profile-form.vivideo-profile-form-compact'
+            );
+          if (profileForm) {
+            const dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
+            if (dupEl) dupEl.remove();
           }
-
-          profileDisplay.textContent =
-            typeof detected.name === 'string' && detected.name.toUpperCase() === 'DEFAULT'
-              ? 'DEFAULT'
-              : detected.name;
-          profileDisplay.className =
-            typeof detected.name === 'string' && detected.name.toUpperCase() === 'DEFAULT'
-              ? 'active-item-status-default'
-              : 'active-item-status-active';
-
-          // Remove duplicate warning if present
           const controlsSection = container.querySelector('.vivideo-controls-section');
           if (controlsSection) {
             const dupEl = controlsSection.querySelector('#vivideo-duplicate-warning');
             if (dupEl) dupEl.remove();
           }
-
-          this.controller.updateProfilesList();
         }
 
-        // Ensure profile form panel visible; toggle edit-mode active class
+        // Update profile list and ensure profile form panel visible
+        this.controller.updateProfilesList();
         const profileFormPanel = container.querySelector('#profile-form-panel');
         if (profileFormPanel) profileFormPanel.style.display = 'block';
         if (this.controller && this.controller.container) {
@@ -1697,7 +1910,7 @@ class ProfileManager {
   // Profile switching methods for keyboard shortcuts
   nextProfile() {
     console.log('Vivideo: Next profile shortcut (Alt+B)');
-    // Build combined list of profiles: built-in defaults first, then saved profiles
+    // Build combined list of profiles: built-in defaults first, then profile list
     const combined = [...this.defaultProfiles, ...(this.controller.profiles || [])];
 
     if (!Array.isArray(combined) || combined.length === 0) {
@@ -1706,7 +1919,13 @@ class ProfileManager {
     }
 
     // Find current profile index within combined list (support id or name references)
-    let currentIndex = combined.findIndex((p) => this.getProfileRef(p) === this.controller.settings.activeProfile);
+    let currentIndex = -1;
+    for (let i = 0; i < combined.length; i++) {
+      if (this.getProfileRef(combined[i]) === this.controller.settings.activeProfile) {
+        currentIndex = i;
+        break;
+      }
+    }
     // If activeProfile not set or not found, try locating DEFAULT
     if (currentIndex === -1) {
       currentIndex = combined.findIndex((p) => p.name === 'DEFAULT');
@@ -1739,7 +1958,7 @@ class ProfileManager {
   previousProfile() {
     console.log('Vivideo: Previous profile shortcut (Alt+C)');
 
-    // Build combined list of profiles: built-in defaults first, then saved profiles
+    // Build combined list of profiles: built-in defaults first, then profile list
     const combined = [...this.defaultProfiles, ...(this.controller.profiles || [])];
 
     if (!Array.isArray(combined) || combined.length === 0) {
@@ -1748,7 +1967,13 @@ class ProfileManager {
     }
 
     // Find current profile index within combined list (support id or name references)
-    let currentIndex = combined.findIndex((p) => this.getProfileRef(p) === this.controller.settings.activeProfile);
+    let currentIndex = -1;
+    for (let i = 0; i < combined.length; i++) {
+      if (this.getProfileRef(combined[i]) === this.controller.settings.activeProfile) {
+        currentIndex = i;
+        break;
+      }
+    }
     // If activeProfile not set or not found, try locating DEFAULT
     if (currentIndex === -1) {
       currentIndex = combined.findIndex((p) => p.name === 'DEFAULT');

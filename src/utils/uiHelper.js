@@ -83,14 +83,7 @@ const UIHelper = {
           <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">Upscale boost</span>
         </label>
-        <label class="vivideo-quality-mode-row">
-          <span class="vivideo-switch-label">Quality profile</span>
-          <select id="video-quality-mode-select" class="vivideo-compare-select">
-            <option value="soft" ${settings.videoQualityMode === 'soft' ? 'selected' : ''}>Soft</option>
-            <option value="balanced" ${settings.videoQualityMode === 'balanced' ? 'selected' : ''}>Balanced</option>
-            <option value="detail" ${settings.videoQualityMode === 'detail' ? 'selected' : ''}>Detail</option>
-          </select>
-        </label>
+        <!-- Targeted quality slider moved to the Controls section (VideoControls) -->
       </div>
     `;
   },
@@ -171,14 +164,7 @@ const UIHelper = {
       });
     });
 
-    const qualityModeSelect = this.safeQuery(container, '#video-quality-mode-select');
-    if (qualityModeSelect) {
-      qualityModeSelect.addEventListener('change', (e) => {
-        controller.settings.videoQualityMode = e.target.value;
-        if (typeof controller.saveSettings === 'function') controller.saveSettings();
-        if (typeof controller.applyFilters === 'function') controller.applyFilters();
-      });
-    }
+    // Targeted quality control lives inside the Video Controls component now.
   },
 
   updateCheckboxes(container, settings = {}) {
@@ -192,8 +178,7 @@ const UIHelper = {
     if (linearCheckbox) linearCheckbox.checked = !!settings.linearColorPipeline;
     const upscaleCheckbox = this.safeQuery(container, '#upscale-quality-boost-checkbox');
     if (upscaleCheckbox) upscaleCheckbox.checked = !!settings.upscaleQualityBoost;
-    const qualityModeSelect = this.safeQuery(container, '#video-quality-mode-select');
-    if (qualityModeSelect) qualityModeSelect.value = settings.videoQualityMode || 'balanced';
+    // Targeted quality control is handled in VideoControls.updateUI
   },
 
   setupDragging(container, _controller) {

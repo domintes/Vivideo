@@ -7,14 +7,38 @@ class VideoFilterEngine {
   }
 
   getQualityProfileSettings(mode) {
+    const soft = { tone: 0.72, chroma: 0.68, gamma: 0.75 };
+    const balanced = { tone: 0.82, chroma: 0.78, gamma: 0.84 };
+    const detail = { tone: 0.94, chroma: 0.9, gamma: 0.92 };
+
+    // Numeric mode (0-100) -> interpolate between profiles
+    if (typeof mode === 'number') {
+      const v = Math.max(0, Math.min(100, mode));
+      const t = v / 100;
+      if (t <= 0.5) {
+        const alpha = t / 0.5;
+        return {
+          tone: soft.tone * (1 - alpha) + balanced.tone * alpha,
+          chroma: soft.chroma * (1 - alpha) + balanced.chroma * alpha,
+          gamma: soft.gamma * (1 - alpha) + balanced.gamma * alpha
+        };
+      }
+      const alpha = (t - 0.5) / 0.5;
+      return {
+        tone: balanced.tone * (1 - alpha) + detail.tone * alpha,
+        chroma: balanced.chroma * (1 - alpha) + detail.chroma * alpha,
+        gamma: balanced.gamma * (1 - alpha) + detail.gamma * alpha
+      };
+    }
+
     switch (mode) {
       case 'soft':
-        return { tone: 0.72, chroma: 0.68, gamma: 0.75 };
+        return soft;
       case 'detail':
-        return { tone: 0.94, chroma: 0.9, gamma: 0.92 };
+        return detail;
       case 'balanced':
       default:
-        return { tone: 0.82, chroma: 0.78, gamma: 0.84 };
+        return balanced;
     }
   }
 
@@ -29,7 +53,8 @@ class VideoFilterEngine {
     };
 
     if (settings.keepQuality) {
-      const qualityProfile = this.getQualityProfileSettings(settings.videoQualityMode);
+      const qualityMode = typeof settings.targetedQualityLevel === 'number' ? settings.targetedQualityLevel : settings.videoQualityMode;
+      const qualityProfile = this.getQualityProfileSettings(qualityMode);
       adjusted.brightness *= qualityProfile.tone;
       adjusted.contrast *= qualityProfile.tone;
       adjusted.saturation *= qualityProfile.chroma;

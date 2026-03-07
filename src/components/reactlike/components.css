@@ -474,11 +474,22 @@
 .vivideo-info-icon {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.6);
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 0;
+  font-size: 14px;
+  line-height: 1;
+  border-radius: 0;
   cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+@keyframes vivideo-info-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+.vivideo-info-icon:hover {
+  animation: vivideo-info-pulse 0.6s ease;
 }
 
 /* Compact layout tweaks */

@@ -364,7 +364,7 @@ const VivideoMainPanel = ({
           onTabChange={setActiveTab}
           onProfileSelect={handleProfileSelect}
           onThemeSelect={handleThemeSelect}
-          onCreateProfile={() => console.log('Create profile')}
+          onCreateProfile={() => console.log('Save profile')}
           onDeleteProfile={(profileName) => console.log('Delete profile', profileName)}
           onImportSettings={() => console.log('Import settings')}
           onExportSettings={() => console.log('Export settings')}
