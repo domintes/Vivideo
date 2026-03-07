@@ -1986,7 +1986,7 @@ button.vivideo-close {
   flex: 0 0 auto;
   margin-right: 8px;
   outline: none;
-  transition: background 0.18s ease;
+  transition: all 0.18s ease;
 }
 
 .vivideo-switch::after {
