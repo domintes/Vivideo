@@ -22,10 +22,10 @@ class VideoControls {
       typeof this.controller.settings.targetedQualityLevel === 'number'
         ? this.controller.settings.targetedQualityLevel
         : this.controller.settings.videoQualityMode === 'soft'
-        ? 0
-        : this.controller.settings.videoQualityMode === 'detail'
-        ? 100
-        : 50;
+          ? 0
+          : this.controller.settings.videoQualityMode === 'detail'
+            ? 100
+            : 50;
 
     return /*html*/ `
       <div class="vivideo-controls-section">
@@ -190,7 +190,8 @@ class VideoControls {
         const mode = mapLevelToMode(val);
         this.controller.settings.videoQualityMode = mode;
         this.controller.updateControl('targetedQualityLevel', val);
-        if (videoQualityValue) videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+        if (videoQualityValue)
+          videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
         if (videoQualityInput) videoQualityInput.value = val;
       });
     }
@@ -204,7 +205,8 @@ class VideoControls {
         this.controller.settings.videoQualityMode = mode;
         this.controller.updateControl('targetedQualityLevel', clamped);
         if (videoQualitySlider) videoQualitySlider.value = clamped;
-        if (videoQualityValue) videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
+        if (videoQualityValue)
+          videoQualityValue.textContent = mode.charAt(0).toUpperCase() + mode.slice(1);
       });
     }
 

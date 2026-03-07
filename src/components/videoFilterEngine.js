@@ -53,7 +53,10 @@ class VideoFilterEngine {
     };
 
     if (settings.keepQuality) {
-      const qualityMode = typeof settings.targetedQualityLevel === 'number' ? settings.targetedQualityLevel : settings.videoQualityMode;
+      const qualityMode =
+        typeof settings.targetedQualityLevel === 'number'
+          ? settings.targetedQualityLevel
+          : settings.videoQualityMode;
       const qualityProfile = this.getQualityProfileSettings(qualityMode);
       adjusted.brightness *= qualityProfile.tone;
       adjusted.contrast *= qualityProfile.tone;

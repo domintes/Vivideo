@@ -384,7 +384,8 @@ class SpeedController {
   // Bind events to speed control UI
   bindSpeedControlEvents(container) {
     const slider = container.querySelector('.vivideo-speed-slider');
-    const valueDisplay = container.querySelector('#speed-value') || container.querySelector('.vivideo-speed-value');
+    const valueDisplay =
+      container.querySelector('#speed-value') || container.querySelector('.vivideo-speed-value');
     const speedButtons = container.querySelectorAll('.vivideo-speed-button');
     const autoSpeedCheckbox = container.querySelector('.vivideo-auto-speed-checkbox');
 
@@ -471,7 +472,8 @@ class SpeedController {
     if (!container) return;
 
     const slider = container.querySelector('.vivideo-speed-slider');
-    const valueDisplay = container.querySelector('#speed-value') || container.querySelector('.vivideo-speed-value');
+    const valueDisplay =
+      container.querySelector('#speed-value') || container.querySelector('.vivideo-speed-value');
     const autoSpeedCheckbox = container.querySelector('.vivideo-auto-speed-checkbox');
 
     // Only update slider value when user is not actively adjusting it

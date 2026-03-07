@@ -115,12 +115,13 @@ if (window !== window.top) {
 
         if (response && response.vivideoSettings) {
           this.settings = { ...this.settings, ...response.vivideoSettings };
-            // Backwards compatibility: derive numeric targetedQualityLevel from videoQualityMode
-            if (this.settings.targetedQualityLevel === undefined) {
-              if (this.settings.videoQualityMode === 'soft') this.settings.targetedQualityLevel = 0;
-              else if (this.settings.videoQualityMode === 'detail') this.settings.targetedQualityLevel = 100;
-              else this.settings.targetedQualityLevel = 50;
-            }
+          // Backwards compatibility: derive numeric targetedQualityLevel from videoQualityMode
+          if (this.settings.targetedQualityLevel === undefined) {
+            if (this.settings.videoQualityMode === 'soft') this.settings.targetedQualityLevel = 0;
+            else if (this.settings.videoQualityMode === 'detail')
+              this.settings.targetedQualityLevel = 100;
+            else this.settings.targetedQualityLevel = 50;
+          }
           // Ensure preferredSpeed has a default value
           if (this.settings.preferredSpeed === undefined) {
             this.settings.preferredSpeed = 1.72;
@@ -439,7 +440,9 @@ if (window !== window.top) {
       }
 
       // Set checkbox state based on applyProfileSpeed setting
-      const applyProfileSpeedCheckbox = this.container.querySelector('#apply-profile-speed-checkbox');
+      const applyProfileSpeedCheckbox = this.container.querySelector(
+        '#apply-profile-speed-checkbox'
+      );
       if (applyProfileSpeedCheckbox) {
         applyProfileSpeedCheckbox.checked = !!this.profileManager.applyProfileSpeed;
       }
@@ -1190,8 +1193,20 @@ if (window !== window.top) {
               'speed'
             ];
             keys.forEach((k) => {
-              const v = sanitized && Object.prototype.hasOwnProperty.call(sanitized, k) ? sanitized[k] : undefined;
-              sanitized[k] = typeof v === 'number' && !Number.isNaN(v) ? v : defaults[k] !== undefined ? defaults[k] : k === 'gamma' ? 1 : k === 'speed' ? 1.0 : 0;
+              const v =
+                sanitized && Object.prototype.hasOwnProperty.call(sanitized, k)
+                  ? sanitized[k]
+                  : undefined;
+              sanitized[k] =
+                typeof v === 'number' && !Number.isNaN(v)
+                  ? v
+                  : defaults[k] !== undefined
+                    ? defaults[k]
+                    : k === 'gamma'
+                      ? 1
+                      : k === 'speed'
+                        ? 1.0
+                        : 0;
             });
           }
           Object.keys(sanitized).forEach((key) => {
@@ -1216,7 +1231,10 @@ if (window !== window.top) {
             this.speedController.applySpeedToAllVideos(this.settings.speed);
           } else {
             // Apply currently-set controller speed to videos (do not override from profile)
-            const current = this.speedController.currentSpeed !== undefined ? this.speedController.currentSpeed : this.settings.speed || 1.0;
+            const current =
+              this.speedController.currentSpeed !== undefined
+                ? this.speedController.currentSpeed
+                : this.settings.speed || 1.0;
             this.speedController.applySpeedToAllVideos(current);
           }
         }
@@ -1257,7 +1275,10 @@ if (window !== window.top) {
       this.saveProfiles();
       this.updateProfilesList();
       // Refresh duplicate warnings / active profile display after deletion so UI updates immediately
-      if (this.profileManager && typeof this.profileManager.updateActiveProfileDisplay === 'function') {
+      if (
+        this.profileManager &&
+        typeof this.profileManager.updateActiveProfileDisplay === 'function'
+      ) {
         try {
           this.profileManager.updateActiveProfileDisplay(this.container, this.settings);
         } catch (e) {
@@ -1479,7 +1500,9 @@ if (window !== window.top) {
           this.settings.activeProfile !== 'DEFAULT'
         ) {
           const idx = this.profiles.findIndex(
-            (p) => (p.id && p.id === this.settings.activeProfile) || p.name === this.settings.activeProfile
+            (p) =>
+              (p.id && p.id === this.settings.activeProfile) ||
+              p.name === this.settings.activeProfile
           );
           if (idx !== -1) {
             // Copy only relevant visual settings into profile

@@ -131,7 +131,8 @@ class ProfileManager {
     };
     const out = {};
     Object.keys(defaults).forEach((k) => {
-      const v = settings && Object.prototype.hasOwnProperty.call(settings, k) ? settings[k] : undefined;
+      const v =
+        settings && Object.prototype.hasOwnProperty.call(settings, k) ? settings[k] : undefined;
       // Accept numbers only; fall back to default for missing or invalid values
       out[k] = typeof v === 'number' && !Number.isNaN(v) ? v : defaults[k];
     });
@@ -150,7 +151,8 @@ class ProfileManager {
   findProfileByRef(ref) {
     if (!ref) return null;
     // Try profile list by id first
-    const users = this.controller && Array.isArray(this.controller.profiles) ? this.controller.profiles : [];
+    const users =
+      this.controller && Array.isArray(this.controller.profiles) ? this.controller.profiles : [];
     let idx = users.findIndex((p) => p.id && p.id === ref);
     if (idx !== -1) return { profile: users[idx], profileType: 'user', index: idx };
     // Fallback to profile list by name
@@ -459,7 +461,8 @@ class ProfileManager {
                     this.controller.profiles[existingIndex2].profileCategory = 'General';
                     console.log('Vivideo: Profile overwrite (inline):', val);
                     const existingProfile = this.controller.profiles[existingIndex2];
-                    this.controller.settings.activeProfile = existingProfile.id || existingProfile.name;
+                    this.controller.settings.activeProfile =
+                      existingProfile.id || existingProfile.name;
                     this.controller.saveProfiles();
                     this.controller.saveSettings();
                     this.controller.saveAppState();
@@ -525,7 +528,7 @@ class ProfileManager {
           // Clear any duplicate warning messages when cancelling
           try {
             this.clearDuplicateWarning(container);
-          } catch (e) {
+          } catch {
             // ignore
           }
 
@@ -578,11 +581,22 @@ class ProfileManager {
           // Block creating a new profile when there's a name or settings conflict
           saveBtn.disabled = true;
           if (duplicateByName) {
-            this.showDuplicateWarning(container, `A profile named \"${name}\" already exists.`, 'warning');
+            this.showDuplicateWarning(
+              container,
+              `A profile named "${name}" already exists.`,
+              'warning'
+            );
             this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
           } else if (duplicateBySettings) {
-            const namesText = matchesBySettings.map((m) => (m.profile && m.profile.name) || '').filter(Boolean).join(', ');
-            this.showDuplicateWarning(container, `A profile with identical settings already exists: ${namesText}`, 'warning');
+            const namesText = matchesBySettings
+              .map((m) => (m.profile && m.profile.name) || '')
+              .filter(Boolean)
+              .join(', ');
+            this.showDuplicateWarning(
+              container,
+              `A profile with identical settings already exists: ${namesText}`,
+              'warning'
+            );
             this.updateActiveStatus('Duplicate profile settings detected', '#bb531e');
           }
         } else {
@@ -1182,8 +1196,15 @@ class ProfileManager {
     // Check for duplicate settings (prevent creating a new profile that matches existing settings)
     const matchingBySettings = this.findAllMatchingProfiles(currentSettings) || [];
     if (editIndexMain === null && matchingBySettings.length > 0) {
-      const namesText = matchingBySettings.map((m) => (m.profile && m.profile.name) || '').filter(Boolean).join(', ');
-      this.showDuplicateWarning(container, `Cannot create profile: a profile with identical settings already exists: ${namesText}`, 'error');
+      const namesText = matchingBySettings
+        .map((m) => (m.profile && m.profile.name) || '')
+        .filter(Boolean)
+        .join(', ');
+      this.showDuplicateWarning(
+        container,
+        `Cannot create profile: a profile with identical settings already exists: ${namesText}`,
+        'error'
+      );
       this.updateActiveStatus('Duplicate profile settings', '#ff4d4f');
       return;
     }
@@ -1198,7 +1219,11 @@ class ProfileManager {
     const editTypeMain = mainSaveBtn && mainSaveBtn.dataset ? mainSaveBtn.dataset.editType : null;
     if (existingProfileIndex !== -1) {
       // Show duplicate error in the duplicate warning area and ask user to confirm overwrite
-      this.showDuplicateWarning(container, `A profile named "${profileName}" already exists. Confirm overwrite to proceed.`, 'error');
+      this.showDuplicateWarning(
+        container,
+        `A profile named "${profileName}" already exists. Confirm overwrite to proceed.`,
+        'error'
+      );
       // Ask user to confirm overwrite
       this.showOverwriteModal(
         profileName,
@@ -1372,15 +1397,26 @@ class ProfileManager {
     const isEditingExisting = editIndex !== null && editIndex >= 0;
     if (!isEditingExisting && existingIndex !== -1) {
       // Name collision - refuse to create and show error in duplicate warning
-      this.showDuplicateWarning(container, `Cannot create profile: a profile named "${name}" already exists. Use Overwrite to replace it.`, 'error');
+      this.showDuplicateWarning(
+        container,
+        `Cannot create profile: a profile named "${name}" already exists. Use Overwrite to replace it.`,
+        'error'
+      );
       this.updateActiveStatus('Duplicate profile name', '#ff4d4f');
       return;
     }
 
     if (!isEditingExisting && matchingBySettings.length > 0) {
       // Settings collision - refuse to create and show error
-      const namesText = matchingBySettings.map((m) => (m.profile && m.profile.name) || '').filter(Boolean).join(', ');
-      this.showDuplicateWarning(container, `Cannot create profile: a profile with identical settings already exists: ${namesText}`, 'error');
+      const namesText = matchingBySettings
+        .map((m) => (m.profile && m.profile.name) || '')
+        .filter(Boolean)
+        .join(', ');
+      this.showDuplicateWarning(
+        container,
+        `Cannot create profile: a profile with identical settings already exists: ${namesText}`,
+        'error'
+      );
       this.updateActiveStatus('Duplicate profile settings', '#ff4d4f');
       return;
     }
@@ -1667,8 +1703,9 @@ class ProfileManager {
   // Show or update the duplicate warning element under the compact profile form
   showDuplicateWarning(container, message, severity = 'warning') {
     try {
-      const profileForm =
-        container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
+      const profileForm = container.querySelector(
+        '.vivideo-profile-form.vivideo-profile-form-compact'
+      );
       if (!profileForm) return;
       let dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
       if (!dupEl) {
@@ -1693,8 +1730,9 @@ class ProfileManager {
 
   clearDuplicateWarning(container) {
     try {
-      const profileForm =
-        container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
+      const profileForm = container.querySelector(
+        '.vivideo-profile-form.vivideo-profile-form-compact'
+      );
       if (!profileForm) return;
       const dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
       if (dupEl) dupEl.remove();
@@ -1919,7 +1957,9 @@ class ProfileManager {
         if (matches.length > 1) {
           const namesText = names.join(', ');
           // Prefer to show the warning under the compact profile form header if available
-          const profileForm = container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
+          const profileForm = container.querySelector(
+            '.vivideo-profile-form.vivideo-profile-form-compact'
+          );
           if (profileForm) {
             let dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
             if (!dupEl) {
@@ -1948,7 +1988,9 @@ class ProfileManager {
           }
         } else {
           // Remove duplicate warning if present from profile form or controls section
-          const profileForm = container.querySelector('.vivideo-profile-form.vivideo-profile-form-compact');
+          const profileForm = container.querySelector(
+            '.vivideo-profile-form.vivideo-profile-form-compact'
+          );
           if (profileForm) {
             const dupEl = profileForm.querySelector('#vivideo-duplicate-warning');
             if (dupEl) dupEl.remove();
