@@ -569,7 +569,36 @@ if (window !== window.top) {
                 }
 
                 if (importedData.profiles && Array.isArray(importedData.profiles)) {
-                  this.profiles = importedData.profiles;
+                  // Merge existing profiles with imported ones.
+                  // Keep the newest (last) profile when duplicate settings are encountered.
+                  const combined = [...(this.profiles || []), ...importedData.profiles];
+
+                  // Helper to generate a stable key from settings to detect duplicates
+                  const settingsKey = (s) =>
+                    [
+                      s.brightness || 0,
+                      s.contrast || 0,
+                      s.saturation || 0,
+                      s.gamma || 1,
+                      s.colorTemp || 0,
+                      s.sharpness || 0,
+                      s.speed || 1.0
+                    ].join('|');
+
+                  const seenKeys = new Set();
+                  const mergedReverse = [];
+                  // iterate from end to keep the last occurrence and preserve newer positions
+                  for (let i = combined.length - 1; i >= 0; i--) {
+                    const p = combined[i];
+                    const key = settingsKey(p.settings || {});
+                    if (!seenKeys.has(key)) {
+                      seenKeys.add(key);
+                      mergedReverse.push(p);
+                    }
+                  }
+                  // reverse to restore forward order (but only last occurrences kept)
+                  const merged = mergedReverse.reverse();
+                  this.profiles = merged;
                   this.saveProfiles();
 
                   if (this.mainPanel) {
