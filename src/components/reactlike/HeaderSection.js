@@ -11,6 +11,9 @@ const HeaderSection = ({
   onInfo,
   onSaveState,
   onRestoreDefaults
+  ,
+  layoutStacked = false,
+  onLayoutToggle
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const headerRef = useRef(null);
@@ -79,6 +82,10 @@ const HeaderSection = ({
     if (typeof onRestoreDefaults === 'function') onRestoreDefaults();
   };
 
+  const handleLayoutToggleClick = () => {
+    if (typeof onLayoutToggle === 'function') onLayoutToggle(!layoutStacked);
+  };
+
   return (
     <div
       ref={headerRef}
@@ -97,6 +104,9 @@ const HeaderSection = ({
           </button>
           <button className="vivideo-save-btn" onClick={handleSaveClick} title="Save state">
             💾
+          </button>
+          <button className="vivideo-layout-toggle-btn" onClick={handleLayoutToggleClick} title="Toggle layout">
+            {layoutStacked ? '⿻' : '❏'}
           </button>
           <button className="vivideo-info-btn" onClick={handleInfoClick} title="Info">
             ℹ️

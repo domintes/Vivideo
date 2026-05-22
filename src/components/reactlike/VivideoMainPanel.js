@@ -40,6 +40,9 @@ const VivideoMainPanel = ({
   onSaveState
   ,
   onRestoreDefaults
+  ,
+  onLayoutToggle,
+  initialLayoutStacked = false
 }) => {
   const [isVisible, setIsVisible] = useState(initialVisible);
   const [collapsed, setCollapsed] = useState(initialCollapsed);
@@ -50,6 +53,7 @@ const VivideoMainPanel = ({
   const [activeProfile, setActiveProfile] = useState(initialActiveProfile);
   const [activeTab, setActiveTab] = useState('profiles');
   const [compatibilityMode, setCompatibilityMode] = useState(false);
+  const [layoutStacked, setLayoutStacked] = useState(initialLayoutStacked);
 
   const panelRef = useRef(null);
   const isDraggingRef = useRef(false);
@@ -179,6 +183,22 @@ const VivideoMainPanel = ({
       panelRef.current.style.top = position.y + 'px';
     }
   }, [position]);
+
+  // Apply layout stacked class when changed
+  useEffect(() => {
+    try {
+      if (!panelRef.current) return;
+      if (layoutStacked) panelRef.current.classList.add('vivideo-stacked');
+      else panelRef.current.classList.remove('vivideo-stacked');
+    } catch (e) {
+      console.warn('Failed to apply layout stacked class', e);
+    }
+  }, [layoutStacked]);
+
+  const handleLayoutToggle = (newState) => {
+    setLayoutStacked(!!newState);
+    if (typeof onLayoutToggle === 'function') onLayoutToggle(!!newState);
+  };
 
   const handleClose = () => {
     setIsVisible(false);
@@ -324,6 +344,8 @@ const VivideoMainPanel = ({
           onRestoreDefaults={() => {
             if (typeof onRestoreDefaults === 'function') onRestoreDefaults();
           }}
+          layoutStacked={layoutStacked}
+          onLayoutToggle={handleLayoutToggle}
         />
 
         <CollapseMenuSection collapsed={collapsed} />

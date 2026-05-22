@@ -2927,3 +2927,41 @@ button.vivideo-restore-default-profiles-btn {
 .vivideo-default-profile-item {
   background: rgb(0 0 0 / 27%);
 }
+
+/* Stacked layout: used by layout toggle */
+.vivideo-container.vivideo-stacked .vivideo-main-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.vivideo-main-panel.vivideo-stacked .vivideo-panel-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.vivideo-layout-toggle,
+.vivideo-layout-toggle-btn {
+  background: transparent;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* Ensure core/profile ordering and visibility in stacked mode */
+.vivideo-container.vivideo-stacked .vivideo-core-section {
+  order: 1;
+  min-height: 120px;
+  max-height: calc(80vh);
+  overflow: auto;
+}
+
+.vivideo-container.vivideo-stacked .vivideo-profile-section {
+  order: 2;
+  overflow: visible;
+}
+
+/* Make sure grid rows collapse naturally in stacked mode */
+.vivideo-container.vivideo-stacked .vivideo-main-grid {
+  grid-auto-rows: auto;
+}

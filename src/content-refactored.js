@@ -128,6 +128,9 @@ if (window !== window.top) {
             if (data.vivideoAppState.mainGridTemplate !== undefined) {
               this.tempMainGridTemplate = data.vivideoAppState.mainGridTemplate;
             }
+            if (data.vivideoAppState.layoutStacked !== undefined) {
+              this.tempLayoutStacked = !!data.vivideoAppState.layoutStacked;
+            }
           }
 
           console.log('Vivideo: Settings loaded successfully');
@@ -281,7 +284,16 @@ if (window !== window.top) {
                 },
                 onRestoreDefaults: () => {
                   if (typeof this.restoreDefaults === 'function') this.restoreDefaults();
-                }
+                },
+                onLayoutToggle: async (stacked) => {
+                  try {
+                    this.layoutStacked = !!stacked;
+                    await this.saveAppState();
+                  } catch (err) {
+                    console.warn('onLayoutToggle failed', err);
+                  }
+                },
+                initialLayoutStacked: !!this.tempLayoutStacked
               })
             );
           }
@@ -431,9 +443,21 @@ if (window !== window.top) {
           if (grid) {
             const cs = window.getComputedStyle(grid);
             appState.mainGridTemplate = cs.gridTemplateColumns;
+
+            // also save core height if present (stacked mode)
+            const coreEl = document.querySelector('.vivideo-core-section');
+            if (coreEl) {
+              const h = coreEl.getBoundingClientRect().height;
+              appState.mainGridRowHeight = `${Math.round(h)}px`;
+            }
           }
         } catch (e) {
           console.warn('saveAppState: failed to read DOM sizes', e);
+        }
+
+        // include layout flag if available
+        if (this.layoutStacked !== undefined) {
+          appState.layoutStacked = !!this.layoutStacked;
         }
 
         if (this.storageManager) {

@@ -123,6 +123,7 @@ const UIHelper = {
         <div class="vivideo-header-buttons">
           <button class="vivideo-restore" title="Restore Defaults">↻ Restore Defaults</button>
           <button class="vivideo-save" title="Save State">💾 Save State</button>
+          <button class="vivideo-layout-toggle" title="Toggle layout">❏</button>
           <button class="vivideo-info" title="Information">𝒾</button>
           <button class="vivideo-close" title="Close (Alt+V)">✕</button>
         </div>
@@ -150,6 +151,62 @@ const UIHelper = {
           controller.saveFullState();
         } else if (controller && typeof controller.saveAppState === 'function') {
           controller.saveAppState();
+        }
+      });
+    }
+
+    const layoutBtn = this.safeQuery(container, '.vivideo-layout-toggle');
+    if (layoutBtn) {
+      // set initial icon based on container state
+      try {
+        if (container.classList.contains('vivideo-stacked')) {
+          layoutBtn.textContent = '⿻';
+        } else {
+          layoutBtn.textContent = '❏';
+        }
+      } catch (err) {
+        console.warn('layout init failed', err);
+      }
+
+      layoutBtn.addEventListener('click', (_e) => {
+        _e.stopPropagation();
+        try {
+          const grid = container.querySelector('.vivideo-main-grid');
+          if (!grid) return;
+
+          const isStacked = container.classList.toggle('vivideo-stacked');
+
+          if (isStacked) {
+            // save previous template
+            try {
+              const cs = window.getComputedStyle(grid);
+              container.dataset.prevGridTemplate = cs.gridTemplateColumns || '';
+            } catch (err) {
+              container.dataset.prevGridTemplate = '';
+              console.warn('failed to read grid computed style', err);
+            }
+            grid.style.gridTemplateColumns = '1fr';
+            layoutBtn.textContent = '⿻';
+          } else {
+            const prev = container.dataset.prevGridTemplate;
+            // If we have a previously saved template, restore it. If not, try a safe default.
+            if (prev && prev.length > 0) {
+              grid.style.gridTemplateColumns = prev;
+            } else {
+              // If a divider element exists, restore a sensible 3-column template (left divider right)
+              const divider = container.querySelector('.vivideo-grid-divider');
+              if (divider) {
+                // default safe template: 240px for left (profiles), 8px divider, 1fr for right (core)
+                grid.style.gridTemplateColumns = '240px 8px 1fr';
+              } else {
+                // fallback to simple two-column layout
+                grid.style.gridTemplateColumns = '240px 1fr';
+              }
+            }
+            layoutBtn.textContent = '❏';
+          }
+        } catch (err) {
+          console.warn('layout toggle failed', err);
         }
       });
     }
