@@ -2668,7 +2668,7 @@ div .vivideo-container,
 }
 
 .vivideo-main-grid {
-  grid-template-columns: minmax(240px, 1fr) minmax(280px, 1.25fr);
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 1.25fr);
   gap: 12px;
   margin: 10px;
   height: calc(100% - 86px);
@@ -2928,12 +2928,14 @@ button.vivideo-restore-default-profiles-btn {
   background: rgb(0 0 0 / 27%);
 }
 
-/* Stacked layout: used by layout toggle */
-.vivideo-container.vivideo-stacked .vivideo-main-grid {
+/* Stacked / Vertical layout: used by layout toggle */
+.vivideo-container.vivideo-stacked .vivideo-main-grid,
+.vivideo-container.vivideo-vertical .vivideo-main-grid {
   grid-template-columns: 1fr !important;
 }
 
-.vivideo-main-panel.vivideo-stacked .vivideo-panel-content {
+.vivideo-main-panel.vivideo-stacked .vivideo-panel-content,
+.vivideo-main-panel.vivideo-vertical .vivideo-panel-content {
   display: flex;
   flex-direction: column;
 }
@@ -2949,19 +2951,22 @@ button.vivideo-restore-default-profiles-btn {
 }
 
 /* Ensure core/profile ordering and visibility in stacked mode */
-.vivideo-container.vivideo-stacked .vivideo-core-section {
+.vivideo-container.vivideo-stacked .vivideo-core-section,
+.vivideo-container.vivideo-vertical .vivideo-core-section {
   order: 1;
-  min-height: 120px;
+  min-height: 360px; /* Enforce minimum/default core height in Vertical Layout */
   max-height: calc(80vh);
   overflow: auto;
 }
 
-.vivideo-container.vivideo-stacked .vivideo-profile-section {
+.vivideo-container.vivideo-stacked .vivideo-profile-section,
+.vivideo-container.vivideo-vertical .vivideo-profile-section {
   order: 2;
   overflow: visible;
 }
 
-/* Make sure grid rows collapse naturally in stacked mode */
-.vivideo-container.vivideo-stacked .vivideo-main-grid {
+/* Make sure grid rows collapse naturally in stacked/vertical mode */
+.vivideo-container.vivideo-stacked .vivideo-main-grid,
+.vivideo-container.vivideo-vertical .vivideo-main-grid {
   grid-auto-rows: auto;
 }

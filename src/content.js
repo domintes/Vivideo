@@ -58,6 +58,24 @@ if (window !== window.top) {
         name: 'DEFAULT',
         settings: { ...this.defaultSettings }
       };
+      // Layout management
+      this.LAYOUTS = {
+        HORIZONTAL: 'Horizontal Layout',
+        VERTICAL: 'Vertical Layout'
+      };
+      this.activeLayout = this.LAYOUTS.HORIZONTAL; // default layout for new installs
+      // sizing defaults (px)
+      this.defaultProfileWidth = 220;
+      this.minProfileWidth = 220;
+      this.defaultCoreHeight = 360;
+      this.minCoreHeight = 360;
+      // temporary loaded overrides from storage (applied during createUI)
+      this.tempContainerWidth = undefined;
+      this.tempMainGridTemplate = undefined;
+      this.tempMainGridRowHeight = undefined;
+      this.tempActiveLayout = undefined;
+      this.tempProfileSectionWidth = undefined;
+      this.tempCoreSectionHeight = undefined;
       this.currentTheme = window.VivideoConfig.defaultTheme;
       this.themeColors = {
         casual: {
@@ -168,12 +186,24 @@ if (window !== window.top) {
           if (Array.isArray(response.vivideoAppState.builtinProfiles)) {
             this.tempBuiltinProfiles = response.vivideoAppState.builtinProfiles;
           }
-          // optional layout overrides
+          // optional layout overrides (backwards-compatible keys and new ones)
           if (response.vivideoAppState.containerWidth !== undefined) {
             this.tempContainerWidth = response.vivideoAppState.containerWidth;
           }
           if (response.vivideoAppState.mainGridTemplate !== undefined) {
             this.tempMainGridTemplate = response.vivideoAppState.mainGridTemplate;
+          }
+          if (response.vivideoAppState.mainGridRowHeight !== undefined) {
+            this.tempMainGridRowHeight = response.vivideoAppState.mainGridRowHeight;
+          }
+          if (response.vivideoAppState.activeLayout !== undefined) {
+            this.tempActiveLayout = response.vivideoAppState.activeLayout;
+          }
+          if (response.vivideoAppState.profileSectionWidth !== undefined) {
+            this.tempProfileSectionWidth = response.vivideoAppState.profileSectionWidth;
+          }
+          if (response.vivideoAppState.coreSectionHeight !== undefined) {
+            this.tempCoreSectionHeight = response.vivideoAppState.coreSectionHeight;
           }
         }
       } catch (error) {
@@ -417,10 +447,15 @@ if (window !== window.top) {
             // Immediately set grid to 3 columns so right section is placed into third column
             try {
               if (window.innerWidth > 900) {
+                const presetLeft =
+                  typeof this.tempProfileSectionWidth === 'number'
+                    ? this.tempProfileSectionWidth
+                    : null;
                 const leftWidth =
+                  presetLeft ||
                   left.getBoundingClientRect().width ||
-                  Math.max(240, Math.floor(mainGrid.clientWidth * 0.4));
-                mainGrid.style.gridTemplateColumns = `${leftWidth}px 8px 1fr`;
+                  Math.max(this.defaultProfileWidth, Math.floor(mainGrid.clientWidth * 0.4));
+                mainGrid.style.gridTemplateColumns = `${Math.max(this.minProfileWidth, Math.round(leftWidth))}px 8px 1fr`;
               } else {
                 // keep responsive single-column layout on small screens
                 mainGrid.style.gridTemplateColumns = '1fr';
@@ -435,12 +470,15 @@ if (window !== window.top) {
             let startY = 0;
             let startTopHeight = 0;
             let startLeftWidth = 0;
-
+            const self = this;
             const onMouseDown = (e) => {
               e.preventDefault();
               isDragging = true;
-              // detect stacked (single-column) mode
-              isVerticalDrag = container.classList.contains('vivideo-stacked');
+              // detect stacked (single-column) mode using controller state if available
+              isVerticalDrag =
+                self.getActiveLayout && typeof self.getActiveLayout === 'function'
+                  ? self.getActiveLayout() === self.LAYOUTS.VERTICAL
+                  : self.container && self.container.classList.contains('vivideo-stacked');
               startX = e.clientX;
               startY = e.clientY;
               startLeftWidth = left.getBoundingClientRect().width;
@@ -454,7 +492,7 @@ if (window !== window.top) {
                   // ensure core has explicit height to be resizable
                   coreEl.style.boxSizing = 'border-box';
                 } else {
-                  startTopHeight = 360; // fallback
+                  startTopHeight = self.defaultCoreHeight; // fallback
                 }
               }
 
@@ -466,7 +504,7 @@ if (window !== window.top) {
               if (!isVerticalDrag) {
                 const dx = e.clientX - startX;
                 const newLeft = Math.max(
-                  160,
+                  self.minProfileWidth,
                   Math.min(window.innerWidth - 200, startLeftWidth + dx)
                 );
                 // set grid columns to px value + 1fr
@@ -485,7 +523,7 @@ if (window !== window.top) {
 
                 let newCoreHeight = coreIsAbove ? startTopHeight + dy : startTopHeight - dy;
                 // enforce minimum height
-                newCoreHeight = Math.max(360, newCoreHeight);
+                newCoreHeight = Math.max(self.minCoreHeight, newCoreHeight);
                 // enforce max (don't overflow viewport)
                 newCoreHeight = Math.min(window.innerHeight - 80, newCoreHeight);
 
@@ -505,9 +543,24 @@ if (window !== window.top) {
                 if (!isVerticalDrag) {
                   const cs = window.getComputedStyle(mainGrid);
                   const gridTemplate = cs.gridTemplateColumns;
+                  // try to extract left width in px
+                  let leftPx = null;
+                  try {
+                    const first = gridTemplate.split(' ').find((t) => t.indexOf('px') !== -1);
+                    if (first) leftPx = parseInt(first.replace('px', ''), 10);
+                  } catch (err) {
+                    console.warn('Vivideo: parse gridTemplate failed', err);
+                  }
+                  if (leftPx)
+                    this.tempProfileSectionWidth = Math.max(
+                      self.minProfileWidth,
+                      Math.round(leftPx)
+                    );
                   StorageUtils.saveAppState({
                     ...(this._lastSavedAppState || {}),
                     mainGridTemplate: gridTemplate,
+                    profileSectionWidth: this.tempProfileSectionWidth,
+                    activeLayout: this.activeLayout || this.LAYOUTS.HORIZONTAL,
                     containerWidth: this.container
                       ? this.container.getBoundingClientRect().width
                       : undefined
@@ -517,10 +570,13 @@ if (window !== window.top) {
                   const coreEl = mainGrid.querySelector('.vivideo-core-section');
                   if (coreEl) {
                     const height = coreEl.getBoundingClientRect().height;
+                    this.tempCoreSectionHeight = Math.max(self.minCoreHeight, Math.round(height));
                     StorageUtils.saveAppState({
                       ...(this._lastSavedAppState || {}),
                       mainGridTemplate: window.getComputedStyle(mainGrid).gridTemplateColumns,
                       mainGridRowHeight: `${Math.round(height)}px`,
+                      coreSectionHeight: this.tempCoreSectionHeight,
+                      activeLayout: this.activeLayout || this.LAYOUTS.VERTICAL,
                       containerWidth: this.container
                         ? this.container.getBoundingClientRect().width
                         : undefined
@@ -552,32 +608,60 @@ if (window !== window.top) {
             : '';
         }
         const mainGrid = this.container.querySelector('.vivideo-main-grid');
-        if (this.tempMainGridTemplate && mainGrid) {
-          // validate stored template - it should contain at least two column values
-          if (
-            typeof this.tempMainGridTemplate === 'string' &&
-            this.tempMainGridTemplate.indexOf(' ') > -1
-          ) {
-            mainGrid.style.gridTemplateColumns = this.tempMainGridTemplate;
-          } else {
-            // fallback default
-            const divider = this.container.querySelector('.vivideo-grid-divider');
-            if (divider) mainGrid.style.gridTemplateColumns = '240px 8px 1fr';
-            else mainGrid.style.gridTemplateColumns = '240px 1fr';
-          }
-        }
+        if (mainGrid) {
+          // If an active layout was stored, prefer it
+          if (this.tempActiveLayout) this.activeLayout = this.tempActiveLayout;
 
-        // Apply stored stacked-mode core height if present
-        if (this.tempMainGridRowHeight && mainGrid) {
+          // If explicit profile width stored, prefer that
+          if (typeof this.tempProfileSectionWidth === 'number') {
+            const divider = this.container.querySelector('.vivideo-grid-divider');
+            if (this.activeLayout === this.LAYOUTS.VERTICAL) {
+              // stacked
+              this.setActiveLayout(this.LAYOUTS.VERTICAL, false);
+            } else {
+              // horizontal
+              const left = Math.max(this.minProfileWidth, Math.round(this.tempProfileSectionWidth));
+              if (divider) mainGrid.style.gridTemplateColumns = `${left}px 8px 1fr`;
+              else mainGrid.style.gridTemplateColumns = `${left}px 1fr`;
+              this.setActiveLayout(this.LAYOUTS.HORIZONTAL, false);
+            }
+          } else if (this.tempMainGridTemplate) {
+            // validate stored template - it should contain at least two column values
+            if (
+              typeof this.tempMainGridTemplate === 'string' &&
+              this.tempMainGridTemplate.indexOf(' ') > -1
+            ) {
+              mainGrid.style.gridTemplateColumns = this.tempMainGridTemplate;
+              // try to parse first px value into profileSectionWidth
+              try {
+                const first = this.tempMainGridTemplate
+                  .split(' ')
+                  .find((t) => t.indexOf('px') !== -1);
+                if (first) this.tempProfileSectionWidth = parseInt(first.replace('px', ''), 10);
+              } catch (err) {
+                console.warn('Vivideo: parse saved grid template failed', err);
+              }
+              this.setActiveLayout(this.LAYOUTS.HORIZONTAL, false);
+            } else {
+              // fallback default
+              const divider = this.container.querySelector('.vivideo-grid-divider');
+              if (divider) mainGrid.style.gridTemplateColumns = '220px 8px 1fr';
+              else mainGrid.style.gridTemplateColumns = '220px 1fr';
+              this.setActiveLayout(this.LAYOUTS.HORIZONTAL, false);
+            }
+          } else {
+            // no explicit saved template - apply the stored activeLayout or default
+            this.setActiveLayout(this.activeLayout || this.LAYOUTS.HORIZONTAL, false);
+          }
+
+          // Apply stored core height if present (stacked/vertical mode)
           const coreEl = mainGrid.querySelector('.vivideo-core-section');
-          if (coreEl) {
-            // ensure minimum
+          const coreHeightValue = this.tempCoreSectionHeight || this.tempMainGridRowHeight;
+          if (coreEl && coreHeightValue !== undefined) {
             const value =
-              typeof this.tempMainGridRowHeight === 'string'
-                ? this.tempMainGridRowHeight
-                : `${this.tempMainGridRowHeight}px`;
-            const parsed = parseInt(value, 10) || 360;
-            coreEl.style.height = Math.max(360, parsed) + 'px';
+              typeof coreHeightValue === 'string' ? coreHeightValue : `${coreHeightValue}px`;
+            const parsed = parseInt(value, 10) || this.defaultCoreHeight;
+            coreEl.style.height = Math.max(this.minCoreHeight, parsed) + 'px';
             coreEl.style.overflow = 'auto';
           }
         }
@@ -731,6 +815,85 @@ if (window !== window.top) {
           }
         });
       });
+    }
+
+    // Layout helpers
+    getActiveLayout() {
+      return this.activeLayout || this.LAYOUTS.HORIZONTAL;
+    }
+
+    setActiveLayout(layoutName, save = true) {
+      if (!layoutName) return;
+      this.activeLayout = layoutName;
+      if (!this.container) return;
+
+      const mainGrid = this.container.querySelector('.vivideo-main-grid');
+      const divider = this.container.querySelector('.vivideo-grid-divider');
+      const coreEl = this.container.querySelector('.vivideo-core-section');
+
+      if (layoutName === this.LAYOUTS.VERTICAL) {
+        // stacked/vertical mode
+        this.container.classList.add('vivideo-stacked', 'vivideo-vertical');
+        this.container.classList.remove('vivideo-horizontal');
+        if (mainGrid) mainGrid.style.gridTemplateColumns = '1fr';
+        if (coreEl) {
+          const h = this.tempCoreSectionHeight || this.defaultCoreHeight;
+          coreEl.style.height =
+            Math.max(this.minCoreHeight, parseInt(h, 10) || this.defaultCoreHeight) + 'px';
+          coreEl.style.overflow = 'auto';
+        }
+      } else {
+        // horizontal/multi-column
+        this.container.classList.remove('vivideo-stacked', 'vivideo-vertical');
+        this.container.classList.add('vivideo-horizontal');
+        if (mainGrid) {
+          const left = this.tempProfileSectionWidth || this.defaultProfileWidth;
+          if (divider)
+            mainGrid.style.gridTemplateColumns = `${Math.max(this.minProfileWidth, left)}px 8px 1fr`;
+          else mainGrid.style.gridTemplateColumns = `${Math.max(this.minProfileWidth, left)}px 1fr`;
+        }
+        if (coreEl) {
+          // clear explicit height when returning to horizontal layout
+          coreEl.style.height = '';
+          coreEl.style.overflow = '';
+        }
+      }
+
+      // update layout toggle icon if present
+      const layoutBtn =
+        UIHelper.safeQuery(this.container, '.vivideo-layout-toggle') ||
+        UIHelper.safeQuery(this.container, '.vivideo-layout-toggle-btn');
+      if (layoutBtn) {
+        try {
+          layoutBtn.textContent = layoutName === this.LAYOUTS.VERTICAL ? '⿻' : '❏';
+        } catch (err) {
+          console.warn('Vivideo: failed to update layout icon', err);
+        }
+      }
+
+      if (save) {
+        // persist layout choice and known sizes
+        try {
+          const appState = { ...(this._lastSavedAppState || {}) };
+          appState.activeLayout = this.activeLayout;
+          if (this.tempProfileSectionWidth)
+            appState.profileSectionWidth = this.tempProfileSectionWidth;
+          if (this.tempCoreSectionHeight) appState.coreSectionHeight = this.tempCoreSectionHeight;
+          if (this.container)
+            appState.containerWidth = this.container.getBoundingClientRect().width;
+          StorageUtils.saveAppState(appState).catch((e) => console.warn('saveAppState failed', e));
+        } catch (e) {
+          console.warn('setActiveLayout: save failed', e);
+        }
+      }
+    }
+
+    toggleLayout() {
+      const newLayout =
+        this.getActiveLayout() === this.LAYOUTS.HORIZONTAL
+          ? this.LAYOUTS.VERTICAL
+          : this.LAYOUTS.HORIZONTAL;
+      this.setActiveLayout(newLayout, true);
     }
 
     enterFullscreenMode(fullscreenElement) {
@@ -1754,15 +1917,42 @@ if (window !== window.top) {
         settings: this.settings
       };
 
-      // include container and grid sizes when available
+      // include container and grid sizes and explicit layout when available
       try {
         if (this.container) appState.containerWidth = this.container.getBoundingClientRect().width;
         const grid = this.container ? this.container.querySelector('.vivideo-main-grid') : null;
         if (grid) {
-          appState.mainGridTemplate = window.getComputedStyle(grid).gridTemplateColumns;
+          const gridTemplate = window.getComputedStyle(grid).gridTemplateColumns;
+          appState.mainGridTemplate = gridTemplate;
+
+          // try to extract left column width in px
+          try {
+            const first = gridTemplate.split(' ').find((t) => t.indexOf('px') !== -1);
+            if (first) {
+              const leftPx = parseInt(first.replace('px', ''), 10);
+              if (!isNaN(leftPx))
+                appState.profileSectionWidth = Math.max(this.minProfileWidth, leftPx);
+            }
+          } catch (err) {
+            console.warn('Vivideo: parse gridTemplate failed', err);
+          }
+        }
+
+        // if stacked/vertical mode, include core height
+        const coreEl = this.container
+          ? this.container.querySelector('.vivideo-core-section')
+          : null;
+        if (coreEl) {
+          const h = coreEl.getBoundingClientRect().height;
+          appState.coreSectionHeight = Math.max(this.minCoreHeight, Math.round(h));
         }
       } catch (e) {
         console.warn('saveAppState: failed to read DOM sizes', e);
+      }
+
+      // include layout flag if available
+      if (this.activeLayout !== undefined) {
+        appState.activeLayout = this.activeLayout;
       }
 
       // remember for later merges
@@ -1803,14 +1993,58 @@ if (window !== window.top) {
           console.warn('restoreDefaults: updateUI failed', e);
         }
 
-        // Clear layout overrides in saved app state
+        // Reset layout to default (Horizontal Layout) and sizes
         try {
+          // Reset in-memory values
+          this.activeLayout = this.LAYOUTS.HORIZONTAL;
+          this.tempProfileSectionWidth = this.defaultProfileWidth;
+          this.tempCoreSectionHeight = this.defaultCoreHeight;
+
+          // Apply to DOM
+          try {
+            const mainGrid = this.container
+              ? this.container.querySelector('.vivideo-main-grid')
+              : null;
+            const divider = this.container
+              ? this.container.querySelector('.vivideo-grid-divider')
+              : null;
+            if (this.container) {
+              this.container.style.width = '';
+            }
+            if (mainGrid) {
+              if (divider)
+                mainGrid.style.gridTemplateColumns = `${this.defaultProfileWidth}px 8px 1fr`;
+              else mainGrid.style.gridTemplateColumns = `${this.defaultProfileWidth}px 1fr`;
+            }
+            const coreEl = this.container
+              ? this.container.querySelector('.vivideo-core-section')
+              : null;
+            if (coreEl) {
+              coreEl.style.height = '';
+              coreEl.style.overflow = '';
+            }
+            // update classes
+            if (this.container) {
+              this.container.classList.remove('vivideo-stacked', 'vivideo-vertical');
+              this.container.classList.add('vivideo-horizontal');
+            }
+          } catch (e) {
+            console.warn('restoreDefaults: failed to apply DOM layout defaults', e);
+          }
+
+          // Persist defaults explicitly
           await StorageUtils.saveAppState({
             activeProfile: this.settings.activeProfile,
-            autoActivate: this.settings.autoActivate
+            autoActivate: this.settings.autoActivate,
+            activeLayout: this.activeLayout,
+            profileSectionWidth: this.tempProfileSectionWidth,
+            coreSectionHeight: this.tempCoreSectionHeight,
+            containerWidth: this.container
+              ? this.container.getBoundingClientRect().width
+              : undefined
           });
         } catch (e) {
-          console.warn('restoreDefaults: failed to clear layout overrides', e);
+          console.warn('restoreDefaults: failed to reset layout overrides', e);
         }
 
         // Save settings and notify user

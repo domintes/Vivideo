@@ -157,13 +157,15 @@ const UIHelper = {
 
     const layoutBtn = this.safeQuery(container, '.vivideo-layout-toggle');
     if (layoutBtn) {
-      // set initial icon based on container state
+      // set initial icon based on controller-provided layout if available
       try {
-        if (container.classList.contains('vivideo-stacked')) {
-          layoutBtn.textContent = '⿻';
-        } else {
-          layoutBtn.textContent = '❏';
-        }
+        const currentLayout =
+          controller && typeof controller.getActiveLayout === 'function'
+            ? controller.getActiveLayout()
+            : container.classList.contains('vivideo-stacked')
+              ? 'Vertical Layout'
+              : 'Horizontal Layout';
+        layoutBtn.textContent = currentLayout === 'Vertical Layout' ? '⿻' : '❏';
       } catch (err) {
         console.warn('layout init failed', err);
       }
@@ -171,39 +173,40 @@ const UIHelper = {
       layoutBtn.addEventListener('click', (_e) => {
         _e.stopPropagation();
         try {
-          const grid = container.querySelector('.vivideo-main-grid');
-          if (!grid) return;
-
-          const isStacked = container.classList.toggle('vivideo-stacked');
-
-          if (isStacked) {
-            // save previous template
-            try {
-              const cs = window.getComputedStyle(grid);
-              container.dataset.prevGridTemplate = cs.gridTemplateColumns || '';
-            } catch (err) {
-              container.dataset.prevGridTemplate = '';
-              console.warn('failed to read grid computed style', err);
-            }
-            grid.style.gridTemplateColumns = '1fr';
-            layoutBtn.textContent = '⿻';
+          if (controller && typeof controller.toggleLayout === 'function') {
+            controller.toggleLayout();
+            // controller will update DOM/classes and icon
           } else {
-            const prev = container.dataset.prevGridTemplate;
-            // If we have a previously saved template, restore it. If not, try a safe default.
-            if (prev && prev.length > 0) {
-              grid.style.gridTemplateColumns = prev;
-            } else {
-              // If a divider element exists, restore a sensible 3-column template (left divider right)
-              const divider = container.querySelector('.vivideo-grid-divider');
-              if (divider) {
-                // default safe template: 240px for left (profiles), 8px divider, 1fr for right (core)
-                grid.style.gridTemplateColumns = '240px 8px 1fr';
-              } else {
-                // fallback to simple two-column layout
-                grid.style.gridTemplateColumns = '240px 1fr';
+            // Fallback to legacy toggle behavior
+            const grid = container.querySelector('.vivideo-main-grid');
+            if (!grid) return;
+
+            const isStacked = container.classList.toggle('vivideo-stacked');
+
+            if (isStacked) {
+              try {
+                const cs = window.getComputedStyle(grid);
+                container.dataset.prevGridTemplate = cs.gridTemplateColumns || '';
+              } catch (err) {
+                container.dataset.prevGridTemplate = '';
+                console.warn('failed to read grid computed style', err);
               }
+              grid.style.gridTemplateColumns = '1fr';
+              layoutBtn.textContent = '⿻';
+            } else {
+              const prev = container.dataset.prevGridTemplate;
+              if (prev && prev.length > 0) {
+                grid.style.gridTemplateColumns = prev;
+              } else {
+                const divider = container.querySelector('.vivideo-grid-divider');
+                if (divider) {
+                  grid.style.gridTemplateColumns = '220px 8px 1fr';
+                } else {
+                  grid.style.gridTemplateColumns = '220px 1fr';
+                }
+              }
+              layoutBtn.textContent = '❏';
             }
-            layoutBtn.textContent = '❏';
           }
         } catch (err) {
           console.warn('layout toggle failed', err);
