@@ -1308,18 +1308,7 @@ video:-ms-fullscreen .vivideo-container {
   flex: 1;
   width: auto;
 }
-.vivideo-active-item-row .vivideo-active-item-actions {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-.vivideo-active-item-row .vivideo-active-item-actions .vivideo-profile-edit-btn,
-.vivideo-active-item-row .vivideo-active-item-actions .vivideo-profile-remove-btn {
-  min-width: 36px;
-  height: 32px;
-  padding: 6px;
-  border-radius: 6px;
-}
+/* Active-item action buttons removed from top bar; keep list-item buttons styles elsewhere */
 
 /* Profile status styles */
 .active-item-status-warning.default {

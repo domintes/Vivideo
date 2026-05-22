@@ -263,6 +263,9 @@ if (window !== window.top) {
             );
           }
         );
+
+        // Start background sync to keep profiles up-to-date across tabs
+        this.startProfileSync();
       }
 
       injectPanelIntoDOM(panel) {
@@ -396,6 +399,56 @@ if (window !== window.top) {
 
         if (this.storageManager) {
           await this.storageManager.save('vivideoAppState', appState);
+        }
+      }
+
+      // Start a background sync task to keep profiles in sync across tabs
+      startProfileSync() {
+        // keep last known string to detect changes
+        this._lastProfilesJSON = JSON.stringify(this.profiles || []);
+        // poll every 15s
+        this._profileSyncInterval = setInterval(() => {
+          this.syncProfilesFromStorage();
+        }, 15000);
+
+        // Also sync when tab becomes visible or window gains focus
+        document.addEventListener('visibilitychange', () => {
+          if (document.visibilityState === 'visible') this.syncProfilesFromStorage();
+        });
+        window.addEventListener('focus', () => this.syncProfilesFromStorage());
+      }
+
+      async syncProfilesFromStorage() {
+        try {
+          if (!this.storageManager) return;
+          const stored = await this.storageManager.load('vivideoProfiles');
+          const storedJSON = JSON.stringify(stored || []);
+          if (storedJSON !== this._lastProfilesJSON) {
+            this._lastProfilesJSON = storedJSON;
+            this.profiles = Array.isArray(stored) ? stored : [];
+            console.log('Vivideo: Profiles synchronized from storage, updated list.');
+            // update UI components if present
+            if (this.mainPanel && typeof this.mainPanel.updateProfiles === 'function') {
+              try {
+                this.mainPanel.updateProfiles(this.profiles);
+              } catch (e) {
+                console.warn('Vivideo: mainPanel.updateProfiles failed', e);
+              }
+            }
+            // Also notify non-react profile manager if exists
+            if (
+              this.profileManager &&
+              typeof this.profileManager.updateProfilesList === 'function'
+            ) {
+              try {
+                this.profileManager.updateProfilesList(this.container);
+              } catch (e) {
+                console.warn('Vivideo: profileManager.updateProfilesList failed', e);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Vivideo: syncProfilesFromStorage failed', e);
         }
       }
 

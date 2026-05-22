@@ -4,6 +4,7 @@
 class ProfileManager {
   constructor(controller) {
     this.controller = controller;
+    this.autoOverwriteProfiles = false; // new setting: auto overwrite without confirmation
     this.defaultProfiles = this.createDefaultProfiles();
     this.showingProfiles = true; // Currently showing profiles (vs themes)
     this.displayDefaultProfiles = true; // Display default profile in list
@@ -194,10 +195,6 @@ class ProfileManager {
               <div class="vivideo-box-header profile-panel-header">➤ Active Profile</div>
               <div class="vivideo-active-item-row">
                 <div class="active-item-status" id="active-profile-display">DEFAULT</div>
-                <div class="vivideo-active-item-actions">
-                  <button class="vivideo-profile-edit-btn vivideo-btn" title="Overwrite active profile with current values">💾</button>
-                  <button class="vivideo-profile-remove-btn vivideo-btn" title="Delete active profile">✖</button>
-                </div>
               </div>
             </div>
             <div class="vivideo-bottom-controls-right">
@@ -276,6 +273,15 @@ class ProfileManager {
           </label>
         </div>
 
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
+            <input type="checkbox" id="auto-overwrite-profiles-checkbox" class="vivideo-switch-input">
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Automatically overwrite profiles with the same name</span>
+            <button class="vivideo-info-icon" data-info="When enabled, saving a profile with an existing name will overwrite it without confirmation">❔</button>
+          </label>
+        </div>
+
 
       </div>
 
@@ -349,9 +355,12 @@ class ProfileManager {
 
       if (msgEl) msgEl.textContent = `This will overwrite profile "${profileName}". Confirm?`;
 
+      const backdrop = modal.querySelector('.vivideo-modal-backdrop');
       const cleanup = () => {
         confirmBtn.removeEventListener('click', onConfirmWrapper);
         cancelBtn.removeEventListener('click', onCancelWrapper);
+        if (backdrop) backdrop.removeEventListener('click', onCancelWrapper);
+        document.removeEventListener('keydown', onKeyDown);
         modal.style.display = 'none';
       };
 
@@ -373,10 +382,21 @@ class ProfileManager {
         cleanup();
       };
 
+      const onKeyDown = (ev) => {
+        if (ev.key === 'Escape') {
+          onCancelWrapper();
+        }
+      };
+
       confirmBtn.addEventListener('click', onConfirmWrapper);
       cancelBtn.addEventListener('click', onCancelWrapper);
+      if (backdrop) backdrop.addEventListener('click', onCancelWrapper);
+      document.addEventListener('keydown', onKeyDown);
 
+      // Make modal visible and accessible
       modal.style.display = 'block';
+      modal.setAttribute('role', 'dialog');
+      modal.setAttribute('aria-modal', 'true');
     } catch (e) {
       console.warn('Vivideo: showOverwriteModal failed', e);
     }
@@ -435,27 +455,8 @@ class ProfileManager {
         const duplicateByName = val.length > 0 && (existingIndex !== -1 || defaultNameExists);
         const duplicateBySettings = matchesBySettings.length > 0;
 
-        // If there are duplicate names or settings, show the duplicate warning and block quick-save
+        // If there are duplicate names or settings, block quick-save (do not show warning until save attempt)
         if ((duplicateByName || duplicateBySettings) && val.length > 0) {
-          // Build friendly message
-          if (duplicateByName && existingIndex !== -1) {
-            this.showDuplicateWarning(
-              container,
-              `A profile named "${val}" already exists. Use Overwrite to replace it.`,
-              'warning'
-            );
-          } else if (duplicateBySettings) {
-            const namesText = matchesBySettings
-              .map((m) => (m.profile && m.profile.name) || '')
-              .filter(Boolean)
-              .join(', ');
-            this.showDuplicateWarning(
-              container,
-              `A profile with identical settings already exists: ${namesText}`,
-              'warning'
-            );
-          }
-
           // Show inline Overwrite if name conflict points to a specific user profile
           if (duplicateByName && existingIndex !== -1 && grid) {
             if (!inline) {
@@ -601,25 +602,7 @@ class ProfileManager {
         } else if (!editingIndex && (duplicateByName || duplicateBySettings)) {
           // Block creating a new profile when there's a name or settings conflict
           saveBtn.disabled = true;
-          if (duplicateByName) {
-            this.showDuplicateWarning(
-              container,
-              `A profile named "${name}" already exists.`,
-              'warning'
-            );
-            this.updateActiveStatus(`You will overwrite ${name}`, '#bb531e');
-          } else if (duplicateBySettings) {
-            const namesText = matchesBySettings
-              .map((m) => (m.profile && m.profile.name) || '')
-              .filter(Boolean)
-              .join(', ');
-            this.showDuplicateWarning(
-              container,
-              `A profile with identical settings already exists: ${namesText}`,
-              'warning'
-            );
-            this.updateActiveStatus('Duplicate profile settings detected', '#bb531e');
-          }
+          // Do not display the duplicate warning while typing. Show only on explicit save attempt.
         } else {
           // No blocking duplicates detected
           saveBtn.disabled = false;
@@ -656,6 +639,20 @@ class ProfileManager {
         this.applyProfileSpeed = e.target.checked;
         console.log('Vivideo: Apply profile video speed:', this.applyProfileSpeed);
         // Save setting
+        if (this.controller) this.controller.saveAppState();
+      });
+    }
+
+    // Auto-overwrite profiles checkbox
+    const autoOverwriteCheckbox = UIHelper.safeQuery(
+      container,
+      '#auto-overwrite-profiles-checkbox'
+    );
+    if (autoOverwriteCheckbox) {
+      autoOverwriteCheckbox.checked = !!this.autoOverwriteProfiles;
+      autoOverwriteCheckbox.addEventListener('change', (e) => {
+        this.autoOverwriteProfiles = e.target.checked;
+        // Persist this preference in app state
         if (this.controller) this.controller.saveAppState();
       });
     }
@@ -731,96 +728,7 @@ class ProfileManager {
       });
     }
 
-    // Active profile edit/remove buttons in the top active-item section
-    const activeEditBtn = UIHelper.safeQuery(
-      container,
-      '.vivideo-active-item-section .vivideo-profile-edit-btn'
-    );
-    const activeRemoveBtn = UIHelper.safeQuery(
-      container,
-      '.vivideo-active-item-section .vivideo-profile-remove-btn'
-    );
-
-    if (activeEditBtn) {
-      activeEditBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const currentSettings = {
-          brightness: this.controller.settings.brightness,
-          contrast: this.controller.settings.contrast,
-          saturation: this.controller.settings.saturation,
-          gamma: this.controller.settings.gamma,
-          colorTemp: this.controller.settings.colorTemp,
-          sharpness: this.controller.settings.sharpness,
-          speed: this.controller.settings.speed
-        };
-        if (this.validateSettings(currentSettings)) {
-          this.updateActiveStatus('Invalid value entered', '#bb531e');
-          return;
-        }
-
-        const activeRef = this.controller.settings.activeProfile;
-        const found = this.findProfileByRef(activeRef);
-        if (found) {
-          if (found.profileType === 'builtin') {
-            this.defaultProfiles[found.index].settings = this.sanitizeSettings({
-              ...currentSettings,
-              autoActivate: this.controller.settings.autoActivate
-            });
-            this.controller.settings.activeProfile = this.defaultProfiles[found.index].name;
-          } else {
-            this.controller.profiles[found.index].settings = this.sanitizeSettings({
-              ...currentSettings,
-              autoActivate: this.controller.settings.autoActivate
-            });
-            const userProfile = this.controller.profiles[found.index];
-            this.controller.settings.activeProfile = userProfile.id || userProfile.name;
-            this.controller.saveProfiles();
-          }
-        } else {
-          // No matching profile - create a new user profile and activate it
-          const profile = {
-            id: this.generateProfileId(),
-            name: `Profile_${this.controller.profiles.length + 1}`,
-            profileCategory: 'General',
-            settings: this.sanitizeSettings({
-              ...currentSettings,
-              autoActivate: this.controller.settings.autoActivate
-            })
-          };
-          this.controller.profiles.push(profile);
-          this.controller.settings.activeProfile = profile.id;
-          this.controller.saveProfiles();
-        }
-
-        this.controller.saveSettings();
-        this.controller.saveAppState();
-        this.updateProfilesList(container);
-        this.updateActiveProfileDisplay(container, this.controller.settings);
-        this.updateActiveStatus('Saved', '');
-      });
-    }
-
-    if (activeRemoveBtn) {
-      activeRemoveBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const activeRef = this.controller.settings.activeProfile;
-        const found = this.findProfileByRef(activeRef);
-        if (found) {
-          if (found.profileType === 'builtin') {
-            this.defaultProfiles.splice(found.index, 1);
-            this.updateProfilesList(this.controller.container);
-          } else {
-            this.controller.deleteProfile(found.index);
-          }
-          this.controller.saveProfiles();
-          this.updateProfilesList(container);
-          this.updateActiveProfileDisplay(container, this.controller.settings);
-          this.updateActiveStatus('Deleted', '');
-        }
-      });
-    }
+    // Active-profile action buttons removed: top active item only shows label now.
 
     this.refreshCategorySelectors(container);
   }
@@ -1112,61 +1020,30 @@ class ProfileManager {
             if (!input) return;
             const newName = input.value.trim();
             if (!newName) return;
-            // Prepare current settings from controller to save with profile
-            const currentSettings = {
-              brightness: this.controller.settings.brightness,
-              contrast: this.controller.settings.contrast,
-              saturation: this.controller.settings.saturation,
-              gamma: this.controller.settings.gamma,
-              colorTemp: this.controller.settings.colorTemp,
-              sharpness: this.controller.settings.sharpness,
-              speed: this.controller.settings.speed
-            };
-
-            // Update model (name + settings)
-            if (profileType === 'builtin') {
-              const bp = this.defaultProfiles[index];
-              if (bp) {
-                bp.name = newName;
-                bp.settings = this.sanitizeSettings({
-                  ...currentSettings,
-                  autoActivate: this.controller.settings.autoActivate
-                });
-                // set activeProfile to builtin name
-                this.controller.settings.activeProfile = bp.name;
-              }
-            } else {
-              const up = this.controller.profiles[index];
-              if (up) {
-                up.name = newName;
-                up.settings = this.sanitizeSettings({
-                  ...currentSettings,
-                  autoActivate: this.controller.settings.autoActivate
-                });
-                this.controller.settings.activeProfile = up.id || up.name;
-              }
-            }
-
-            // Persist and update UI
+            // Inline edit routes to centralized save; controller.settings will be used by saveCurrentProfile
+            // Route inline edit save to the centralized main save flow
             try {
-              if (typeof this.controller.saveProfiles === 'function') {
-                this.controller.saveProfiles();
+              const mainNameInput = container.querySelector('#profile-name');
+              const mainSaveBtn = container.querySelector('#save-profile');
+              if (mainNameInput) mainNameInput.value = newName;
+              if (mainSaveBtn) {
+                // mark main save as editing this profile index
+                if (profileType === 'builtin') {
+                  mainSaveBtn.dataset.editBuiltinIndex = index;
+                  mainSaveBtn.dataset.editType = 'builtin';
+                } else {
+                  mainSaveBtn.dataset.editIndex = index;
+                  mainSaveBtn.dataset.editType = 'user';
+                }
               }
-              if (typeof this.controller.saveSettings === 'function') {
-                this.controller.saveSettings();
-              }
-              if (typeof this.controller.saveAppState === 'function') {
-                this.controller.saveAppState();
-              }
-            } catch (e) {
-              console.warn('Vivideo: Failed to save after inline edit', e);
+              // Call centralized save which will take current controller.settings as profile settings
+              this.saveCurrentProfile(container);
+            } catch (err) {
+              console.warn('Vivideo: Failed to perform centralized save from inline edit', err);
             }
-
-            // Exit edit mode and refresh list
+            // Exit inline edit UI
             profileItem.classList.remove('editing');
             editBtn.textContent = '✎';
-            this.updateProfilesList(container);
-            this.updateActiveProfileDisplay(container, this.controller.settings);
             return;
           }
 
@@ -1285,6 +1162,7 @@ class ProfileManager {
 
   saveCurrentProfile(container) {
     const nameInput = container.querySelector('#profile-name');
+    const mainSaveBtn = container.querySelector('#save-profile');
     let profileName = nameInput.value.trim();
     const categorySelect = container.querySelector('#profile-category');
     const selectedCategory = this.normalizeCategoryName(categorySelect ? categorySelect.value : '');
@@ -1343,7 +1221,6 @@ class ProfileManager {
       return;
     }
     // Check if main save button indicates editing a built-in
-    const mainSaveBtn = container.querySelector('#save-profile');
     const editBuiltinIndexMain =
       mainSaveBtn &&
       mainSaveBtn.dataset &&
@@ -1352,13 +1229,34 @@ class ProfileManager {
         : null;
     const editTypeMain = mainSaveBtn && mainSaveBtn.dataset ? mainSaveBtn.dataset.editType : null;
     if (existingProfileIndex !== -1) {
-      // Show duplicate error in the duplicate warning area and ask user to confirm overwrite
+      // Overwrite existing profile — respect auto-overwrite setting
+      const doAuto = !!this.autoOverwriteProfiles;
+      if (doAuto) {
+        this.controller.profiles[existingProfileIndex].settings = this.sanitizeSettings({
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        });
+        this.controller.profiles[existingProfileIndex].profileCategory = profileCategory;
+        console.log('Vivideo: Profile overwritten (auto):', profileName);
+        const existing = this.controller.profiles[existingProfileIndex];
+        this.controller.settings.activeProfile = existing.id || existing.name;
+        this.controller.saveProfiles();
+        this.controller.saveSettings();
+        this.controller.saveAppState();
+        this.updateProfilesList(this.controller.container);
+        this.updateActiveProfileDisplay(this.controller.container, this.controller.settings);
+        if (nameInput) nameInput.value = '';
+        this.isEditingProfile = false;
+        this.editingIndex = null;
+        return;
+      }
+
+      // Ask user to confirm overwrite
       this.showDuplicateWarning(
         container,
         `A profile named "${profileName}" already exists. Confirm overwrite to proceed.`,
         'error'
       );
-      // Ask user to confirm overwrite
       this.showOverwriteModal(
         profileName,
         () => {
@@ -1527,28 +1425,73 @@ class ProfileManager {
     // Check for duplicates by settings
     const matchingBySettings = this.findAllMatchingProfiles(currentSettings) || [];
 
-    // If trying to create a new profile (not editing) and a name or settings duplicate exists, block and show an error
+    // If trying to create a new profile (not editing) and a name or settings duplicate exists
     const isEditingExisting = editIndex !== null && editIndex >= 0;
     if (!isEditingExisting && existingIndex !== -1) {
-      // Name collision - refuse to create and show error in duplicate warning
+      // Name collision - either auto-overwrite or ask for confirmation
+      if (this.autoOverwriteProfiles) {
+        this.controller.profiles[existingIndex].settings = this.sanitizeSettings({
+          ...currentSettings,
+          autoActivate: this.controller.settings.autoActivate
+        });
+        this.controller.profiles[existingIndex].profileCategory = profileCategory;
+        console.log('Vivideo: Profile overwritten (auto):', name);
+        this.controller.settings.activeProfile =
+          this.controller.profiles[existingIndex].id ||
+          this.controller.profiles[existingIndex].name;
+        // Persist
+        this.controller.saveProfiles();
+        this.controller.saveSettings();
+        this.controller.saveAppState();
+        // Update UI
+        this.updateProfilesList(container);
+        this.updateActiveProfileDisplay(container, this.controller.settings);
+        if (input) input.value = '';
+        return;
+      }
+
+      // Otherwise ask for confirmation
       this.showDuplicateWarning(
         container,
         `Cannot create profile: a profile named "${name}" already exists. Use Overwrite to replace it.`,
         'error'
       );
-      this.updateActiveStatus('Duplicate profile name', '#ff4d4f');
+      this.showOverwriteModal(
+        name,
+        () => {
+          try {
+            this.controller.profiles[existingIndex].settings = this.sanitizeSettings({
+              ...currentSettings,
+              autoActivate: this.controller.settings.autoActivate
+            });
+            this.controller.profiles[existingIndex].profileCategory = profileCategory;
+            console.log('Vivideo: Profile overwritten (confirm):', name);
+            this.controller.settings.activeProfile =
+              this.controller.profiles[existingIndex].id ||
+              this.controller.profiles[existingIndex].name;
+            this.controller.saveProfiles();
+            this.controller.saveSettings();
+            this.controller.saveAppState();
+            this.updateProfilesList(container);
+            this.updateActiveProfileDisplay(container, this.controller.settings);
+            if (input) input.value = '';
+          } catch (e) {
+            console.warn('Vivideo: overwrite confirm handler failed', e);
+          }
+        },
+        () => {
+          this.updateActiveStatus('Canceled', '');
+        }
+      );
+
       return;
     }
 
     if (!isEditingExisting && matchingBySettings.length > 0) {
-      // Settings collision - refuse to create and show error
-      const namesText = matchingBySettings
-        .map((m) => (m.profile && m.profile.name) || '')
-        .filter(Boolean)
-        .join(', ');
+      // Settings collision - refuse to create and show concise error message
       this.showDuplicateWarning(
         container,
-        `Cannot create profile: a profile with identical settings already exists: ${namesText}`,
+        'User Profile with same parameters already exists',
         'error'
       );
       this.updateActiveStatus('Duplicate profile settings', '#ff4d4f');

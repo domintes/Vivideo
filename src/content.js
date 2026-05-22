@@ -1560,7 +1560,10 @@ if (window !== window.top) {
         workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false,
         workOnEverything: this.profileManager ? this.profileManager.workOnEverything : false,
         profileCategories: this.profileManager ? this.profileManager.profileCategories : [],
-        builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : []
+        builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : [],
+        autoOverwriteProfiles: this.profileManager
+          ? this.profileManager.autoOverwriteProfiles
+          : false
       });
     }
 
