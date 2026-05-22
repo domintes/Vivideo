@@ -2844,6 +2844,7 @@ body.vivideo-resizing .vivideo-profile-list {
   overflow-x: hidden;
   width: 100%;
   min-width: 0;
+  min-height: 444px;
 }
 
 /* Info Icon Styles */ 
@@ -2959,7 +2960,6 @@ button.vivideo-restore-default-profiles-btn {
 .vivideo-container.vivideo-stacked .vivideo-core-section,
 .vivideo-container.vivideo-vertical .vivideo-core-section {
   order: 1;
-  min-height: 360px; /* Enforce minimum/default core height in Vertical Layout */
   max-height: calc(80vh);
   overflow: auto;
 }
