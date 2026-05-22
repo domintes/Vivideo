@@ -8,7 +8,9 @@ const HeaderSection = ({
   onClose,
   onToggleCollapse,
   onDragStart,
-  onInfo
+  onInfo,
+  onSaveState,
+  onRestoreDefaults
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const headerRef = useRef(null);
@@ -69,6 +71,14 @@ const HeaderSection = ({
     }
   };
 
+  const handleSaveClick = () => {
+    if (typeof onSaveState === 'function') onSaveState();
+  };
+
+  const handleRestoreClick = () => {
+    if (typeof onRestoreDefaults === 'function') onRestoreDefaults();
+  };
+
   return (
     <div
       ref={headerRef}
@@ -82,6 +92,12 @@ const HeaderSection = ({
           <span className="vivideo-version">v{version}</span>
         </div>
         <div className="vivideo-header-controls">
+          <button className="vivideo-restore-btn" onClick={handleRestoreClick} title="Restore Defaults">
+            ↻
+          </button>
+          <button className="vivideo-save-btn" onClick={handleSaveClick} title="Save state">
+            💾
+          </button>
           <button className="vivideo-info-btn" onClick={handleInfoClick} title="Info">
             ℹ️
           </button>

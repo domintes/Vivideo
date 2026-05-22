@@ -36,6 +36,10 @@ const VivideoMainPanel = ({
   onPositionChange,
   onProfileSelect,
   onThemeSelect
+  ,
+  onSaveState
+  ,
+  onRestoreDefaults
 }) => {
   const [isVisible, setIsVisible] = useState(initialVisible);
   const [collapsed, setCollapsed] = useState(initialCollapsed);
@@ -314,6 +318,12 @@ const VivideoMainPanel = ({
           onToggleCollapse={handleToggleCollapse}
           onDragStart={handleDragStart}
           onInfo={() => console.log('Info clicked')}
+          onSaveState={() => {
+            if (typeof onSaveState === 'function') onSaveState();
+          }}
+          onRestoreDefaults={() => {
+            if (typeof onRestoreDefaults === 'function') onRestoreDefaults();
+          }}
         />
 
         <CollapseMenuSection collapsed={collapsed} />

@@ -120,8 +120,12 @@ const UIHelper = {
     return `
       <div class="vivideo-header vivideo-draggable">
         <h3 class="vivideo-title">Vivideo</h3>
-        <button class="vivideo-info" title="Information">𝒾</button>
-        <button class="vivideo-close" title="Close (Alt+V)">✕</button>
+        <div class="vivideo-header-buttons">
+          <button class="vivideo-restore" title="Restore Defaults">↻ Restore Defaults</button>
+          <button class="vivideo-save" title="Save State">💾 Save State</button>
+          <button class="vivideo-info" title="Information">𝒾</button>
+          <button class="vivideo-close" title="Close (Alt+V)">✕</button>
+        </div>
       </div>
     `;
   },
@@ -136,6 +140,54 @@ const UIHelper = {
         _e.stopPropagation();
         controller.toggleInfo();
       });
+
+    const saveBtn = this.safeQuery(container, '.vivideo-save');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', (_e) => {
+        _e.stopPropagation();
+        // Prefer a full-state save method if available
+        if (controller && typeof controller.saveFullState === 'function') {
+          controller.saveFullState();
+        } else if (controller && typeof controller.saveAppState === 'function') {
+          controller.saveAppState();
+        }
+      });
+    }
+
+    const restoreBtn = this.safeQuery(container, '.vivideo-restore');
+    if (restoreBtn) {
+      restoreBtn.addEventListener('click', (_e) => {
+        _e.stopPropagation();
+        if (controller && typeof controller.restoreDefaults === 'function') {
+          controller.restoreDefaults();
+        }
+      });
+    }
+  },
+
+  showToast(message = '', duration = 2500) {
+    try {
+      const existing = document.querySelector('.vivideo-toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'vivideo-toast';
+      toast.textContent = message;
+      toast.style.position = 'fixed';
+      toast.style.right = '16px';
+      toast.style.bottom = '16px';
+      toast.style.zIndex = 2147483647;
+      UIHelper.safeAppend(toast);
+      setTimeout(() => {
+        try {
+          toast.classList.add('vivideo-toast-hide');
+          setTimeout(() => toast.remove(), 300);
+        } catch (err) {
+          console.warn('Toast hide failed', err);
+        }
+      }, duration);
+    } catch (e) {
+      console.warn('showToast failed', e);
+    }
   },
 
   bindCheckboxEvents(container, controller) {

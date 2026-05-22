@@ -121,6 +121,13 @@ if (window !== window.top) {
           if (data.vivideoAppState) {
             this.activeProfile = data.vivideoAppState.activeProfile || 'DEFAULT';
             this.panelPosition = data.vivideoAppState.panelPosition || { x: 20, y: 20 };
+            // optional layout overrides
+            if (data.vivideoAppState.containerWidth !== undefined) {
+              this.tempContainerWidth = data.vivideoAppState.containerWidth;
+            }
+            if (data.vivideoAppState.mainGridTemplate !== undefined) {
+              this.tempMainGridTemplate = data.vivideoAppState.mainGridTemplate;
+            }
           }
 
           console.log('Vivideo: Settings loaded successfully');
@@ -237,6 +244,15 @@ if (window !== window.top) {
                 onMount: (panelApi) => {
                   console.log('Vivideo: Main panel mounted');
                   this.panelApi = panelApi;
+                  // apply saved container width if present
+                  try {
+                    if (this.tempContainerWidth) {
+                      const panelEl = document.getElementById('vivideo-panel');
+                      if (panelEl) panelEl.style.width = this.tempContainerWidth + 'px';
+                    }
+                  } catch (e) {
+                    console.warn('Failed to apply saved panel width', e);
+                  }
                 },
 
                 onClose: () => {
@@ -258,6 +274,13 @@ if (window !== window.top) {
 
                 onThemeSelect: (themeName) => {
                   this.changeTheme(themeName);
+                },
+                onSaveState: () => {
+                  if (typeof this.saveFullState === 'function') this.saveFullState();
+                  else if (typeof this.saveAppState === 'function') this.saveAppState();
+                },
+                onRestoreDefaults: () => {
+                  if (typeof this.restoreDefaults === 'function') this.restoreDefaults();
                 }
               })
             );
@@ -394,11 +417,94 @@ if (window !== window.top) {
       async saveAppState() {
         const appState = {
           activeProfile: this.activeProfile,
-          panelPosition: this.panelPosition
+          panelPosition: this.panelPosition,
+          settings: this.settings
         };
+
+        // Also include container width and main grid layout if available
+        try {
+          const container = document.querySelector('.vivideo-container');
+          if (container) {
+            appState.containerWidth = container.getBoundingClientRect().width;
+          }
+          const grid = document.querySelector('.vivideo-main-grid');
+          if (grid) {
+            const cs = window.getComputedStyle(grid);
+            appState.mainGridTemplate = cs.gridTemplateColumns;
+          }
+        } catch (e) {
+          console.warn('saveAppState: failed to read DOM sizes', e);
+        }
 
         if (this.storageManager) {
           await this.storageManager.save('vivideoAppState', appState);
+        }
+      }
+
+      async saveFullState() {
+        // Alias for saveAppState in case a full save is requested
+        await this.saveAppState();
+        // Also save profiles and theme so that the saved state represents full app snapshot
+        try {
+          if (this.storageManager) {
+            await this.storageManager.save('vivideoProfiles', this.profiles || []);
+            await this.storageManager.save('vivideoTheme', this.currentTheme);
+            await this.storageManager.save('vivideoSettings', this.settings || {});
+          }
+          try {
+            if (window.UIHelper && typeof window.UIHelper.showToast === 'function') {
+              window.UIHelper.showToast('Nowy domyślny stan zapisany');
+            }
+          } catch (err) {
+            console.warn('showToast failed', err);
+          }
+        } catch (e) {
+          console.warn('saveFullState: failed to save auxiliary data', e);
+        }
+      }
+
+      async restoreDefaults() {
+        try {
+          // Reset settings to default profile settings
+          const defaultProfiles = this.createDefaultProfiles();
+          const defaultSettings =
+            (defaultProfiles && defaultProfiles[0] && defaultProfiles[0].settings) || {};
+          this.settings = { ...defaultSettings };
+          this.activeProfile = 'DEFAULT';
+
+          // Update UI
+          if (this.mainPanel && typeof this.mainPanel.updateSettings === 'function') {
+            try {
+              this.mainPanel.updateSettings(this.settings);
+            } catch (err) {
+              console.warn('mainPanel.updateSettings failed', err);
+            }
+          }
+          if (this.panelApi && typeof this.panelApi.updateSettings === 'function') {
+            try {
+              this.panelApi.updateSettings(this.settings);
+            } catch (err) {
+              console.warn('panelApi.updateSettings failed', err);
+            }
+          }
+
+          // Clear stored layout overrides so UI returns to defaults
+          try {
+            await this.storageManager.save('vivideoAppState', {
+              activeProfile: this.activeProfile,
+              panelPosition: this.panelPosition
+            });
+          } catch (e) {
+            console.warn('restoreDefaults: failed to clear layout overrides', e);
+          }
+
+          // Save settings and notify
+          if (this.storageManager) await this.storageManager.save('vivideoSettings', this.settings);
+          if (window.UIHelper && typeof window.UIHelper.showToast === 'function') {
+            window.UIHelper.showToast('Przywrócono domyślny stan');
+          }
+        } catch (e) {
+          console.warn('restoreDefaults failed', e);
         }
       }
 

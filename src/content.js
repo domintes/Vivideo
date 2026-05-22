@@ -168,6 +168,13 @@ if (window !== window.top) {
           if (Array.isArray(response.vivideoAppState.builtinProfiles)) {
             this.tempBuiltinProfiles = response.vivideoAppState.builtinProfiles;
           }
+          // optional layout overrides
+          if (response.vivideoAppState.containerWidth !== undefined) {
+            this.tempContainerWidth = response.vivideoAppState.containerWidth;
+          }
+          if (response.vivideoAppState.mainGridTemplate !== undefined) {
+            this.tempMainGridTemplate = response.vivideoAppState.mainGridTemplate;
+          }
         }
       } catch (error) {
         console.error('Vivideo: Error loading settings:', error);
@@ -395,8 +402,99 @@ if (window !== window.top) {
 
       this.container.innerHTML = htmlContent;
 
+      // Insert grid divider between profile and core sections for resizing
+      try {
+        const mainGrid = this.container.querySelector('.vivideo-main-grid');
+        if (mainGrid) {
+          const left = mainGrid.querySelector('.vivideo-profile-section');
+          const right = mainGrid.querySelector('.vivideo-core-section');
+          if (left && right) {
+            const divider = document.createElement('div');
+            divider.className = 'vivideo-grid-divider';
+            // insert divider between left and right
+            mainGrid.insertBefore(divider, right);
+
+            // Immediately set grid to 3 columns so right section is placed into third column
+            try {
+              if (window.innerWidth > 900) {
+                const leftWidth =
+                  left.getBoundingClientRect().width ||
+                  Math.max(240, Math.floor(mainGrid.clientWidth * 0.4));
+                mainGrid.style.gridTemplateColumns = `${leftWidth}px 8px 1fr`;
+              } else {
+                // keep responsive single-column layout on small screens
+                mainGrid.style.gridTemplateColumns = '1fr';
+              }
+            } catch (err) {
+              console.warn('Failed to set initial gridTemplateColumns for divider', err);
+            }
+            // Setup dragging to resize columns
+            let isDragging = false;
+            let startX = 0;
+            let startLeftWidth = 0;
+
+            const onMouseDown = (e) => {
+              e.preventDefault();
+              isDragging = true;
+              startX = e.clientX;
+              startLeftWidth = left.getBoundingClientRect().width;
+              document.body.classList.add('vivideo-resizing');
+            };
+
+            const onMouseMove = (e) => {
+              if (!isDragging) return;
+              const dx = e.clientX - startX;
+              const newLeft = Math.max(160, Math.min(window.innerWidth - 200, startLeftWidth + dx));
+              // set grid columns to px value + 1fr
+              mainGrid.style.gridTemplateColumns = `${newLeft}px 8px 1fr`;
+            };
+
+            const onMouseUp = () => {
+              if (!isDragging) return;
+              isDragging = false;
+              document.body.classList.remove('vivideo-resizing');
+              // persist grid template in storage
+              try {
+                const cs = window.getComputedStyle(mainGrid);
+                const gridTemplate = cs.gridTemplateColumns;
+                StorageUtils.saveAppState({
+                  ...(this._lastSavedAppState || {}),
+                  mainGridTemplate: gridTemplate,
+                  containerWidth: this.container
+                    ? this.container.getBoundingClientRect().width
+                    : undefined
+                });
+              } catch (e) {
+                console.warn('Failed to persist grid template', e);
+              }
+            };
+
+            divider.addEventListener('mousedown', onMouseDown);
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to initialize grid divider', e);
+      }
+
       this.safeAppend(this.container);
       this.updateProfilesList();
+
+      // Apply any saved layout overrides (container width / grid template)
+      try {
+        if (this.tempContainerWidth && this.container) {
+          this.container.style.width = this.tempContainerWidth
+            ? this.tempContainerWidth + 'px'
+            : '';
+        }
+        const mainGrid = this.container.querySelector('.vivideo-main-grid');
+        if (this.tempMainGridTemplate && mainGrid) {
+          mainGrid.style.gridTemplateColumns = this.tempMainGridTemplate;
+        }
+      } catch (e) {
+        console.warn('Failed to apply saved layout overrides', e);
+      }
 
       // Initialize checkbox and button states based on showDefaultProfiles setting
       this.initializeProfilesUI();
@@ -1550,7 +1648,7 @@ if (window !== window.top) {
     }
 
     async saveAppState() {
-      await StorageUtils.saveAppState({
+      const appState = {
         activeProfile: this.settings.activeProfile,
         autoActivate: this.settings.autoActivate,
         showProfileAfterChange: this.profileManager
@@ -1563,8 +1661,81 @@ if (window !== window.top) {
         builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : [],
         autoOverwriteProfiles: this.profileManager
           ? this.profileManager.autoOverwriteProfiles
-          : false
-      });
+          : false,
+        settings: this.settings
+      };
+
+      // include container and grid sizes when available
+      try {
+        if (this.container) appState.containerWidth = this.container.getBoundingClientRect().width;
+        const grid = this.container ? this.container.querySelector('.vivideo-main-grid') : null;
+        if (grid) {
+          appState.mainGridTemplate = window.getComputedStyle(grid).gridTemplateColumns;
+        }
+      } catch (e) {
+        console.warn('saveAppState: failed to read DOM sizes', e);
+      }
+
+      // remember for later merges
+      this._lastSavedAppState = appState;
+
+      await StorageUtils.saveAppState(appState);
+    }
+
+    async saveFullState() {
+      // Save main app state then auxiliary data (profiles, theme, settings)
+      try {
+        await this.saveAppState();
+        await StorageUtils.saveProfiles(this.profiles || []);
+        await StorageUtils.saveTheme(this.currentTheme);
+        await StorageUtils.saveSettings(this.settings || {});
+        try {
+          if (window.UIHelper && typeof window.UIHelper.showToast === 'function') {
+            window.UIHelper.showToast('Nowy domyślny stan zapisany');
+          }
+        } catch (err) {
+          console.warn('showToast failed', err);
+        }
+      } catch (e) {
+        console.warn('saveFullState failed', e);
+      }
+    }
+
+    async restoreDefaults() {
+      try {
+        // Reset visual settings to defaults (do not remove user profiles)
+        this.settings = { ...this.defaultSettings };
+        this.settings.activeProfile = 'DEFAULT';
+
+        // Apply to UI
+        try {
+          this.updateUI();
+        } catch (e) {
+          console.warn('restoreDefaults: updateUI failed', e);
+        }
+
+        // Clear layout overrides in saved app state
+        try {
+          await StorageUtils.saveAppState({
+            activeProfile: this.settings.activeProfile,
+            autoActivate: this.settings.autoActivate
+          });
+        } catch (e) {
+          console.warn('restoreDefaults: failed to clear layout overrides', e);
+        }
+
+        // Save settings and notify user
+        await StorageUtils.saveSettings(this.settings);
+        try {
+          if (window.UIHelper && typeof window.UIHelper.showToast === 'function') {
+            window.UIHelper.showToast('Przywrócono domyślny stan');
+          }
+        } catch (err) {
+          console.warn('showToast failed', err);
+        }
+      } catch (e) {
+        console.warn('restoreDefaults failed', e);
+      }
     }
 
     destroy() {
