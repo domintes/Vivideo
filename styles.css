@@ -1884,9 +1884,9 @@ button.vivideo-close {
 .vivideo-open-edit-mode { background: #2b7cff; color: #fff; border: none; padding: 8px 12px; }
 
 /* Active profile action buttons (rename / save / remove) */
-.vivideo-active-item-actions { display: inline-flex; gap: 6px; margin-left: 8px; align-items: center; }
-.vivideo-active-item-actions .vivideo-btn { padding: 4px 6px; font-size: 14px; }
-.active-inline-name-input { width: 160px; padding: 4px 6px; border-radius: 6px; }
+.vivideo-active-item-actions { display: inline-flex; gap: 8px; margin-left: 8px; align-items: center; }
+.vivideo-active-item-actions .vivideo-btn { padding: 4px 6px; font-size: 14px; flex: 0 0 auto; }
+.active-inline-name-input { flex: 1 1 auto; min-width: 0; padding: 4px 6px; border-radius: 6px; width: auto; }
 
 /* Notification styles */
 .vivideo-notification { position: fixed; top: 20px; right: 20px; background: rgba(40,44,52,0.95); color: #61dafb; padding: 12px 20px; border-radius: 8px; font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(97, 218, 251, 0.3); border: 1px solid rgba(97, 218, 251, 0.5); opacity: 0; transform: translateX(100%); transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: none; backdrop-filter: blur(10px); }
@@ -2638,7 +2638,7 @@ div .vivideo-container,
 /* Ensure scrollbars when content exceeds panel */
 .vivideo-container {
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto; /* allow vertical scrolling so core/profile sections remain accessible */
 }
 
 /* Small fixes for unsaved quick-save panel */
@@ -2751,7 +2751,7 @@ div .vivideo-container,
   min-width: 0;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 720px) {
   .vivideo-container {
     right: 8px;
     top: 8px;
@@ -2844,7 +2844,7 @@ body.vivideo-resizing .vivideo-profile-list {
   overflow-x: hidden;
   width: 100%;
   min-width: 0;
-  min-height: 444px;
+  min-height: auto; /* allow core subsections to flow naturally */
 }
 
 /* Info Icon Styles */ 
@@ -2974,4 +2974,9 @@ button.vivideo-restore-default-profiles-btn {
 .vivideo-container.vivideo-stacked .vivideo-main-grid,
 .vivideo-container.vivideo-vertical .vivideo-main-grid {
   grid-auto-rows: auto;
+}
+
+/* Default two-column proportions: ~40% / 60% with enforced minimums */
+.vivideo-container:not(.vivideo-stacked) .vivideo-main-grid {
+  grid-template-columns: minmax(320px, 2fr) 8px minmax(380px, 3fr);
 }

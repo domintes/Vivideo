@@ -65,8 +65,10 @@ if (window !== window.top) {
       };
       this.activeLayout = this.LAYOUTS.HORIZONTAL; // default layout for new installs
       // sizing defaults (px)
-      this.defaultProfileWidth = 220;
-      this.minProfileWidth = 220;
+      // Set defaults and minimums to match UX expectations (profile ~320px, core ~380px)
+      this.defaultProfileWidth = 320;
+      this.minProfileWidth = 320;
+      this.minCoreWidth = 380; // used by resizers
       this.defaultCoreHeight = 360;
       this.minCoreHeight = 360;
       // temporary loaded overrides from storage (applied during createUI)
@@ -379,6 +381,16 @@ if (window !== window.top) {
       this.container = document.createElement('div');
       this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
 
+      // enforce minimum total width so columns cannot be shrunk below usable sizes
+      try {
+        const dividerWidth = 8;
+        const extraPadding = 16; // account for paddings/margins
+        const minTotal = (this.minProfileWidth || 320) + (this.minCoreWidth || 380) + dividerWidth + extraPadding;
+        this.container.style.minWidth = `${minTotal}px`;
+      } catch (e) {
+        // ignore
+      }
+
       // Add extended limits class if enabled
       if (this.settings.extendedLimits) {
         this.container.classList.add('extended-limits');
@@ -451,11 +463,14 @@ if (window !== window.top) {
                   typeof this.tempProfileSectionWidth === 'number'
                     ? this.tempProfileSectionWidth
                     : null;
-                const leftWidth =
-                  presetLeft ||
-                  left.getBoundingClientRect().width ||
-                  Math.max(this.defaultProfileWidth, Math.floor(mainGrid.clientWidth * 0.4));
-                mainGrid.style.gridTemplateColumns = `${Math.max(this.minProfileWidth, Math.round(leftWidth))}px 8px 1fr`;
+                const minCore = this.minCoreWidth || 380;
+                if (presetLeft) {
+                  const leftWidth = Math.max(this.minProfileWidth, Math.round(presetLeft));
+                  mainGrid.style.gridTemplateColumns = `${leftWidth}px 8px 1fr`;
+                } else {
+                  // default to proportional 40/60 with enforced minimums
+                  mainGrid.style.gridTemplateColumns = `minmax(${Math.max(this.minProfileWidth,320)}px, 2fr) 8px minmax(${minCore}px, 3fr)`;
+                }
               } else {
                 // keep responsive single-column layout on small screens
                 mainGrid.style.gridTemplateColumns = '1fr';
@@ -503,12 +518,27 @@ if (window !== window.top) {
               if (!isDragging) return;
               if (!isVerticalDrag) {
                 const dx = e.clientX - startX;
-                const newLeft = Math.max(
-                  self.minProfileWidth,
-                  Math.min(window.innerWidth - 200, startLeftWidth + dx)
-                );
-                // set grid columns to px value + 1fr
-                mainGrid.style.gridTemplateColumns = `${newLeft}px 8px 1fr`;
+                const gridRect = mainGrid.getBoundingClientRect();
+                const gridWidth = Math.max(0, Math.round(gridRect.width));
+                const dividerW = 8;
+                const minProfile = self.minProfileWidth || 320;
+                const minCore = self.minCoreWidth || 380;
+                const available = gridWidth - dividerW;
+
+                // If overall available width can't satisfy minimums, switch to stacked
+                if (available < minProfile + minCore) {
+                  try {
+                    self.setActiveLayout(self.LAYOUTS.VERTICAL, true);
+                  } catch (err) {
+                    console.warn('Failed to switch to stacked layout during resize', err);
+                  }
+                  return;
+                }
+
+                let newLeft = startLeftWidth + dx;
+                newLeft = Math.max(minProfile, Math.min(available - minCore, newLeft));
+                const rightPx = Math.max(minCore, Math.round(available - newLeft));
+                mainGrid.style.gridTemplateColumns = `${newLeft}px ${dividerW}px ${rightPx}px`;
               } else {
                 // vertical resizing of stacked layout: resize core section height
                 const coreEl = mainGrid.querySelector('.vivideo-core-section');
@@ -782,7 +812,8 @@ if (window !== window.top) {
       // Dragging functionality
       this.dragHandlers = UIHelper.setupDragging(this.container, this);
       // Resizing functionality (left edge: ew-resize, top edge: ns-resize)
-      this.resizeHandlers = UIHelper.setupResizing(this.container);
+      // pass controller so resizing can enforce column minimums and toggle layouts
+      this.resizeHandlers = UIHelper.setupResizing(this.container, this);
 
       // Handle fullscreen changes
       document.addEventListener('fullscreenchange', () => {
@@ -847,10 +878,18 @@ if (window !== window.top) {
         this.container.classList.remove('vivideo-stacked', 'vivideo-vertical');
         this.container.classList.add('vivideo-horizontal');
         if (mainGrid) {
-          const left = this.tempProfileSectionWidth || this.defaultProfileWidth;
-          if (divider)
-            mainGrid.style.gridTemplateColumns = `${Math.max(this.minProfileWidth, left)}px 8px 1fr`;
-          else mainGrid.style.gridTemplateColumns = `${Math.max(this.minProfileWidth, left)}px 1fr`;
+          const dividerWidth = 8;
+          const minProfile = this.minProfileWidth || 320;
+          const minCore = this.minCoreWidth || 380;
+          if (typeof this.tempProfileSectionWidth === 'number') {
+            const left = Math.max(minProfile, Math.round(this.tempProfileSectionWidth));
+            if (divider) mainGrid.style.gridTemplateColumns = `${left}px ${dividerWidth}px 1fr`;
+            else mainGrid.style.gridTemplateColumns = `${left}px 1fr`;
+          } else {
+            // default proportional 40/60 split using flexible fractions with enforced minimums
+            if (divider) mainGrid.style.gridTemplateColumns = `minmax(${minProfile}px, 2fr) ${dividerWidth}px minmax(${minCore}px, 3fr)`;
+            else mainGrid.style.gridTemplateColumns = `minmax(${minProfile}px, 2fr) minmax(${minCore}px, 3fr)`;
+          }
         }
         if (coreEl) {
           // clear explicit height when returning to horizontal layout

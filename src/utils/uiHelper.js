@@ -325,7 +325,9 @@ const UIHelper = {
     return { down, move, up, header };
   },
 
-  setupResizing(container) {
+  // Enhanced resizing: optionally accept controller to enforce min column widths and
+  // switch between stacked/horizontal layouts when panel becomes too small.
+  setupResizing(container, controller) {
     if (!container) return null;
 
     // create handles if they don't exist
@@ -350,6 +352,8 @@ const UIHelper = {
     let startY = 0;
     let startRect = null;
 
+    const dividerWidth = 8;
+
     const onMouseDownLeft = (e) => {
       e.preventDefault();
       isResizingLeft = true;
@@ -368,23 +372,54 @@ const UIHelper = {
 
     const onMouseMove = (e) => {
       if (isResizingLeft && startRect) {
-        // dragging left edge: change width and left position
         const dx = e.clientX - startX; // positive if moved right
-        // new width = startWidth - dx (because dragging left edge)
+        // new container width
         let newWidth = startRect.width - dx;
-        // enforce minimum width
-        const minWidth = 280;
-        const maxWidth = Math.min(window.innerWidth - 20, 1200);
-        newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
-        // compute new left so right edge stays same
+
+        // determine sensible min widths
+        const minProfile = controller && controller.minProfileWidth ? controller.minProfileWidth : 320;
+        const minCore = controller && controller.minCoreWidth ? controller.minCoreWidth : 380;
+        const extraPadding = 16; // approximate internal paddings
+        const minTotal = minProfile + minCore + dividerWidth + extraPadding;
+
+        const maxWidth = Math.min(window.innerWidth - 20, 1600);
+        newWidth = Math.max(200, Math.min(maxWidth, newWidth));
+
+        // update container width and left so right edge stays fixed
         const newLeft = startRect.right - newWidth;
         container.style.width = newWidth + 'px';
         container.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth)) + 'px';
+
+        // If container becomes smaller than minTotal, switch to stacked layout
+        try {
+          if (newWidth < minTotal && controller && typeof controller.setActiveLayout === 'function') {
+            controller.setActiveLayout(controller.LAYOUTS.VERTICAL, true);
+          } else if (controller && typeof controller.getActiveLayout === 'function' && controller.getActiveLayout() !== controller.LAYOUTS.VERTICAL) {
+            // adjust columns proportionally to available width
+            const mainGrid = container.querySelector('.vivideo-main-grid');
+            if (mainGrid) {
+              const leftEl = mainGrid.querySelector('.vivideo-profile-section');
+              const rightEl = mainGrid.querySelector('.vivideo-core-section');
+              if (leftEl && rightEl) {
+                const available = Math.max(0, newWidth - dividerWidth - extraPadding);
+                // compute current left ratio
+                const leftWidth = leftEl.getBoundingClientRect().width || Math.round(available * 0.4);
+                const leftRatio = leftWidth / Math.max(1, leftWidth + rightEl.getBoundingClientRect().width);
+                let newLeftPx = Math.round(Math.max(minProfile, Math.min(available - minCore, Math.round(leftRatio * available))));
+                newLeftPx = Math.max(minProfile, Math.min(available - minCore, newLeftPx));
+                const rightPx = Math.max(minCore, Math.round(available - newLeftPx));
+                mainGrid.style.gridTemplateColumns = `${newLeftPx}px ${dividerWidth}px ${rightPx}px`;
+                if (controller) controller.tempProfileSectionWidth = newLeftPx;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('setupResizing proportional resize failed', err);
+        }
       }
 
       if (isResizingTop && startRect) {
-        const dy = e.clientY - startY; // positive if moved down
-        // dragging top edge: new height = startHeight - dy
+        const dy = e.clientY - startY;
         let newHeight = startRect.height - dy;
         const minHeight = 120;
         const maxHeight = Math.min(window.innerHeight - 20, 1200);
