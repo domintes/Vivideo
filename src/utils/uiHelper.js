@@ -385,15 +385,22 @@ const UIHelper = {
         const maxWidth = Math.min(window.innerWidth - 20, 1600);
         newWidth = Math.max(200, Math.min(maxWidth, newWidth));
 
-        // update container width and left so right edge stays fixed
-        const newLeft = startRect.right - newWidth;
+        // update container width while keeping right edge fixed
+        // Use 'right' instead of 'left' to maintain fixed right position
+        const newRight = window.innerWidth - (startRect.left + newWidth);
         container.style.width = newWidth + 'px';
-        container.style.left = Math.max(0, Math.min(newLeft, window.innerWidth - newWidth)) + 'px';
+        container.style.right = Math.max(0, Math.min(newRight, window.innerWidth - newWidth)) + 'px';
+        // Remove left style if it was previously set to avoid conflicts
+        container.style.left = '';
 
         // If container becomes smaller than minTotal, switch to stacked layout
+        // If container becomes larger than minTotal and is in vertical layout, switch back to horizontal
         try {
           if (newWidth < minTotal && controller && typeof controller.setActiveLayout === 'function') {
             controller.setActiveLayout(controller.LAYOUTS.VERTICAL, true);
+          } else if (newWidth >= minTotal && controller && typeof controller.getActiveLayout === 'function' && controller.getActiveLayout() === controller.LAYOUTS.VERTICAL) {
+            // Switch back to horizontal layout when width is sufficient
+            controller.setActiveLayout(controller.LAYOUTS.HORIZONTAL, true);
           } else if (controller && typeof controller.getActiveLayout === 'function' && controller.getActiveLayout() !== controller.LAYOUTS.VERTICAL) {
             // adjust columns proportionally to available width
             const mainGrid = container.querySelector('.vivideo-main-grid');

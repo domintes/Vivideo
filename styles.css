@@ -2371,7 +2371,8 @@ div .vivideo-container,
   display: flex;
   flex-direction: column;
   gap: 0;
-  overflow-y: hidden;
+  overflow-y: auto;
+  max-height: 100%;
 }
 
 /* Adjust existing sections for new layout */
