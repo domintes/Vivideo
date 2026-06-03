@@ -244,7 +244,8 @@ class ProfileManager {
       </div>
 
       <!-- Profile Settings Section -->
-      <div class="vivideo-profile-settings-section">
+      <div class="vivideo-section-container vivideo-profile-settings-section">
+        <div class="vivideo-box-header profile-panel-header">⚙️ Vivideo Options</div>
         <div class="vivideo-switch-row">
           <label class="vivideo-switch-container">
             <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-switch-input" checked>
@@ -274,6 +275,15 @@ class ProfileManager {
 
         <div class="vivideo-switch-row">
           <label class="vivideo-switch-container">
+            <input type="checkbox" id="force-vivideo-checkbox" class="vivideo-switch-input">
+            <span class="vivideo-switch-track"></span>
+            <span class="vivideo-switch-label">Alternative Engine</span>
+            <button class="vivideo-info-icon" data-info="Apply powerful Vivideo effects to videos and images using alternative processing engine">❔</button>
+          </label>
+        </div>
+
+        <div class="vivideo-switch-row">
+          <label class="vivideo-switch-container">
             <input type="checkbox" id="apply-profile-speed-checkbox" class="vivideo-switch-input">
             <span class="vivideo-switch-track"></span>
             <span class="vivideo-switch-knob"></span>
@@ -290,13 +300,13 @@ class ProfileManager {
             <button class="vivideo-info-icon" data-info="When enabled, saving a profile with an existing name will overwrite it without confirmation">❔</button>
           </label>
         </div>
-
-
       </div>
 
       <!-- Compare Mode Section -->
-      <div class="vivideo-compare-section">
-        <div class="vivideo-compare-header">
+      <div class="vivideo-section-container vivideo-compare-section">
+        <div class="vivideo-box-header profile-panel-header">🔄 Compare Mode</div>
+        
+        <div class="vivideo-switch-row">
           <label class="vivideo-switch-container">
             <input type="checkbox" id="compare-mode-checkbox" class="vivideo-switch-input">
             <span class="vivideo-switch-track"></span>
@@ -705,6 +715,19 @@ class ProfileManager {
         } else {
           if (this.controller && typeof this.controller.removeGlobalPageFilters === 'function')
             this.controller.removeGlobalPageFilters();
+        }
+      });
+    }
+
+    // Alternative Engine (forceVivideo) checkbox
+    const forceVivideoCheckbox = UIHelper.safeQuery(container, '#force-vivideo-checkbox');
+    if (forceVivideoCheckbox) {
+      forceVivideoCheckbox.addEventListener('change', (e) => {
+        this.controller.settings.forceVivideo = e.target.checked;
+        console.log('Vivideo: Alternative Engine (forceVivideo):', e.target.checked);
+        if (this.controller) this.controller.saveSettings();
+        if (this.controller && typeof this.controller.applyFilters === 'function') {
+          this.controller.applyFilters();
         }
       });
     }

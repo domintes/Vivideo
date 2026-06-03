@@ -2372,6 +2372,7 @@ div .vivideo-container,
   flex-direction: column;
   gap: 0;
   overflow-y: auto;
+  height: 100%;
   max-height: 100%;
 }
 
@@ -2608,6 +2609,23 @@ div .vivideo-container,
   display: grid;
   gap: 8px;
 }
+
+/* Standard section container with header and border */
+.vivideo-section-container {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 191, 255, 0.2);
+}
+
+.vivideo-section-container .vivideo-box-header {
+  margin: -12px -12px 8px -12px;
+  padding: 8px 12px;
+  border-radius: 6px 6px 0 0;
+}
+
 .vivideo-quality-subtitle {
   font-size: 11px;
   opacity: 0.8;
@@ -2980,4 +2998,12 @@ button.vivideo-restore-default-profiles-btn {
 /* Default two-column proportions: ~40% / 60% with enforced minimums */
 .vivideo-container:not(.vivideo-stacked) .vivideo-main-grid {
   grid-template-columns: minmax(320px, 2fr) 8px minmax(380px, 3fr);
+}
+
+div.vivideo-controls-section {
+  min-height: 360px;
+}
+
+div.vivideo-core-section {
+  min-height: 100vh;
 }

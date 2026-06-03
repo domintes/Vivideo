@@ -53,10 +53,7 @@ class VideoFilterEngine {
     };
 
     if (settings.keepQuality) {
-      const qualityMode =
-        typeof settings.targetedQualityLevel === 'number'
-          ? settings.targetedQualityLevel
-          : settings.videoQualityMode;
+      const qualityMode = settings.videoQualityMode || 'balanced';
       const qualityProfile = this.getQualityProfileSettings(qualityMode);
       adjusted.brightness *= qualityProfile.tone;
       adjusted.contrast *= qualityProfile.tone;
@@ -158,9 +155,24 @@ class VideoFilterEngine {
 
   applyFilterToElement(element, settings) {
     const adjusted = this.getAdjustedSettings(settings, element);
-    const brightness = 1 + adjusted.brightness / 100;
-    const contrast = 1 + adjusted.contrast / 100;
-    const saturation = Math.max(0, 1 + adjusted.saturation / 100);
+    let brightness = 1 + adjusted.brightness / 100;
+    let contrast = 1 + adjusted.contrast / 100;
+    let saturation = Math.max(0, 1 + adjusted.saturation / 100);
+
+    // Apply forceVivideo amplification (Alternative Engine)
+    if (settings.forceVivideo) {
+      const amplification = 1.4; // 40% stronger effect
+      brightness = 1 + (brightness - 1) * amplification;
+      contrast = 1 + (contrast - 1) * amplification;
+      saturation = Math.max(0.5, saturation * amplification);
+    }
+
+    // Apply qualityEnhancer boost
+    if (settings.qualityEnhancer) {
+      brightness = Math.min(2.5, brightness * 1.15);
+      contrast = Math.min(3.0, contrast * 1.25);
+      saturation = Math.min(2.5, saturation * 1.2);
+    }
 
     let cssFilters = `
       brightness(${brightness})

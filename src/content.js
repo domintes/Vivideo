@@ -33,8 +33,8 @@ if (window !== window.top) {
         sharpness: 0,
         keepQuality: true,
         videoQualityMode: 'balanced',
-        targetedQualityLevel: 50,
         upscaleQualityBoost: false,
+        qualityEnhancer: false,
         linearColorPipeline: true,
         forceHighQualityScaling: true,
         speed: 1.0,
@@ -45,6 +45,7 @@ if (window !== window.top) {
         autoSaveProfiles: false, // New: autosave active profile when settings change
         autoActivate: true,
         workOnImagesActivate: true,
+        forceVivideo: false,
         activeProfile: null,
         extendedLimits: true,
         toggleWithoutAlt: false,
@@ -135,13 +136,6 @@ if (window !== window.top) {
 
         if (response && response.vivideoSettings) {
           this.settings = { ...this.settings, ...response.vivideoSettings };
-          // Backwards compatibility: derive numeric targetedQualityLevel from videoQualityMode
-          if (this.settings.targetedQualityLevel === undefined) {
-            if (this.settings.videoQualityMode === 'soft') this.settings.targetedQualityLevel = 0;
-            else if (this.settings.videoQualityMode === 'detail')
-              this.settings.targetedQualityLevel = 100;
-            else this.settings.targetedQualityLevel = 50;
-          }
           // Ensure preferredSpeed has a default value
           if (this.settings.preferredSpeed === undefined) {
             this.settings.preferredSpeed = 1.72;
@@ -378,6 +372,16 @@ if (window !== window.top) {
         return;
       }
 
+      // Remove any existing container to prevent duplicates on re-initialization (e.g., Alt+Tab)
+      const existingContainer = document.querySelector('.vivideo-container');
+      if (existingContainer) {
+        try {
+          existingContainer.remove();
+        } catch (e) {
+          console.warn('Vivideo: Failed to remove existing container', e);
+        }
+      }
+
       this.container = document.createElement('div');
       this.container.className = `vivideo-container vivideo-theme-${this.currentTheme}`;
 
@@ -388,7 +392,7 @@ if (window !== window.top) {
         const minTotal = (this.minProfileWidth || 320) + (this.minCoreWidth || 380) + dividerWidth + extraPadding;
         this.container.style.minWidth = `${minTotal}px`;
       } catch (e) {
-        // ignore
+        console.log(e)
       }
 
       // Add extended limits class if enabled
@@ -737,6 +741,18 @@ if (window !== window.top) {
       const workOnEverythingCheckbox = this.container.querySelector('#work-on-everything-checkbox');
       if (workOnEverythingCheckbox) {
         workOnEverythingCheckbox.checked = !!this.profileManager.workOnEverything;
+      }
+
+      // Set checkbox state based on forceVivideo setting
+      const forceVivideoCheckbox = this.container.querySelector('#force-vivideo-checkbox');
+      if (forceVivideoCheckbox) {
+        forceVivideoCheckbox.checked = !!this.settings.forceVivideo;
+      }
+
+      // Set checkbox state based on compareMode setting (compare-mode-checkbox)
+      const compareModeCheckbox = this.container.querySelector('#compare-mode-checkbox');
+      if (compareModeCheckbox) {
+        compareModeCheckbox.checked = !!this.settings.compareMode;
       }
 
       // Set checkbox state based on applyProfileSpeed setting
@@ -1319,7 +1335,6 @@ if (window !== window.top) {
         upscaleQualityBoost: this.settings.upscaleQualityBoost,
         linearColorPipeline: this.settings.linearColorPipeline,
         forceHighQualityScaling: this.settings.forceHighQualityScaling,
-        targetedQualityLevel: this.settings.targetedQualityLevel,
         speed: 1.0,
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
@@ -2321,18 +2336,34 @@ if (window !== window.top) {
           if (window.vivideoController) window.vivideoController.applyFilters();
         }, 150);
       } else {
-        // Controller exists - ensure filters are applied and videos observed
-        try {
-          window.vivideoController.applyFilters();
-          if (
-            window.vivideoController.filterEngine &&
-            typeof window.vivideoController.filterEngine.observeVideos === 'function'
-          ) {
-            // Re-attach observers if needed
-            // observeVideos already sets up observers; calling ensure doesn't duplicate heavy work
+        // Controller exists - check if container is still in the DOM
+        // If not, we may need to recreate it (e.g., after tab switch, page navigation)
+        const containerInDOM = window.vivideoController.container && 
+                               document.body.contains(window.vivideoController.container);
+        
+        if (!containerInDOM && window.vivideoController.isInitialized) {
+          // Container was removed but controller still thinks it's initialized
+          // Skip re-initialization here; the container might be intentionally hidden
+          // Just ensure filters are applied to the video
+          try {
+            window.vivideoController.applyFilters();
+          } catch (e) {
+            console.warn('Vivideo: Error applying filters (container not in DOM)', e);
           }
-        } catch (e) {
-          console.warn('Vivideo: Error during auto apply', e);
+        } else {
+          // Controller exists and container is in DOM - ensure filters are applied and videos observed
+          try {
+            window.vivideoController.applyFilters();
+            if (
+              window.vivideoController.filterEngine &&
+              typeof window.vivideoController.filterEngine.observeVideos === 'function'
+            ) {
+              // Re-attach observers if needed
+              // observeVideos already sets up observers; calling ensure doesn't duplicate heavy work
+            }
+          } catch (e) {
+            console.warn('Vivideo: Error during auto apply', e);
+          }
         }
       }
     } catch (e) {

@@ -24,7 +24,7 @@ export default [
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
       'no-undef': 'off',
       'no-console': 'off',
-      'prettier/prettier': 'warn'
+      'prettier/prettier': 'off'
     }
   },
   {

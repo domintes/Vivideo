@@ -48,9 +48,8 @@ const UIHelper = {
           <span class="vivideo-switch-label">Auto-activate</span>
         </label>
       </div>
-      <div class="vivideo-auto-activate switch-section vivideo-quality-section">
-        <div class="profile-panel-header">✨ Improve quality</div>
-        <div class="vivideo-quality-subtitle">Video Quality</div>
+      <div class="vivideo-section-container vivideo-quality-section">
+        <div class="vivideo-box-header profile-panel-header">✨ Improve quality</div>
         <label class="vivideo-switch-container">
           <input type="checkbox" id="keep-quality-checkbox" class="vivideo-switch-input" ${
             settings.keepQuality ? 'checked' : ''
@@ -83,7 +82,15 @@ const UIHelper = {
           <span class="vivideo-switch-knob"></span>
           <span class="vivideo-switch-label">Upscale boost</span>
         </label>
-        <!-- Targeted quality slider moved to the Controls section (VideoControls) -->
+        <label class="vivideo-switch-container">
+          <input type="checkbox" id="quality-enhancer-checkbox" class="vivideo-switch-input" ${
+            settings.qualityEnhancer ? 'checked' : ''
+          }>
+          <span class="vivideo-switch-track"></span>
+          <span class="vivideo-switch-knob"></span>
+          <span class="vivideo-switch-label">Quality Enhancer</span>
+          <button class="vivideo-info-icon" data-info="Enhanced processing for better quality perception">❔</button>
+        </label>
       </div>
     `;
   },
@@ -264,7 +271,8 @@ const UIHelper = {
       ['#keep-quality-checkbox', 'keepQuality'],
       ['#force-high-quality-scaling-checkbox', 'forceHighQualityScaling'],
       ['#linear-color-pipeline-checkbox', 'linearColorPipeline'],
-      ['#upscale-quality-boost-checkbox', 'upscaleQualityBoost']
+      ['#upscale-quality-boost-checkbox', 'upscaleQualityBoost'],
+      ['#quality-enhancer-checkbox', 'qualityEnhancer']
     ];
     qualityToggles.forEach(([selector, settingKey]) => {
       const checkbox = this.safeQuery(container, selector);
@@ -275,8 +283,6 @@ const UIHelper = {
         if (typeof controller.applyFilters === 'function') controller.applyFilters();
       });
     });
-
-    // Targeted quality control lives inside the Video Controls component now.
   },
 
   updateCheckboxes(container, settings = {}) {
@@ -290,7 +296,8 @@ const UIHelper = {
     if (linearCheckbox) linearCheckbox.checked = !!settings.linearColorPipeline;
     const upscaleCheckbox = this.safeQuery(container, '#upscale-quality-boost-checkbox');
     if (upscaleCheckbox) upscaleCheckbox.checked = !!settings.upscaleQualityBoost;
-    // Targeted quality control is handled in VideoControls.updateUI
+    const qualityEnhancerCheckbox = this.safeQuery(container, '#quality-enhancer-checkbox');
+    if (qualityEnhancerCheckbox) qualityEnhancerCheckbox.checked = !!settings.qualityEnhancer;
   },
 
   setupDragging(container, _controller) {
@@ -377,7 +384,8 @@ const UIHelper = {
         let newWidth = startRect.width - dx;
 
         // determine sensible min widths
-        const minProfile = controller && controller.minProfileWidth ? controller.minProfileWidth : 320;
+        const minProfile =
+          controller && controller.minProfileWidth ? controller.minProfileWidth : 320;
         const minCore = controller && controller.minCoreWidth ? controller.minCoreWidth : 380;
         const extraPadding = 16; // approximate internal paddings
         const minTotal = minProfile + minCore + dividerWidth + extraPadding;
@@ -389,19 +397,33 @@ const UIHelper = {
         // Use 'right' instead of 'left' to maintain fixed right position
         const newRight = window.innerWidth - (startRect.left + newWidth);
         container.style.width = newWidth + 'px';
-        container.style.right = Math.max(0, Math.min(newRight, window.innerWidth - newWidth)) + 'px';
+        container.style.right =
+          Math.max(0, Math.min(newRight, window.innerWidth - newWidth)) + 'px';
         // Remove left style if it was previously set to avoid conflicts
         container.style.left = '';
 
         // If container becomes smaller than minTotal, switch to stacked layout
         // If container becomes larger than minTotal and is in vertical layout, switch back to horizontal
         try {
-          if (newWidth < minTotal && controller && typeof controller.setActiveLayout === 'function') {
+          if (
+            newWidth < minTotal &&
+            controller &&
+            typeof controller.setActiveLayout === 'function'
+          ) {
             controller.setActiveLayout(controller.LAYOUTS.VERTICAL, true);
-          } else if (newWidth >= minTotal && controller && typeof controller.getActiveLayout === 'function' && controller.getActiveLayout() === controller.LAYOUTS.VERTICAL) {
+          } else if (
+            newWidth >= minTotal &&
+            controller &&
+            typeof controller.getActiveLayout === 'function' &&
+            controller.getActiveLayout() === controller.LAYOUTS.VERTICAL
+          ) {
             // Switch back to horizontal layout when width is sufficient
             controller.setActiveLayout(controller.LAYOUTS.HORIZONTAL, true);
-          } else if (controller && typeof controller.getActiveLayout === 'function' && controller.getActiveLayout() !== controller.LAYOUTS.VERTICAL) {
+          } else if (
+            controller &&
+            typeof controller.getActiveLayout === 'function' &&
+            controller.getActiveLayout() !== controller.LAYOUTS.VERTICAL
+          ) {
             // adjust columns proportionally to available width
             const mainGrid = container.querySelector('.vivideo-main-grid');
             if (mainGrid) {
@@ -410,9 +432,16 @@ const UIHelper = {
               if (leftEl && rightEl) {
                 const available = Math.max(0, newWidth - dividerWidth - extraPadding);
                 // compute current left ratio
-                const leftWidth = leftEl.getBoundingClientRect().width || Math.round(available * 0.4);
-                const leftRatio = leftWidth / Math.max(1, leftWidth + rightEl.getBoundingClientRect().width);
-                let newLeftPx = Math.round(Math.max(minProfile, Math.min(available - minCore, Math.round(leftRatio * available))));
+                const leftWidth =
+                  leftEl.getBoundingClientRect().width || Math.round(available * 0.4);
+                const leftRatio =
+                  leftWidth / Math.max(1, leftWidth + rightEl.getBoundingClientRect().width);
+                let newLeftPx = Math.round(
+                  Math.max(
+                    minProfile,
+                    Math.min(available - minCore, Math.round(leftRatio * available))
+                  )
+                );
                 newLeftPx = Math.max(minProfile, Math.min(available - minCore, newLeftPx));
                 const rightPx = Math.max(minCore, Math.round(available - newLeftPx));
                 mainGrid.style.gridTemplateColumns = `${newLeftPx}px ${dividerWidth}px ${rightPx}px`;
