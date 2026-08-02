@@ -1,6 +1,10 @@
 {
     "css.lint.boxModel": "ignore",
     "chat.tools.terminal.autoApprove": {
-        "npm audit": true
+        "npm audit": true,
+        "/^node --check src/components/profileManager\\.js; npm run lint; npm run build; git diff --check$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     },
 }

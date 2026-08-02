@@ -61,6 +61,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.action === 'set-storage') {
     chrome.storage.sync.set(request.data, () => {
+      if (chrome.runtime.lastError) {
+        console.warn('Vivideo: Failed to persist settings:', chrome.runtime.lastError.message);
+        sendResponse({ success: false });
+        return;
+      }
       sendResponse({ success: true });
     });
     return true;

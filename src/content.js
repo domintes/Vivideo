@@ -56,6 +56,7 @@ if (window !== window.top) {
       this.defaultSettings = { ...this.settings };
       this.profiles = [];
       this.defaultProfile = {
+        id: 'builtin-default',
         name: 'DEFAULT',
         settings: { ...this.defaultSettings }
       };
@@ -156,6 +157,12 @@ if (window !== window.top) {
         }
         if (response && response.vivideoAppState) {
           this.loadActiveProfile(response.vivideoAppState.activeProfile);
+          // Keep the site-scope preference in the canonical settings object
+          // as well as app state, so a later UI refresh cannot reset it.
+          if (response.vivideoAppState.workOnAllSites !== undefined) {
+            this.settings.workOnAllSites = !!response.vivideoAppState.workOnAllSites;
+            this.tempWorkOnAllSites = !!response.vivideoAppState.workOnAllSites;
+          }
           // Load displayDefaultProfiles setting
           if (response.vivideoAppState.displayDefaultProfiles !== undefined) {
             this.tempDisplayDefaultProfiles = response.vivideoAppState.displayDefaultProfiles;
@@ -167,10 +174,6 @@ if (window !== window.top) {
           // Load applyProfileSpeed setting
           if (response.vivideoAppState.applyProfileSpeed !== undefined) {
             this.tempApplyProfileSpeed = response.vivideoAppState.applyProfileSpeed;
-          }
-          // Load workOnAllSites setting
-          if (response.vivideoAppState.workOnAllSites !== undefined) {
-            this.tempWorkOnAllSites = response.vivideoAppState.workOnAllSites;
           }
           // Load workOnEverything setting
           if (response.vivideoAppState.workOnEverything !== undefined) {
@@ -284,6 +287,7 @@ if (window !== window.top) {
       // Apply saved workOnAllSites setting if available
       if (this.tempWorkOnAllSites !== undefined) {
         this.profileManager.workOnAllSites = this.tempWorkOnAllSites;
+        this.settings.workOnAllSites = !!this.tempWorkOnAllSites;
         delete this.tempWorkOnAllSites;
       }
       if (this.tempWorkOnEverything !== undefined) {
@@ -303,6 +307,17 @@ if (window !== window.top) {
         this.profileManager.defaultProfiles = [...this.tempBuiltinProfiles];
         delete this.tempBuiltinProfiles;
       }
+      this.profileManager.defaultProfiles = this.profileManager.defaultProfiles.map((profile, index) =>
+        this.profileManager.normalizeProfile(profile, index, 'builtin')
+      );
+      this.defaultProfile = {
+        ...this.profileManager.defaultProfiles[0],
+        settings: { ...this.profileManager.defaultProfiles[0].settings }
+      };
+      this.profiles = this.profileManager.normalizeProfiles(this.profiles || []);
+      const activeRef = this.settings.activeProfile;
+      if (activeRef === 'DEFAULT') this.settings.activeProfile = this.profileManager.defaultProfileId;
+      this.saveProfiles();
 
       console.log('Vivideo: All components initialized successfully');
       return true;
@@ -349,8 +364,8 @@ if (window !== window.top) {
       if (!profileRef) return;
 
       // If saved ref is 'DEFAULT', keep default behavior
-      if (profileRef === 'DEFAULT') {
-        this.settings.activeProfile = 'DEFAULT';
+      if (profileRef === 'DEFAULT' || profileRef === 'builtin-default') {
+        this.settings.activeProfile = 'builtin-default';
         return;
       }
 
@@ -1383,7 +1398,7 @@ if (window !== window.top) {
         autoActivate: this.settings.autoActivate,
         workOnImagesActivate: this.settings.workOnImagesActivate,
         extendedLimits: this.settings.extendedLimits,
-        activeProfile: 'DEFAULT'
+        activeProfile: 'builtin-default'
       };
 
       // Sync speed controller with default settings
@@ -1584,10 +1599,13 @@ if (window !== window.top) {
           'forceHighQualityScaling'
         ];
         if (profile.name === 'DEFAULT') {
-          this.settings.activeProfile = null;
-          Object.keys(this.defaultSettings).forEach((key) => {
+          this.settings.activeProfile = 'builtin-default';
+          const defaultSettings = this.profileManager && typeof this.profileManager.sanitizeSettings === 'function'
+            ? this.profileManager.sanitizeSettings(profile.settings || this.defaultSettings)
+            : profile.settings || this.defaultSettings;
+          Object.keys(defaultSettings).forEach((key) => {
             if (!profileScopedExclusions.includes(key)) {
-              this.settings[key] = this.defaultSettings[key];
+              this.settings[key] = defaultSettings[key];
             }
           });
         } else {
@@ -1942,6 +1960,9 @@ if (window !== window.top) {
     }
 
     async saveProfiles() {
+      if (this.profileManager && typeof this.profileManager.normalizeProfiles === 'function') {
+        this.profiles = this.profileManager.normalizeProfiles(this.profiles || []);
+      }
       await StorageUtils.saveProfiles(this.profiles);
     }
 
@@ -2038,7 +2059,7 @@ if (window !== window.top) {
       try {
         // Reset visual settings to defaults (do not remove user profiles)
         this.settings = { ...this.defaultSettings };
-        this.settings.activeProfile = 'DEFAULT';
+        this.settings.activeProfile = 'builtin-default';
 
         // Apply to UI
         try {
@@ -2286,14 +2307,24 @@ if (window !== window.top) {
         const profile = request.profile;
 
         if (window.vivideoController) {
+          const manager = window.vivideoController.profileManager;
+          if (manager && typeof manager.normalizeProfile === 'function') {
+            profile.id = profile.id || manager.generateProfileId();
+            profile.createdAt = Number(profile.createdAt) || Date.now();
+            profile.updatedAt = Number(profile.updatedAt) || Date.now();
+            profile.settings = manager.sanitizeSettings(profile.settings || {});
+          }
           // Update or add profile in controller.profiles
           const existingIndex = window.vivideoController.profiles.findIndex(
-            (p) => p.name === profile.name
+            (p) => (p.id && p.id === profile.id) || p.name.toLowerCase() === profile.name.toLowerCase()
           );
           if (existingIndex >= 0) {
             window.vivideoController.profiles[existingIndex] = profile;
           } else {
             window.vivideoController.profiles.push(profile);
+          }
+          if (manager && typeof manager.normalizeProfiles === 'function') {
+            window.vivideoController.profiles = manager.normalizeProfiles(window.vivideoController.profiles);
           }
 
           // Persist profiles via StorageUtils
@@ -2313,7 +2344,10 @@ if (window !== window.top) {
           // Update UI
           if (window.vivideoController.container) {
             window.vivideoController.updateProfilesList();
-            window.vivideoController.updateActiveProfileDisplay(window.vivideoController.settings);
+            manager.updateActiveProfileDisplay(
+              window.vivideoController.container,
+              window.vivideoController.settings
+            );
           }
         }
 

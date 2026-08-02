@@ -20,6 +20,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
+  function generateProfileId() {
+    return 'p_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
   // Update save button label depending on whether name exists
   async function updateSaveButtonState() {
     const name = profileNameInput && profileNameInput.value.trim();
@@ -69,7 +73,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const profiles = await getProfiles();
         const existingIndex = profiles.findIndex((p) => p.name === name);
 
-        const newProfile = { name: name, settings: current };
+        const existing = existingIndex >= 0 ? profiles[existingIndex] : null;
+        const newProfile = {
+          id: existing && existing.id ? existing.id : generateProfileId(),
+          name,
+          profileCategory: (existing && existing.profileCategory) || 'General',
+          settings: current,
+          createdAt: (existing && existing.createdAt) || Date.now(),
+          updatedAt: Date.now()
+        };
 
         if (existingIndex >= 0) {
           profiles[existingIndex] = newProfile;

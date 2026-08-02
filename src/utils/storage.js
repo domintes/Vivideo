@@ -30,12 +30,21 @@ class StorageUtils {
   }
 
   static async setStorage(data) {
-    try {
-      return await this.sendMessage('set-storage', { data });
-    } catch (error) {
-      console.error('Storage set error:', error);
-      return false;
-    }
+    // Serialize writes. Several controls can save nearly simultaneously and
+    // chrome.storage.sync may otherwise finish an older write last.
+    if (!this.writeQueue) this.writeQueue = Promise.resolve();
+
+    const write = this.writeQueue.then(async () => {
+      try {
+        return (await this.sendMessage('set-storage', { data }))?.success === true;
+      } catch (error) {
+        console.error('Storage set error:', error);
+        return false;
+      }
+    });
+
+    this.writeQueue = write.catch(() => false);
+    return write;
   }
 
   static async loadSettings() {
