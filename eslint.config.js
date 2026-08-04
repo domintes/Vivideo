@@ -28,6 +28,6 @@ export default [
     }
   },
   {
-    ignores: ['dist/**', 'node_modules/**', 'src/components/reactlike/**']
+    ignores: ['dist/**', 'node_modules/**']
   }
 ];
