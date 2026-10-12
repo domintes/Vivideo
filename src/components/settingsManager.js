@@ -15,7 +15,13 @@ class SettingsManager {
         version: '1.0.0',
         timestamp: new Date().toISOString(),
         settings: allData.vivideoSettings || this.controller.defaultSettings,
-        profiles: allData.vivideoProfiles || [],
+        profiles: [
+          ...(this.controller.profileManager?.defaultProfiles || []).map((profile) => ({
+            ...profile,
+            isBuiltIn: true
+          })),
+          ...(this.controller.profiles || allData.vivideoProfiles || [])
+        ],
         theme: allData.vivideoTheme || window.VivideoConfig.defaultTheme,
         themeColors: allData.vivideoThemeColors || this.controller.themeColors,
         appState: allData.vivideoAppState || {}
@@ -152,8 +158,20 @@ class SettingsManager {
 
       // Update profiles
       if (importData.profiles) {
-        this.controller.profiles = [...importData.profiles];
+        const normalizeProfile = (profile, index, profileType) =>
+          this.controller.profileManager && typeof this.controller.profileManager.normalizeProfile === 'function'
+            ? this.controller.profileManager.normalizeProfile(profile, index, profileType)
+            : profile;
+        const importedBuiltins = importData.profiles
+          .filter((profile) => profile && profile.isBuiltIn)
+          .map((profile, index) => normalizeProfile(profile, index, 'builtin'));
+        const importedUsers = importData.profiles
+          .filter((profile) => !profile || !profile.isBuiltIn)
+          .map((profile, index) => normalizeProfile(profile, index, 'user'));
+        this.controller.profileManager.defaultProfiles = importedBuiltins;
+        this.controller.profiles = this.controller.profileManager.normalizeProfiles(importedUsers);
         await StorageUtils.saveProfiles(this.controller.profiles);
+        await this.controller.saveAppState();
       }
 
       // Update theme
@@ -173,7 +191,13 @@ class SettingsManager {
 
       // Update app state
       if (importData.appState) {
-        await StorageUtils.saveAppState(importData.appState);
+        const appState = {
+          ...importData.appState,
+          ...(importData.profiles
+            ? { builtinProfiles: this.controller.profileManager.defaultProfiles }
+            : {})
+        };
+        await StorageUtils.saveAppState(appState);
       }
 
       // Refresh UI if controller is available and visible
@@ -196,38 +220,140 @@ class SettingsManager {
     }
   }
 
+  async getBuiltInConfigFiles() {
+    const configFiles = [
+      { id: 'default', name: 'Default', path: 'src/configs/default.json', type: 'default' },
+      { id: 'besto', name: 'Besto', path: 'src/configs/besto.json', type: 'preset' }
+    ];
+
+    const results = await Promise.all(
+      configFiles.map(async (config) => {
+        try {
+          const url = chrome.runtime.getURL(config.path);
+          const response = await fetch(url);
+          if (!response.ok) return null;
+          const data = await response.json();
+          return {
+            ...config,
+            label: data.name || config.name,
+            comment: data.comment || 'Vivideo configuration preset',
+            profilesCount: Array.isArray(data.profiles) ? data.profiles.length : 0,
+            payload: data
+          };
+        } catch (error) {
+          console.warn('Vivideo: failed to load config', config.path, error);
+          return null;
+        }
+      })
+    );
+
+    return results.filter(Boolean);
+  }
+
+  async loadConfigPreset(configEntry) {
+    if (!configEntry || !configEntry.payload) {
+      throw new Error('Config preset not found');
+    }
+
+    await this.applyImportedSettings({
+      settings: configEntry.payload.settings || this.controller.defaultSettings,
+      profiles: configEntry.payload.profiles || [],
+      theme: configEntry.payload.theme || window.VivideoConfig.defaultTheme,
+      themeColors: configEntry.payload.themeColors || this.controller.themeColors,
+      appState: configEntry.payload.appState || {}
+    });
+
+    return {
+      success: true,
+      message: `${configEntry.label} config loaded successfully!`,
+      profilesCount: Array.isArray(configEntry.payload.profiles)
+        ? configEntry.payload.profiles.length
+        : 0
+    };
+  }
+
+  renderConfigList(container) {
+    if (!container) return;
+
+    const configList = container.querySelector('#vivideo-config-list');
+    if (!configList) return;
+
+    this.getBuiltInConfigFiles().then((files) => {
+      if (!files || files.length === 0) {
+        configList.innerHTML = '<div class="vivideo-config-empty">No Vivideo configs found.</div>';
+        return;
+      }
+
+      configList.innerHTML = files
+        .map(
+          (file) => `
+            <button
+              type="button"
+              class="vivideo-config-item vivideo-profile-row"
+              data-config-id="${file.id}"
+              title="Load ${file.label} preset"
+            >
+              <span class="vivideo-config-name">${file.label}</span>
+              <span class="vivideo-config-meta">${file.profilesCount} profiles</span>
+              <span class="vivideo-config-comment">${file.comment}</span>
+            </button>
+          `
+        )
+        .join('');
+
+      configList.querySelectorAll('.vivideo-config-item').forEach((button) => {
+        button.addEventListener('click', async () => {
+          const entry = files.find((item) => item.id === button.dataset.configId);
+          if (!entry) return;
+
+          try {
+            const result = await this.loadConfigPreset(entry);
+            if (this.controller?.container) {
+              const buttonNode = this.controller.container.querySelector('[data-config-id="' + entry.id + '"]');
+              if (buttonNode) {
+                UIHelper.flashButton(buttonNode, 'success', result.message);
+              }
+            }
+            this.showMessage(
+              container.querySelector('#settings-message'),
+              `${result.message} Loaded ${result.profilesCount} profiles.`,
+              'success'
+            );
+          } catch (error) {
+            this.showMessage(
+              container.querySelector('#settings-message'),
+              error.message,
+              'error'
+            );
+          }
+        });
+      });
+    });
+  }
+
   // Create import/export HTML interface
   createImportExportHTML() {
     return /*html*/ `
       <div class="vivideo-settings-management" style="display: block;" id="settings-management">
-        <div>
-            <div class="vivideo-box-header vivideo-settings-box-header">🔄 Import/Export Settings</div>
-          
-          <div class="settings-actions">
-            <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Export all settings and profiles">
+        <div class="settings-actions">
+          <button class="vivideo-control-btn export-btn" id="export-settings-btn" title="Export all settings and profiles">
             📤 Export settings
-            </button>
-            
-            <div class="import-section">
-              <input type="file" id="import-settings-file" accept=".json" style="display: none;">
-              <button class="vivideo-control-btn import-btn" id="import-settings-btn" title="Import settings from file">
+          </button>
+
+          <div class="import-section">
+            <input type="file" id="import-settings-file" accept=".json" style="display: none;">
+            <button class="vivideo-control-btn import-btn" id="import-settings-btn" title="Import settings from file">
               📥 Import settings
-              </button>
-            </div>
+            </button>
           </div>
-          
-          <div class="settings-info">
-            <p>📝 Export includes:</p>
-            <ul>
-              <li>✅ All filter settings</li>
-              <li>✅ Profile List</li>
-              <li>✅ Theme selection</li>
-              <li>✅ Theme colors</li>
-            </ul>
-          </div>
-          
-          <div id="settings-message" class="settings-message" style="display: none;"></div>
         </div>
+
+        <div class="vivideo-configs-panel vivideo-border-box" id="vivideo-configs-panel">
+          <div class="vivideo-box-header profile-panel-header">⚙️ Vivideo Configs</div>
+          <div class="vivideo-config-list" id="vivideo-config-list"></div>
+        </div>
+
+        <div id="settings-message" class="settings-message" style="display: none;"></div>
       </div>
     `;
   }
@@ -242,6 +368,7 @@ class SettingsManager {
     if (exportBtn) {
       exportBtn.addEventListener('click', async () => {
         this.showMessage(messageDiv, 'Exporting settings...', 'info');
+        UIHelper.flashButton(exportBtn, 'success', 'Export started');
         const result = await this.exportSettings();
         this.showMessage(messageDiv, result.message, result.success ? 'success' : 'error');
       });
@@ -256,6 +383,7 @@ class SettingsManager {
         const file = e.target.files[0];
         if (file) {
           this.showMessage(messageDiv, 'Importing settings...', 'info');
+          UIHelper.flashButton(importBtn, 'success', 'Importing profile set');
           try {
             const result = await this.importSettings(file);
             this.showMessage(
@@ -263,7 +391,6 @@ class SettingsManager {
               `${result.message} Imported ${result.profilesCount} profiles.`,
               'success'
             );
-            // Clear file input
             fileInput.value = '';
           } catch (error) {
             this.showMessage(messageDiv, error.message, 'error');
@@ -272,6 +399,8 @@ class SettingsManager {
         }
       });
     }
+
+    this.renderConfigList(container);
   }
 
   // Show message to user

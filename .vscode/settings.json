@@ -5,6 +5,10 @@
         "/^node --check src/components/profileManager\\.js; npm run lint; npm run build; git diff --check$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^node --check src/components/profileManager\\.js; node --check src/content\\.js; node --check src/utils/uiHelper\\.js$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     },
 }

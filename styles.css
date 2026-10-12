@@ -8,8 +8,7 @@
 
 @font-face {
   font-family: 'Rajdhani';
-  src: url('https://fonts.gstatic.com/s/rajdhani/v15/LDI2apCSOBg7S-QT7q4AOeekWPrP.woff2')
-    format('woff2');
+  src: url('https://fonts.gstatic.com/s/rajdhani/v15/LDI2apCSOBg7S-QT7q4AOeekWPrP.woff2') format('woff2');
   font-weight: 300 700;
   font-display: swap;
 }
@@ -18,7 +17,8 @@
   position: fixed;
   top: 20px;
   right: 20px;
-  width: 480px; /* compact layout */
+  width: 480px;
+  /* compact layout */
   max-height: calc(100vh - 40px);
   padding: 8px;
   border-radius: 12px;
@@ -35,14 +35,16 @@
 .vivideo-resize-left,
 .vivideo-resize-top {
   position: absolute;
-  z-index: 2147483650; /* above panel content */
+  z-index: 2147483650;
+  /* above panel content */
   background: transparent;
 }
 
 .vivideo-resize-left {
   top: 0;
   left: 0;
-  width: 8px; /* draggable area on left edge */
+  width: 8px;
+  /* draggable area on left edge */
   height: 100%;
   cursor: ew-resize;
 }
@@ -50,7 +52,8 @@
 .vivideo-resize-top {
   top: 0;
   left: 0;
-  height: 8px; /* draggable area on top edge */
+  height: 8px;
+  /* draggable area on top edge */
   width: 100%;
   cursor: ns-resize;
 }
@@ -83,6 +86,7 @@
   0% {
     transform: translate(0, 0);
   }
+
   100% {
     transform: translate(20px, 20px);
   }
@@ -93,9 +97,11 @@
     transform: translate(0, 0);
     opacity: 0.3;
   }
+
   50% {
     opacity: 0.6;
   }
+
   100% {
     transform: translate(8px, 8px);
     opacity: 0.3;
@@ -443,9 +449,11 @@
   from {
     transform: translateX(0);
   }
+
   50% {
     transform: translateX(10px);
   }
+
   to {
     transform: translateX(0);
   }
@@ -455,9 +463,11 @@
   from {
     transform: translateX(0);
   }
+
   50% {
     transform: translateX(-10px);
   }
+
   to {
     transform: translateX(0);
   }
@@ -467,10 +477,12 @@
   from {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.1);
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
   }
+
   to {
     transform: scale(1);
   }
@@ -494,7 +506,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  padding: 0 5px 15px 0; /* Reduced right padding to move buttons closer to edge */
+  padding: 0 5px 15px 0;
+  /* Reduced right padding to move buttons closer to edge */
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   cursor: move;
 }
@@ -510,21 +523,27 @@
 .vivideo-header .vivideo-info {
   background: none;
   border: none;
-  font-size: 16px; /* Smaller size */
+  font-size: 16px;
+  /* Smaller size */
   cursor: pointer;
   padding: 0;
-  width: 24px; /* Smaller width */
-  height: 24px; /* Smaller height */
+  width: 24px;
+  /* Smaller width */
+  height: 24px;
+  /* Smaller height */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
-  margin-left: 8px; /* Closer spacing */
+  margin-left: 8px;
+  /* Closer spacing */
   font-family: 'Orbitron', monospace;
   font-weight: 600;
-  color: #00ffac; /* New color */
-  align-self: center; /* Ensure vertical centering */
+  color: #00ffac;
+  /* New color */
+  align-self: center;
+  /* Ensure vertical centering */
 }
 
 .vivideo-header .vivideo-close {
@@ -601,10 +620,12 @@
     transform: scale(1);
     opacity: 0.3;
   }
+
   50% {
     transform: scale(1.1);
     opacity: 0.1;
   }
+
   100% {
     transform: scale(1);
     opacity: 0.3;
@@ -884,12 +905,13 @@
   margin-bottom: 10px;
   border-radius: 8px;
   overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.3s ease;
+  display: grid;
+  grid-template-rows: auto 0fr;
+  transition: grid-template-rows 0.3s ease;
 }
 
 .vivideo-expandable.vivideo-expanded {
-  max-height: 500px;
+  grid-template-rows: auto 1fr;
 }
 
 .vivideo-expandable-header {
@@ -900,7 +922,110 @@
 }
 
 .vivideo-expandable-content {
+  min-height: 0;
+  overflow: hidden;
   padding: 12px;
+}
+
+/* Unified options panel and generic accordion behavior */
+.vivideo-options-panel,
+.vivideo-accordion {
+  display: grid;
+  grid-template-rows: auto 0fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.vivideo-options-panel.vivideo-expanded,
+.vivideo-accordion.vivideo-expanded {
+  grid-template-rows: auto 1fr;
+}
+
+.vivideo-options-header,
+.vivideo-accordion-header {
+  position: relative;
+  padding-right: 34px !important;
+  cursor: pointer;
+  user-select: none;
+}
+
+.vivideo-options-header::after,
+.vivideo-accordion-header::after {
+  content: '\25B6';
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  font-size: 11px;
+  transform: translateY(-50%);
+  transition: transform 0.25s ease;
+}
+
+.vivideo-options-panel.vivideo-expanded>.vivideo-options-header::after,
+.vivideo-accordion.vivideo-expanded>.vivideo-accordion-header::after {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.vivideo-options-body,
+.vivideo-accordion-content {
+  grid-row: 2;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.vivideo-options-panel.vivideo-expanded>.vivideo-options-body,
+.vivideo-accordion.vivideo-expanded>.vivideo-accordion-content {
+  opacity: 1;
+}
+
+.vivideo-options-groups {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.vivideo-option-group {
+  display: grid;
+  gap: 8px;
+  padding: 8px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.vivideo-option-group:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.vivideo-option-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.vivideo-option-row {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .vivideo-options-header::after,
+  .vivideo-accordion-header::after,
+  .vivideo-options-body,
+  .vivideo-accordion-content {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  .vivideo-accordion-header::after,
+  .vivideo-accordion-content {
+    transition: none;
+  }
 }
 
 .vivideo-profile-form {
@@ -962,7 +1087,9 @@
 .vivideo-profile-list {
   overflow-y: auto;
   overflow-x: hidden;
-  max-height: 220px; /* show scrollbar when content exceeds */
+  max-height: none;
+  min-height: 0;
+  height: auto;
   padding: 0;
   margin: 0;
 }
@@ -1300,14 +1427,15 @@ video:-ms-fullscreen .vivideo-container {
 
 /* Layout for active profile row with inline actions */
 .vivideo-active-item-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: grid;
+  grid-template-columns: 1fr;
 }
+
 .vivideo-active-item-row .active-item-status {
   flex: 1;
   width: auto;
 }
+
 /* Active-item action buttons removed from top bar; keep list-item buttons styles elsewhere */
 
 /* Profile status styles */
@@ -1350,8 +1478,8 @@ video:-ms-fullscreen .vivideo-container {
 
 /* Editing state for active profile display (neutral) */
 .active-item-status-warning-editing {
-  background: rgba(255,255,255,0.02);
-  border: 1px dashed rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed rgba(255, 255, 255, 0.04);
   color: inherit;
 }
 
@@ -1386,24 +1514,6 @@ video:-ms-fullscreen .vivideo-container {
   font-weight: bold;
 }
 
-/* Duplicate warning box inside controls section */
-.vivideo-duplicate-warning {
-  background: #fff9f0;
-  border-left: 4px solid #bb531e;
-  color: #7a2f11;
-  padding: 8px 10px;
-  margin-bottom: 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
-
-/* Error variant for duplicate warning when shown as an error */
-.vivideo-duplicate-warning.vivideo-duplicate-error {
-  background: #fff0f0;
-  border-left-color: #ff4d4f;
-  color: #8b1e1e;
-}
-
 /* Vivideo confirmation modals */
 .vivideo-modal {
   position: fixed;
@@ -1420,10 +1530,12 @@ video:-ms-fullscreen .vivideo-container {
   background: rgba(0, 0, 0, 0.58);
   backdrop-filter: blur(5px);
 }
+
 .vivideo-modal-backdrop {
   position: absolute;
   inset: 0;
 }
+
 .vivideo-modal-content {
   position: relative;
   z-index: 1;
@@ -1436,6 +1548,7 @@ video:-ms-fullscreen .vivideo-container {
   box-shadow: 0 0 28px rgba(255, 71, 87, 0.28), 0 12px 40px rgba(0, 0, 0, 0.65);
   animation: vivideo-modal-enter 0.18s ease-out;
 }
+
 .vivideo-modal-header {
   color: #ff8088;
   font-family: 'Orbitron', monospace;
@@ -1443,39 +1556,62 @@ video:-ms-fullscreen .vivideo-container {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
+
 .vivideo-modal-body {
   padding: 14px 0 18px;
   font-size: 13px;
   line-height: 1.45;
 }
+
 .vivideo-modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   flex-wrap: wrap;
 }
+
 .vivideo-modal-footer button {
   min-height: 32px;
   cursor: pointer;
 }
+
 .vivideo-delete-profiles-modal .delete-profiles-confirm {
   min-width: 170px;
 }
+
 .vivideo-delete-profiles-modal .delete-profiles-cancel {
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.25);
   background: rgba(255, 255, 255, 0.08);
 }
+
 .vivideo-delete-profiles-modal .delete-profiles-cancel:hover {
   background: rgba(255, 255, 255, 0.16);
 }
+
 @keyframes vivideo-modal-enter {
-  from { opacity: 0; transform: translateY(-8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-.vivideo-modal .overwrite-message { color: inherit; }
-.vivideo-modal .overwrite-confirm { cursor: pointer; }
-.vivideo-modal .overwrite-cancel { cursor: pointer; }
+
+.vivideo-modal .overwrite-message {
+  color: inherit;
+}
+
+.vivideo-modal .overwrite-confirm {
+  cursor: pointer;
+}
+
+.vivideo-modal .overwrite-cancel {
+  cursor: pointer;
+}
 
 /* Theme status styles */
 .active-theme-status.active {
@@ -1504,9 +1640,11 @@ video:-ms-fullscreen .vivideo-container {
   0% {
     opacity: 0.8;
   }
+
   50% {
     opacity: 1;
   }
+
   100% {
     opacity: 0.8;
   }
@@ -1536,16 +1674,14 @@ video:-ms-fullscreen .vivideo-container {
   height: 8px;
   border-radius: 4px;
   outline: none;
-  background: linear-gradient(
-    to right,
-    hsl(0, 100%, 50%),
-    hsl(60, 100%, 50%),
-    hsl(120, 100%, 50%),
-    hsl(180, 100%, 50%),
-    hsl(240, 100%, 50%),
-    hsl(300, 100%, 50%),
-    hsl(360, 100%, 50%)
-  );
+  background: linear-gradient(to right,
+      hsl(0, 100%, 50%),
+      hsl(60, 100%, 50%),
+      hsl(120, 100%, 50%),
+      hsl(180, 100%, 50%),
+      hsl(240, 100%, 50%),
+      hsl(300, 100%, 50%),
+      hsl(360, 100%, 50%));
   appearance: none;
   margin-bottom: 8px;
 }
@@ -1566,15 +1702,13 @@ video:-ms-fullscreen .vivideo-container {
   height: 20px;
   border-radius: 4px;
   border: 1px solid rgba(255, 255, 255, 0.2);
-  background: linear-gradient(
-    45deg,
-    transparent 25%,
-    rgba(255, 255, 255, 0.1) 25%,
-    rgba(255, 255, 255, 0.1) 50%,
-    transparent 50%,
-    transparent 75%,
-    rgba(255, 255, 255, 0.1) 75%
-  );
+  background: linear-gradient(45deg,
+      transparent 25%,
+      rgba(255, 255, 255, 0.1) 25%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 50%,
+      transparent 75%,
+      rgba(255, 255, 255, 0.1) 75%);
   background-size: 10px 10px;
 }
 
@@ -1807,12 +1941,6 @@ button.vivideo-close {
   width: auto;
 }
 
-.settings-info {
-  margin-top: 15px;
-  font-size: 12px;
-  opacity: 0.8;
-  line-height: 1.4;
-}
 
 .settings-info p {
   margin: 0 0 8px 0;
@@ -1876,6 +2004,7 @@ button.vivideo-close {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1909,14 +2038,42 @@ button.vivideo-close {
 /* Extended limits indicator */
 
 /* Added classes for ProfileManager refactor */
-.vivideo-bottom-controls-right { display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
-.vivideo-profile-form-compact { display:flex; flex-direction:column; gap:6px; }
-.vivideo-grid-3-1 { display:grid; grid-template-columns:3fr 1fr; gap:6px; align-items:center; }
-.vivideo-grid-1-3-1 { display:grid; grid-template-columns:1fr 3fr 1fr; gap:6px; align-items:center; }
-.profile-display-name-input { padding:6px 8px; width:100%; }
+.vivideo-bottom-controls-right {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.vivideo-profile-form-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vivideo-grid-3-1 {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.vivideo-grid-1-3-1 {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 6px;
+  align-items: center;
+}
+
+.profile-display-name-input {
+  padding: 6px 8px;
+  width: 100%;
+}
 
 /* Profile form panel (quick-create) */
-.vivideo-profile-form-panel { width: 100%; }
+.vivideo-profile-form-panel {
+  width: 100%;
+}
 
 /* Cancel button on profile form (red X, no background) */
 .profile-form-cancel-button {
@@ -1927,29 +2084,119 @@ button.vivideo-close {
   padding: 4px 8px;
   cursor: pointer;
 }
+
 .profile-form-cancel-button:hover {
   filter: brightness(0.9);
 }
-.vivideo-modal-actions { display:flex; justify-content:flex-end; gap:8px; }
-.vivideo-modal-cancel { padding:6px 10px; border-radius:6px; background:transparent; border:1px solid rgba(255,255,255,0.08); color:#fff; }
-.vivideo-modal-confirm { padding:6px 10px; border-radius:6px; background:#bb531e; border:none; color:#fff; }
-.vivideo-btn { padding:6px 8px; border-radius:6px; cursor:pointer; }
-.vivideo-restore-default-profiles-btn { background: transparent; border: 1px solid rgba(255,255,255,0.06); }
-.vivideo-profile-remove-btn-btn { background: transparent; border: none; color: #ff6b6b; }
-.vivideo-compare-controls { display: none; }
 
-.vivideo-open-edit-mode { background: #2b7cff; color: #fff; border: none; padding: 8px 12px; }
+.vivideo-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.vivideo-modal-cancel {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.vivideo-modal-confirm {
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #bb531e;
+  border: none;
+  color: #fff;
+}
+
+.vivideo-btn {
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.vivideo-restore-default-profiles-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vivideo-profile-remove-btn-btn {
+  background: transparent;
+  border: none;
+  color: #ff6b6b;
+}
+
+.vivideo-compare-controls {
+  display: none;
+}
+
+.vivideo-open-edit-mode {
+  background: #2b7cff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+}
 
 /* Active profile action buttons (rename / save / remove) */
-.vivideo-active-item-actions { display: inline-flex; gap: 8px; margin-left: 8px; align-items: center; }
-.vivideo-active-item-actions .vivideo-btn { padding: 4px 6px; font-size: 14px; flex: 0 0 auto; }
-.active-inline-name-input { flex: 1 1 auto; min-width: 0; padding: 4px 6px; border-radius: 6px; width: auto; }
+.vivideo-active-item-actions {
+  display: inline-flex;
+  gap: 8px;
+  margin-left: 8px;
+  align-items: center;
+}
+
+.vivideo-active-item-actions .vivideo-btn {
+  padding: 4px 6px;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+
+.active-inline-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 6px;
+  border-radius: 6px;
+  width: auto;
+}
 
 /* Notification styles */
-.vivideo-notification { position: fixed; top: 20px; right: 20px; background: rgba(40,44,52,0.95); color: #61dafb; padding: 12px 20px; border-radius: 8px; font-family: 'Orbitron', monospace; font-size: 14px; font-weight: 500; box-shadow: 0 4px 20px rgba(97, 218, 251, 0.3); border: 1px solid rgba(97, 218, 251, 0.5); opacity: 0; transform: translateX(100%); transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); pointer-events: none; backdrop-filter: blur(10px); }
-.vivideo-notification-content { display:flex; align-items:center; gap:8px; }
-.vivideo-notification-icon { font-size:16px; }
-.vivideo-notification-fullscreen { font-size:12px; opacity:0.8; }
+.vivideo-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(40, 44, 52, 0.95);
+  color: #61dafb;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: 'Orbitron', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 20px rgba(97, 218, 251, 0.3);
+  border: 1px solid rgba(97, 218, 251, 0.5);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.vivideo-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vivideo-notification-icon {
+  font-size: 16px;
+}
+
+.vivideo-notification-fullscreen {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
 .vivideo-container.extended-limits .vivideo-control .vivideo-label::after {
   content: ' [MAX]';
   color: #ff6b35;
@@ -2011,7 +2258,7 @@ button.vivideo-close {
   width: 40px;
   height: 20px;
   border-radius: 12px;
-  background: rgba(255,255,255,0.12);
+  background: rgba(255, 255, 255, 0.12);
   position: relative;
   flex: 0 0 auto;
   margin-right: 8px;
@@ -2051,8 +2298,8 @@ button.vivideo-close {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
   font-size: 11px;
   display: inline-flex;
   align-items: center;
@@ -2064,12 +2311,12 @@ button.vivideo-close {
   position: absolute;
   min-width: 160px;
   max-width: 320px;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0, 0, 0, 0.85);
   color: #fff;
   padding: 8px 10px;
   border-radius: 6px;
   font-size: 12px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   z-index: 99999999;
   display: none;
 }
@@ -2161,12 +2408,10 @@ button.vivideo-close {
   left: 50%;
   width: 2px;
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0.4) 50%,
-    rgba(255, 255, 255, 0.8) 100%
-  );
+  background: linear-gradient(to bottom,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.8) 100%);
   z-index: 10;
   pointer-events: none;
   transform: translateX(-1px);
@@ -2354,7 +2599,7 @@ button.speed-decrease {
 
 .vivideo-switch-label .vivideo-compact-desc {
   font-size: 11px;
-  color: rgba(255,255,255,0.6);
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Theme variations for speed controller */
@@ -2478,6 +2723,7 @@ div .vivideo-container,
   align-items: center;
   margin: 0;
   padding: 0;
+  gap: 12px;
 }
 
 .vivideo-header-fixed .vivideo-title {
@@ -2485,9 +2731,122 @@ div .vivideo-container,
   font-size: 20px;
 }
 
+.vivideo-header-import-export {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.vivideo-header-import-export .vivideo-settings-management {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.vivideo-header-import-export .settings-actions {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+}
+
+.vivideo-configs-panel {
+  margin-top: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.vivideo-config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.vivideo-config-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 8px;
+  align-items: center;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: inherit;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vivideo-config-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(69, 160, 255, 0.4);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.vivideo-config-item:active {
+  transform: translateY(0);
+}
+
+.vivideo-config-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.vivideo-config-meta {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: right;
+}
+
+.vivideo-config-comment {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.vivideo-config-empty {
+  font-size: 12px;
+  opacity: 0.8;
+  padding: 8px 0;
+}
+
 .vivideo-header-fixed .vivideo-header-buttons {
   display: flex;
   gap: 8px;
+}
+
+.vivideo-button-flash-success,
+.vivideo-button-flash-error {
+  animation: vivideo-button-confirm 0.42s ease;
+}
+
+.vivideo-button-flash-success {
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.45), 0 0 16px rgba(76, 175, 80, 0.3);
+}
+
+.vivideo-button-flash-error {
+  box-shadow: 0 0 0 2px rgba(244, 67, 54, 0.45), 0 0 16px rgba(244, 67, 54, 0.3);
+}
+
+@keyframes vivideo-button-confirm {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  30% {
+    transform: scale(1.04);
+    filter: brightness(1.18);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 /* Save State button styling */
@@ -2501,6 +2860,7 @@ div .vivideo-container,
   font-weight: 600;
   cursor: pointer;
 }
+
 .vivideo-save:hover,
 .vivideo-save-btn:hover {
   background: #3a7bbf;
@@ -2510,14 +2870,15 @@ div .vivideo-container,
 .vivideo-restore-btn {
   background: transparent;
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 6px 10px;
   border-radius: 6px;
   cursor: pointer;
 }
+
 .vivideo-restore:hover,
 .vivideo-restore-btn:hover {
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 /* Scrollbar styling for sections */
@@ -2621,11 +2982,11 @@ div .vivideo-container,
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.vivideo-switch-input:checked ~ .vivideo-switch-track {
+.vivideo-switch-input:checked~.vivideo-switch-track {
   background: linear-gradient(90deg, #00bfff, #0080ff);
 }
 
-.vivideo-switch-input:checked ~ .vivideo-switch-knob {
+.vivideo-switch-input:checked~.vivideo-switch-knob {
   transform: translateY(-50%) translateX(20px);
 }
 
@@ -2650,10 +3011,12 @@ div .vivideo-container,
 .vivideo-main-grid {
   gap: 8px;
 }
+
 .vivideo-core-section,
 .vivideo-profile-section {
   padding: 8px;
 }
+
 .vivideo-profile-input {
   padding: 6px 8px;
   font-size: 13px;
@@ -2699,27 +3062,27 @@ div .vivideo-container,
   transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), background 180ms ease;
 }
 
-.vivideo-switch-input:checked ~ .vivideo-switch-track {
+.vivideo-switch-input:checked~.vivideo-switch-track {
   background: linear-gradient(90deg, #00bfff, #0080ff);
   border-color: rgba(0, 191, 255, 0.7);
   box-shadow: 0 0 10px rgba(0, 191, 255, 0.35), inset 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.vivideo-switch-input:checked ~ .vivideo-switch-track::after {
+.vivideo-switch-input:checked~.vivideo-switch-track::after {
   transform: translateX(20px);
   background: #f8fdff;
 }
 
-.vivideo-switch-input:focus-visible ~ .vivideo-switch-track {
+.vivideo-switch-input:focus-visible~.vivideo-switch-track {
   outline: 2px solid rgba(255, 255, 255, 0.8);
   outline-offset: 2px;
 }
 
-.vivideo-switch-input:active ~ .vivideo-switch-track::after {
+.vivideo-switch-input:active~.vivideo-switch-track::after {
   transform: scale(0.88);
 }
 
-.vivideo-switch-input:checked:active ~ .vivideo-switch-track::after {
+.vivideo-switch-input:checked:active~.vivideo-switch-track::after {
   transform: translateX(20px) scale(0.88);
 }
 
@@ -2751,6 +3114,7 @@ div .vivideo-container,
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .vivideo-switch-track,
   .vivideo-switch-track::after,
   .vivideo-container,
@@ -2760,6 +3124,7 @@ div .vivideo-container,
     transition: none !important;
   }
 }
+
 .vivideo-profile-save {
   padding: 6px 8px;
   font-size: 13px;
@@ -2768,6 +3133,24 @@ div .vivideo-container,
 .vivideo-quality-section {
   display: grid;
   gap: 8px;
+}
+
+.vivideo-options-panel {
+  margin: 10px 0;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 191, 255, 0.2);
+}
+
+.vivideo-options-header {
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 6px 6px 0 0;
+}
+
+.vivideo-options-body {
+  padding: 0 12px 12px;
 }
 
 /* Standard section container with header and border */
@@ -2792,22 +3175,27 @@ div .vivideo-container,
   text-transform: uppercase;
   letter-spacing: 0.7px;
 }
+
 .vivideo-targeted-quality-mode-section {
   display: grid;
   gap: 6px;
 }
+
 .vivideo-category-row {
   margin-top: 6px;
 }
+
 .vivideo-user-category-section {
   margin-bottom: 8px;
 }
+
 .vivideo-user-category-header {
   margin-top: 4px;
   margin-bottom: 4px;
   font-size: 11px;
   opacity: 0.8;
 }
+
 .vivideo-profile-empty {
   font-size: 11px;
   opacity: 0.75;
@@ -2817,7 +3205,8 @@ div .vivideo-container,
 /* Ensure scrollbars when content exceeds panel */
 .vivideo-container {
   overflow-x: hidden;
-  overflow-y: auto; /* allow vertical scrolling so core/profile sections remain accessible */
+  overflow-y: auto;
+  /* allow vertical scrolling so core/profile sections remain accessible */
 }
 
 /* Small fixes for unsaved quick-save panel */
@@ -2826,16 +3215,18 @@ div .vivideo-container,
   gap: 6px;
   align-items: center;
 }
+
 .vivideo-profile-input {
   padding: 6px 8px;
   font-size: 13px;
 }
+
 .vivideo-profile-save {
   padding: 6px 8px;
   font-size: 13px;
 }
 
-.vivideo-restore-default-built-in-profiles-btn { 
+.vivideo-restore-default-built-in-profiles-btn {
   font-size: 12px;
 }
 
@@ -2869,12 +3260,12 @@ div .vivideo-container,
   background: rgba(0, 0, 0, 0.14);
 }
 
-.vivideo-profiles,
-.vivideo-profile-list {
-  min-height: 420px;
-  max-height: 42vh;
-  overflow: auto;
-  
+.vivideo-profiles {
+min-height: 0;
+max-height: none;
+height: auto;
+overflow: hidden;
+
 }
 
 .vivideo-profile-form,
@@ -2961,7 +3352,7 @@ div .vivideo-container,
 /* Divider between profile and core sections for manual resizing */
 .vivideo-grid-divider {
   width: 8px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.02));
   cursor: col-resize;
   border-radius: 4px;
   margin: 4px 0;
@@ -2983,13 +3374,14 @@ body.vivideo-resizing .vivideo-profile-list {
 
 /* Toast notification */
 .vivideo-toast {
-  background: rgba(20,24,30,0.95);
+  background: rgba(20, 24, 30, 0.95);
   color: #fff;
   padding: 10px 14px;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
+
 .vivideo-toast-hide {
   opacity: 0;
   transform: translateY(8px);
@@ -3023,10 +3415,11 @@ body.vivideo-resizing .vivideo-profile-list {
   overflow-x: hidden;
   width: 100%;
   min-width: 0;
-  min-height: auto; /* allow core subsections to flow naturally */
+  min-height: auto;
+  /* allow core subsections to flow naturally */
 }
 
-/* Info Icon Styles */ 
+/* Info Icon Styles */
 .vivideo-info-icon {
   font-weight: bold;
   color: #19adff;
@@ -3040,13 +3433,14 @@ body.vivideo-resizing .vivideo-profile-list {
   padding: 0px 7px;
   transition: all 0.3s;
 }
+
 .vivideo-info-icon:hover {
   background: #09367dc4;
   color: #45beff;
   transition: all 0.3s;
 }
 
-/* Vivideo Reusable Styles */ 
+/* Vivideo Reusable Styles */
 .vivideo-border-box {
   margin-top: 15px;
   padding: 15px;
@@ -3059,11 +3453,11 @@ body.vivideo-resizing .vivideo-profile-list {
 }
 
 .vivideo-box-header {
-    font-size: 18px;
-    margin: 12px 0;
-    font-weight: bold;
-    text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.72);
-     text-align: left;
+  font-size: 18px;
+  margin: 12px 0;
+  font-weight: bold;
+  text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.72);
+  text-align: left;
 }
 
 .vivideo-main-grid {
@@ -3095,7 +3489,8 @@ body.vivideo-resizing .vivideo-profile-list {
 
 .vivideo-profile-list {
   overflow-x: hidden;
-  min-height: 100%;
+  min-height: 0;
+  height: auto;
 }
 
 /* Sortable profile data grid */
@@ -3247,6 +3642,7 @@ body.vivideo-resizing .vivideo-profile-list {
 }
 
 @media (max-width: 480px) {
+
   .vivideo-profile-table-header,
   .vivideo-profiles-list-item {
     grid-template-columns: 26px minmax(0, 1fr) auto;
@@ -3291,7 +3687,7 @@ button.vivideo-restore-default-profiles-btn {
 .vivideo-layout-toggle-btn {
   background: transparent;
   color: #fff;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
@@ -3353,4 +3749,48 @@ div.vivideo-core-section {
 .vivideo-profile-list-header {
   grid-template-columns: auto 1fr;
   column-gap: 12px;
+}
+
+div.vivideo-controls-section {
+  min-height: auto !important;
+}
+
+/* Keep the profile list readable without leaving empty space when collapsed. */
+.vivideo-profiles {
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+}
+
+.vivideo-profiles.vivideo-expanded {
+  max-height: 60vh;
+}
+
+.vivideo-profiles.vivideo-expanded>.vivideo-accordion-content {
+  max-height: calc(60vh - 48px);
+  overflow-y: auto;
+}
+
+.vivideo-compare-section {
+  display: none;
+}
+
+.vivideo-option-group {
+  height: unset;
+  max-height: unset;
+  min-height: auto;
+}
+
+div.vivideo-settings-management {
+  min-height: auto;
+  height: auto;
+  max-height: unset;
+  overflow: visible;
+}
+
+div.vivideo-profile-section {
+  min-height: auto;
+  height: auto;
+  max-height: unset;
+  overflow: visible;
 }

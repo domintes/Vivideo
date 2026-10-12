@@ -77,7 +77,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const newProfile = {
           id: existing && existing.id ? existing.id : generateProfileId(),
           name,
-          profileCategory: (existing && existing.profileCategory) || 'General',
           settings: current,
           createdAt: (existing && existing.createdAt) || Date.now(),
           updatedAt: Date.now()

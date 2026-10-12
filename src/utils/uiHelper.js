@@ -38,59 +38,126 @@ const UIHelper = {
 
   createCheckboxesHTML(settings = {}) {
     return `
-      <div class="vivideo-auto-activate switch-section">
-        <label class="vivideo-switch-container">
-          <input type="checkbox" id="auto-activate-checkbox" class="vivideo-switch-input" ${
-            settings.autoActivate ? 'checked' : ''
-          }>
-          <span class="vivideo-switch-track"></span>
-          <span class="vivideo-switch-knob"></span>
-          <span class="vivideo-switch-label">Auto-activate</span>
-        </label>
-      </div>
-      <div class="vivideo-section-container vivideo-quality-section">
-        <div class="vivideo-box-header profile-panel-header">✨ Improve quality</div>
-        <label class="vivideo-switch-container">
-          <input type="checkbox" id="keep-quality-checkbox" class="vivideo-switch-input" ${
-            settings.keepQuality ? 'checked' : ''
-          }>
-          <span class="vivideo-switch-track"></span>
-          <span class="vivideo-switch-knob"></span>
-          <span class="vivideo-switch-label">Keep Quality</span>
-        </label>
-        <label class="vivideo-switch-container">
-          <input type="checkbox" id="force-high-quality-scaling-checkbox" class="vivideo-switch-input" ${
-            settings.forceHighQualityScaling ? 'checked' : ''
-          }>
-          <span class="vivideo-switch-track"></span>
-          <span class="vivideo-switch-knob"></span>
-          <span class="vivideo-switch-label">High quality scaling</span>
-        </label>
-        <label class="vivideo-switch-container">
-          <input type="checkbox" id="linear-color-pipeline-checkbox" class="vivideo-switch-input" ${
-            settings.linearColorPipeline ? 'checked' : ''
-          }>
-          <span class="vivideo-switch-track"></span>
-          <span class="vivideo-switch-knob"></span>
-          <span class="vivideo-switch-label">Linear color pipeline</span>
-        </label>
-        <label class="vivideo-switch-container">
-          <input type="checkbox" id="upscale-quality-boost-checkbox" class="vivideo-switch-input" ${
-            settings.upscaleQualityBoost ? 'checked' : ''
-          }>
-          <span class="vivideo-switch-track"></span>
-          <span class="vivideo-switch-knob"></span>
-          <span class="vivideo-switch-label">Upscale boost</span>
-        </label>
-        <label class="vivideo-switch-container">
-          <input type="checkbox" id="quality-enhancer-checkbox" class="vivideo-switch-input" ${
-            settings.qualityEnhancer ? 'checked' : ''
-          }>
-          <span class="vivideo-switch-track"></span>
-          <span class="vivideo-switch-knob"></span>
-          <span class="vivideo-switch-label">Quality Enhancer</span>
-          <button class="vivideo-info-icon" data-info="Enhanced processing for better quality perception">❔</button>
-        </label>
+      <div class="vivideo-options-panel vivideo-accordion vivideo-expanded">
+        <div class="vivideo-options-header vivideo-accordion-header vivideo-box-header profile-panel-header" role="button" tabindex="0" aria-expanded="true">
+          ⚙️ Vivideo Options
+        </div>
+        <div class="vivideo-options-body vivideo-accordion-content">
+          <div class="vivideo-options-groups">
+            <div class="vivideo-option-group">
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="auto-activate-checkbox" class="vivideo-switch-input" ${
+                    settings.autoActivate ? 'checked' : ''
+                  }>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Auto-activate</span>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="show-profile-after-change-checkbox" class="vivideo-switch-input" checked>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Show profile after change</span>
+                  <button class="vivideo-info-icon" data-info="Display profile name for 3 seconds after switching">❔</button>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="work-on-all-sites-checkbox" class="vivideo-switch-input">
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Work on all websites</span>
+                  <button class="vivideo-info-icon" data-info="Apply video filters to all websites, not just YouTube">❔</button>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="work-on-everything-checkbox" class="vivideo-switch-input">
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Work on everything on website</span>
+                  <button class="vivideo-info-icon" data-info="Apply filters to whole page except Vivideo UI">❔</button>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="force-vivideo-checkbox" class="vivideo-switch-input">
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Alternative Engine</span>
+                  <button class="vivideo-info-icon" data-info="Apply powerful Vivideo effects to videos and images using alternative processing engine">❔</button>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="apply-profile-speed-checkbox" class="vivideo-switch-input">
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Apply Profile Video Speed</span>
+                  <button class="vivideo-info-icon" data-info="When enabled, Vivideo will set video playback speed from the profile's speed value">❔</button>
+                </label>
+              </div>
+            </div>
+
+            <div class="vivideo-option-group">
+              <div class="vivideo-option-group-title">Improve quality</div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="keep-quality-checkbox" class="vivideo-switch-input" ${
+                    settings.keepQuality ? 'checked' : ''
+                  }>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Keep Quality</span>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="force-high-quality-scaling-checkbox" class="vivideo-switch-input" ${
+                    settings.forceHighQualityScaling ? 'checked' : ''
+                  }>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">High quality scaling</span>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="linear-color-pipeline-checkbox" class="vivideo-switch-input" ${
+                    settings.linearColorPipeline ? 'checked' : ''
+                  }>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Linear color pipeline</span>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="upscale-quality-boost-checkbox" class="vivideo-switch-input" ${
+                    settings.upscaleQualityBoost ? 'checked' : ''
+                  }>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Upscale boost</span>
+                </label>
+              </div>
+              <div class="vivideo-option-row">
+                <label class="vivideo-switch-container">
+                  <input type="checkbox" id="quality-enhancer-checkbox" class="vivideo-switch-input" ${
+                    settings.qualityEnhancer ? 'checked' : ''
+                  }>
+                  <span class="vivideo-switch-track"></span>
+                  <span class="vivideo-switch-knob"></span>
+                  <span class="vivideo-switch-label">Quality Enhancer</span>
+                  <button class="vivideo-info-icon" data-info="Enhanced processing for better quality perception">❔</button>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   },
@@ -151,14 +218,14 @@ const UIHelper = {
 
     const saveBtn = this.safeQuery(container, '.vivideo-save');
     if (saveBtn) {
-      saveBtn.addEventListener('click', (_e) => {
+      saveBtn.addEventListener('click', async (_e) => {
         _e.stopPropagation();
-        // Prefer a full-state save method if available
-        if (controller && typeof controller.saveFullState === 'function') {
-          controller.saveFullState();
-        } else if (controller && typeof controller.saveAppState === 'function') {
-          controller.saveAppState();
-        }
+        const saved = controller && typeof controller.saveFullState === 'function'
+          ? await controller.saveFullState()
+          : controller && typeof controller.saveAppState === 'function'
+            ? await controller.saveAppState()
+            : null;
+        this.flashButton(saveBtn, 'success', saved === false ? 'Save skipped' : 'State saved');
       });
     }
 
@@ -223,12 +290,33 @@ const UIHelper = {
 
     const restoreBtn = this.safeQuery(container, '.vivideo-restore');
     if (restoreBtn) {
-      restoreBtn.addEventListener('click', (_e) => {
+      restoreBtn.addEventListener('click', async (_e) => {
         _e.stopPropagation();
         if (controller && typeof controller.restoreDefaults === 'function') {
-          controller.restoreDefaults();
+          await controller.restoreDefaults();
+          this.flashButton(restoreBtn, 'success', 'Defaults restored');
         }
       });
+    }
+  },
+
+  flashButton(button, variant = 'success', message = '') {
+    if (!button) return;
+
+    try {
+      button.classList.remove('vivideo-button-flash-success', 'vivideo-button-flash-error');
+      void button.offsetWidth;
+      button.classList.add(
+        variant === 'error' ? 'vivideo-button-flash-error' : 'vivideo-button-flash-success'
+      );
+      if (message) {
+        this.showToast(message);
+      }
+      setTimeout(() => {
+        button.classList.remove('vivideo-button-flash-success', 'vivideo-button-flash-error');
+      }, 420);
+    } catch (err) {
+      console.warn('Vivideo: flashButton failed', err);
     }
   },
 

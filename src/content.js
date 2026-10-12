@@ -128,7 +128,7 @@ if (window !== window.top) {
 
       console.log('Vivideo: Starting initialization...');
       await this.loadSettings();
-      this.finishInitialization();
+      await this.finishInitialization();
     }
 
     async loadSettings() {
@@ -179,9 +179,6 @@ if (window !== window.top) {
           if (response.vivideoAppState.workOnEverything !== undefined) {
             this.tempWorkOnEverything = response.vivideoAppState.workOnEverything;
           }
-          if (Array.isArray(response.vivideoAppState.profileCategories)) {
-            this.tempProfileCategories = response.vivideoAppState.profileCategories;
-          }
           if (Array.isArray(response.vivideoAppState.builtinProfiles)) {
             this.tempBuiltinProfiles = response.vivideoAppState.builtinProfiles;
           }
@@ -210,9 +207,9 @@ if (window !== window.top) {
       }
     }
 
-    finishInitialization() {
+    async finishInitialization() {
       // Initialize components here when all classes are available
-      if (!this.initializeComponents()) {
+      if (!(await this.initializeComponents())) {
         console.error('Vivideo: Failed to initialize components');
         return;
       }
@@ -245,7 +242,7 @@ if (window !== window.top) {
       }
     }
 
-    initializeComponents() {
+    async initializeComponents() {
       // Check if classes are available before creating instances
       if (typeof VideoControls === 'undefined') {
         console.error('VideoControls class not available');
@@ -299,11 +296,7 @@ if (window !== window.top) {
         this.profileManager.applyProfileSpeed = this.tempApplyProfileSpeed;
         delete this.tempApplyProfileSpeed;
       }
-      if (Array.isArray(this.tempProfileCategories)) {
-        this.profileManager.profileCategories = [...this.tempProfileCategories];
-        delete this.tempProfileCategories;
-      }
-      if (Array.isArray(this.tempBuiltinProfiles) && this.tempBuiltinProfiles.length > 0) {
+      if (Array.isArray(this.tempBuiltinProfiles)) {
         this.profileManager.defaultProfiles = [...this.tempBuiltinProfiles];
         delete this.tempBuiltinProfiles;
       }
@@ -317,7 +310,7 @@ if (window !== window.top) {
       this.profiles = this.profileManager.normalizeProfiles(this.profiles || []);
       const activeRef = this.settings.activeProfile;
       if (activeRef === 'DEFAULT') this.settings.activeProfile = this.profileManager.defaultProfileId;
-      this.saveProfiles();
+      await this.saveProfiles();
 
       console.log('Vivideo: All components initialized successfully');
       return true;
@@ -427,7 +420,6 @@ if (window !== window.top) {
           <!-- Left Section: Profiles -->
           <div class="vivideo-profile-section">
             ${this.profileManager.createProfilesHTML()}
-            ${this.settingsManager.createImportExportHTML()}
             ${UIHelper.createCheckboxesHTML(this.settings)}
             ${UIHelper.createInfoHTML()}
           </div>
@@ -450,7 +442,6 @@ if (window !== window.top) {
         const profileSectionContent = `
           ${this.profileManager.createProfilesHTML()}
           ${this.themeManager.createThemesHTML()}
-          ${this.settingsManager.createImportExportHTML()}
           ${UIHelper.createCheckboxesHTML(this.settings)}
           ${UIHelper.createInfoHTML()}
         `;
@@ -462,6 +453,15 @@ if (window !== window.top) {
       }
 
       this.container.innerHTML = htmlContent;
+
+      const header = this.container.querySelector('.vivideo-header-fixed .vivideo-header');
+      const headerButtons = header ? header.querySelector('.vivideo-header-buttons') : null;
+      if (header && headerButtons) {
+        const importExportWrap = document.createElement('div');
+        importExportWrap.className = 'vivideo-header-import-export';
+        importExportWrap.innerHTML = this.settingsManager.createImportExportHTML();
+        header.insertBefore(importExportWrap, headerButtons);
+      }
 
       // Insert grid divider between profile and core sections for resizing
       try {
@@ -1299,15 +1299,11 @@ if (window !== window.top) {
           this.filterEngine.findImages();
 
           // Check if any videos don't have filters applied
-          let needsReapply = false;
-          videos.forEach((video) => {
-            if (!video.style.filter || video.style.filter === 'none' || video.style.filter === '') {
-              needsReapply = true;
-              unprocessedCount++;
-            }
-          });
+          const unprocessedCount = videos.filter(
+            (video) => !video.style.filter || video.style.filter === 'none' || video.style.filter === ''
+          ).length;
 
-          if (needsReapply) {
+          if (unprocessedCount > 0) {
             console.log(`Periodic check found ${unprocessedCount} unprocessed videos, reapplying`);
             this.applyFilters();
 
@@ -1598,7 +1594,7 @@ if (window !== window.top) {
           'linearColorPipeline',
           'forceHighQualityScaling'
         ];
-        if (profile.name === 'DEFAULT') {
+        if (profile.name === 'DEFAULT' || profile.id === 'builtin-default') {
           this.settings.activeProfile = 'builtin-default';
           const defaultSettings = this.profileManager && typeof this.profileManager.sanitizeSettings === 'function'
             ? this.profileManager.sanitizeSettings(profile.settings || this.defaultSettings)
@@ -1984,11 +1980,7 @@ if (window !== window.top) {
         applyProfileSpeed: this.profileManager ? this.profileManager.applyProfileSpeed : false,
         workOnAllSites: this.profileManager ? this.profileManager.workOnAllSites : false,
         workOnEverything: this.profileManager ? this.profileManager.workOnEverything : false,
-        profileCategories: this.profileManager ? this.profileManager.profileCategories : [],
         builtinProfiles: this.profileManager ? this.profileManager.defaultProfiles : [],
-        autoOverwriteProfiles: this.profileManager
-          ? this.profileManager.autoOverwriteProfiles
-          : false,
         settings: this.settings
       };
 

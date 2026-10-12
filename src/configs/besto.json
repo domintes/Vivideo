@@ -1,0 +1,500 @@
+{
+  "version": "1.0.0",
+  "timestamp": "2026-09-14T16:03:28.817Z",
+  "settings": {
+    "activeProfile": "p_mu1fkmgl_0dk55v",
+    "autoActivate": true,
+    "autoApplyPreviousSpeed": false,
+    "autoSaveProfiles": false,
+    "brightness": 0,
+    "colorTemp": -66,
+    "compareMode": false,
+    "compareProfile": null,
+    "contrast": 0,
+    "extendedLimits": true,
+    "forceHighQualityScaling": true,
+    "forceVivideo": false,
+    "gamma": 1,
+    "keepQuality": true,
+    "linearColorPipeline": true,
+    "overwritePlayerSpeed": true,
+    "preferredSpeed": 1.72,
+    "previousSpeed": 1,
+    "qualityEnhancer": false,
+    "saturation": 115,
+    "sharpness": 0,
+    "speed": 1,
+    "speedStep": 0.25,
+    "toggleWithoutAlt": false,
+    "upscaleQualityBoost": true,
+    "videoQualityMode": "balanced",
+    "workOnAllSites": true,
+    "workOnEverything": false,
+    "workOnImagesActivate": true
+  },
+  "profiles": [
+    {
+      "createdAt": 1789398693781,
+      "description": "Default Vivideo profile, without any value changed",
+      "id": "builtin-default",
+      "isBuiltIn": true,
+      "name": "DEFAULT",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 0,
+        "gamma": 1,
+        "colorTemp": 0,
+        "sharpness": 0,
+        "speed": 1
+      },
+      "updatedAt": 1789398693781
+    },
+    {
+      "createdAt": 1789398692781,
+      "description": "High saturation and contrast for vivid playback",
+      "id": "builtin-vivid-colors",
+      "isBuiltIn": true,
+      "name": "Vivid Colors",
+      "settings": {
+        "brightness": 0,
+        "contrast": 27,
+        "saturation": 72,
+        "gamma": 1,
+        "colorTemp": -72,
+        "sharpness": 0,
+        "speed": 1
+      },
+      "updatedAt": 1789398692781
+    },
+    {
+      "createdAt": 1789398691781,
+      "description": "Desaturate to create a black & white effect",
+      "id": "builtin-black-white",
+      "isBuiltIn": true,
+      "name": "Black & White",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": -100,
+        "gamma": 1,
+        "colorTemp": 0,
+        "sharpness": 0,
+        "speed": 1
+      },
+      "updatedAt": 1789398691781
+    },
+    {
+      "createdAt": 1789398690781,
+      "description": "Brighter midtones with reduced contrast",
+      "id": "builtin-high-gamma-low-contrast",
+      "isBuiltIn": true,
+      "name": "High Gamma / Low Contrast",
+      "settings": {
+        "brightness": 0,
+        "contrast": -15,
+        "saturation": 0,
+        "gamma": 1.6,
+        "colorTemp": 0,
+        "sharpness": 0,
+        "speed": 1
+      },
+      "updatedAt": 1789398690781
+    },
+    {
+      "createdAt": 1789398689781,
+      "description": "Deeper tones with stronger contrast",
+      "id": "builtin-low-gamma-high-contrast",
+      "isBuiltIn": true,
+      "name": "Low Gamma / High Contrast",
+      "settings": {
+        "brightness": 0,
+        "contrast": 25,
+        "saturation": 0,
+        "gamma": 0.8,
+        "colorTemp": 0,
+        "sharpness": 0,
+        "speed": 1
+      },
+      "updatedAt": 1789398689781
+    },
+    {
+      "createdAt": 1789398688781,
+      "description": "Sharpness boost only (matrix-like)",
+      "id": "builtin-matrix-sharp",
+      "isBuiltIn": true,
+      "name": "Matrix (Sharp)",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 0,
+        "gamma": 1,
+        "colorTemp": 0,
+        "sharpness": 31,
+        "speed": 1
+      },
+      "updatedAt": 1789398688781
+    },
+    {
+      "createdAt": 1789398782507,
+      "description": "",
+      "id": "p_mu1du14b_n6nnub",
+      "isBuiltIn": false,
+      "name": "x",
+      "settings": {
+        "brightness": 7,
+        "contrast": 12,
+        "saturation": 48,
+        "gamma": 0.39,
+        "colorTemp": -72,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789398782507
+    },
+    {
+      "createdAt": 1789398820915,
+      "description": "",
+      "id": "p_mu1duur7_4phct9",
+      "isBuiltIn": false,
+      "name": "best",
+      "settings": {
+        "brightness": 0,
+        "contrast": 33,
+        "saturation": 48,
+        "gamma": 0.74,
+        "colorTemp": -66,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789398820915
+    },
+    {
+      "createdAt": 1789398960412,
+      "description": "",
+      "id": "p_mu1dxue4_hijwmf",
+      "isBuiltIn": false,
+      "name": "v",
+      "settings": {
+        "brightness": 7,
+        "contrast": 44,
+        "saturation": 34,
+        "gamma": 0.61,
+        "colorTemp": -72,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789398960412
+    },
+    {
+      "createdAt": 1789399771027,
+      "description": "",
+      "id": "p_mu1ef7v7_l1p5di",
+      "isBuiltIn": false,
+      "name": "b2",
+      "settings": {
+        "brightness": 0,
+        "contrast": 35,
+        "saturation": 48,
+        "gamma": 0.89,
+        "colorTemp": -100,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789399771027
+    },
+    {
+      "createdAt": 1789399925099,
+      "description": "",
+      "id": "p_mu1eiiqz_vce082",
+      "isBuiltIn": false,
+      "name": "b",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 48,
+        "gamma": 1,
+        "colorTemp": -66,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789399925099
+    },
+    {
+      "createdAt": 1789399951204,
+      "description": "",
+      "id": "p_mu1ej2w4_es107r",
+      "isBuiltIn": false,
+      "name": "hot",
+      "settings": {
+        "brightness": 18,
+        "contrast": 18,
+        "saturation": 33,
+        "gamma": 0.61,
+        "colorTemp": 0,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789399951204
+    },
+    {
+      "createdAt": 1789400263242,
+      "description": "",
+      "id": "p_mu1eprnu_qen295",
+      "isBuiltIn": false,
+      "name": "bestset0",
+      "settings": {
+        "brightness": 0,
+        "contrast": 33,
+        "saturation": 0,
+        "gamma": 0.74,
+        "colorTemp": -66,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789400263242
+    },
+    {
+      "createdAt": 1789400430234,
+      "description": "",
+      "id": "p_mu1etcii_3f19kq",
+      "isBuiltIn": false,
+      "name": "bestve",
+      "settings": {
+        "brightness": 0,
+        "contrast": 70,
+        "saturation": 0,
+        "gamma": 0.74,
+        "colorTemp": -66,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789400430234
+    },
+    {
+      "createdAt": 1789400628924,
+      "description": "",
+      "id": "p_mu1exlto_ugvme7",
+      "isBuiltIn": false,
+      "name": "besto",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 115,
+        "gamma": 0.74,
+        "colorTemp": -66,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789400659423
+    },
+    {
+      "createdAt": 1789400701032,
+      "description": "",
+      "id": "p_mu1ez5go_abz68w",
+      "isBuiltIn": false,
+      "name": "bestotemp",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 115,
+        "gamma": 0.74,
+        "colorTemp": 0,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789400701032
+    },
+    {
+      "createdAt": 1789401702837,
+      "description": "",
+      "id": "p_mu1fkmgl_0dk55v",
+      "isBuiltIn": false,
+      "name": "bestozeroabsolute",
+      "settings": {
+        "brightness": 0,
+        "contrast": 0,
+        "saturation": 115,
+        "gamma": 1,
+        "colorTemp": -66,
+        "sharpness": 0,
+        "speed": 1,
+        "autoActivate": true
+      },
+      "updatedAt": 1789401702837
+    }
+  ],
+  "theme": "casual",
+  "themeColors": {
+    "casual": {
+      "fontHue": 200,
+      "backgroundHue": 220,
+      "saturation": 100,
+      "lightness": 50
+    },
+    "cybernetic": {
+      "fontHue": 120,
+      "backgroundHue": 140,
+      "saturation": 100,
+      "lightness": 40
+    }
+  },
+  "appState": {
+    "activeLayout": "Horizontal Layout",
+    "activeProfile": "p_mu1fkmgl_0dk55v",
+    "applyProfileSpeed": false,
+    "autoActivate": true,
+    "builtinProfiles": [
+      {
+        "createdAt": 1789398693781,
+        "description": "Default Vivideo profile, without any value changed",
+        "id": "builtin-default",
+        "isBuiltIn": true,
+        "name": "DEFAULT",
+        "settings": {
+          "brightness": 0,
+          "colorTemp": 0,
+          "contrast": 0,
+          "gamma": 1,
+          "saturation": 0,
+          "sharpness": 0,
+          "speed": 1
+        },
+        "updatedAt": 1789398693781
+      },
+      {
+        "createdAt": 1789398692781,
+        "description": "High saturation and contrast for vivid playback",
+        "id": "builtin-vivid-colors",
+        "isBuiltIn": true,
+        "name": "Vivid Colors",
+        "settings": {
+          "brightness": 0,
+          "colorTemp": -72,
+          "contrast": 27,
+          "gamma": 1,
+          "saturation": 72,
+          "sharpness": 0,
+          "speed": 1
+        },
+        "updatedAt": 1789398692781
+      },
+      {
+        "createdAt": 1789398691781,
+        "description": "Desaturate to create a black & white effect",
+        "id": "builtin-black-white",
+        "isBuiltIn": true,
+        "name": "Black & White",
+        "settings": {
+          "brightness": 0,
+          "colorTemp": 0,
+          "contrast": 0,
+          "gamma": 1,
+          "saturation": -100,
+          "sharpness": 0,
+          "speed": 1
+        },
+        "updatedAt": 1789398691781
+      },
+      {
+        "createdAt": 1789398690781,
+        "description": "Brighter midtones with reduced contrast",
+        "id": "builtin-high-gamma-low-contrast",
+        "isBuiltIn": true,
+        "name": "High Gamma / Low Contrast",
+        "settings": {
+          "brightness": 0,
+          "colorTemp": 0,
+          "contrast": -15,
+          "gamma": 1.6,
+          "saturation": 0,
+          "sharpness": 0,
+          "speed": 1
+        },
+        "updatedAt": 1789398690781
+      },
+      {
+        "createdAt": 1789398689781,
+        "description": "Deeper tones with stronger contrast",
+        "id": "builtin-low-gamma-high-contrast",
+        "isBuiltIn": true,
+        "name": "Low Gamma / High Contrast",
+        "settings": {
+          "brightness": 0,
+          "colorTemp": 0,
+          "contrast": 25,
+          "gamma": 0.8,
+          "saturation": 0,
+          "sharpness": 0,
+          "speed": 1
+        },
+        "updatedAt": 1789398689781
+      },
+      {
+        "createdAt": 1789398688781,
+        "description": "Sharpness boost only (matrix-like)",
+        "id": "builtin-matrix-sharp",
+        "isBuiltIn": true,
+        "name": "Matrix (Sharp)",
+        "settings": {
+          "brightness": 0,
+          "colorTemp": 0,
+          "contrast": 0,
+          "gamma": 1,
+          "saturation": 0,
+          "sharpness": 31,
+          "speed": 1
+        },
+        "updatedAt": 1789398688781
+      }
+    ],
+    "containerWidth": 980,
+    "coreSectionHeight": 911,
+    "mainGridTemplate": "371px 8px 549px",
+    "profileSectionWidth": 371,
+    "settings": {
+      "activeProfile": "p_mu1fkmgl_0dk55v",
+      "autoActivate": true,
+      "autoApplyPreviousSpeed": false,
+      "autoSaveProfiles": false,
+      "brightness": 0,
+      "colorTemp": -66,
+      "compareMode": false,
+      "compareProfile": null,
+      "contrast": 0,
+      "extendedLimits": true,
+      "forceHighQualityScaling": true,
+      "forceVivideo": false,
+      "gamma": 1,
+      "keepQuality": true,
+      "linearColorPipeline": true,
+      "overwritePlayerSpeed": true,
+      "preferredSpeed": 1.72,
+      "previousSpeed": 1,
+      "qualityEnhancer": false,
+      "saturation": 115,
+      "sharpness": 0,
+      "speed": 1,
+      "speedStep": 0.25,
+      "toggleWithoutAlt": false,
+      "upscaleQualityBoost": true,
+      "videoQualityMode": "balanced",
+      "workOnAllSites": true,
+      "workOnEverything": false,
+      "workOnImagesActivate": true
+    },
+    "showProfileAfterChange": true,
+    "workOnAllSites": true,
+    "workOnEverything": false
+  }
+}

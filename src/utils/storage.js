@@ -47,35 +47,121 @@ class StorageUtils {
     return write;
   }
 
-  static async loadSettings() {
-    const response = await this.getStorage([
+  static getStateKeys() {
+    return [
       'vivideoSettings',
       'vivideoProfiles',
       'vivideoTheme',
       'vivideoAppState',
-      'vivideoThemeColors'
-    ]);
+      'vivideoThemeColors',
+      'vivideoStateMeta',
+      'vivideoFullState'
+    ];
+  }
+
+  static mergeStoragePayload(existing = {}, updates = {}) {
+    const merged = { ...existing };
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === undefined) return;
+      if (Array.isArray(value)) {
+        merged[key] = value;
+      } else if (value && typeof value === 'object') {
+        merged[key] = { ...(existing[key] || {}), ...value };
+      } else {
+        merged[key] = value;
+      }
+    });
+
+    return merged;
+  }
+
+  static async saveStateSnapshot(snapshot = {}) {
+    const existing = await this.getStorage(this.getStateKeys());
+    const timestamp = Date.now();
+    const currentMeta = existing.vivideoStateMeta || {};
+    const incomingMeta = snapshot.vivideoStateMeta || {};
+    const savedAt = Number(currentMeta.updatedAt || 0);
+    const nextAt = Number(incomingMeta.updatedAt || timestamp);
+
+    if (savedAt > nextAt) {
+      console.warn('StorageUtils: skipped stale state write', {
+        savedAt,
+        nextAt,
+        key: incomingMeta.source || 'unknown'
+      });
+      return false;
+    }
+
+    const merged = this.mergeStoragePayload(existing, {
+      vivideoSettings: snapshot.vivideoSettings ?? existing.vivideoSettings,
+      vivideoProfiles: snapshot.vivideoProfiles ?? existing.vivideoProfiles,
+      vivideoTheme: snapshot.vivideoTheme ?? existing.vivideoTheme,
+      vivideoAppState: snapshot.vivideoAppState ?? existing.vivideoAppState,
+      vivideoThemeColors: snapshot.vivideoThemeColors ?? existing.vivideoThemeColors,
+      vivideoFullState: snapshot.vivideoFullState ?? existing.vivideoFullState,
+      vivideoStateMeta: {
+        ...(existing.vivideoStateMeta || {}),
+        ...(snapshot.vivideoStateMeta || {}),
+        updatedAt: nextAt,
+        savedAt: nextAt
+      }
+    });
+
+    return await this.setStorage(merged);
+  }
+
+  static async loadSettings() {
+    const response = await this.getStorage(this.getStateKeys());
+    if (response && response.vivideoFullState) {
+      return response;
+    }
     return response;
   }
 
   static async saveSettings(settings) {
-    return await this.setStorage({ vivideoSettings: settings });
+    const current = await this.getStorage(this.getStateKeys());
+    return await this.saveStateSnapshot({
+      ...current,
+      vivideoSettings: settings,
+      vivideoStateMeta: { ...(current.vivideoStateMeta || {}), updatedAt: Date.now() }
+    });
   }
 
   static async saveProfiles(profiles) {
-    return await this.setStorage({ vivideoProfiles: profiles });
+    const current = await this.getStorage(this.getStateKeys());
+    return await this.saveStateSnapshot({
+      ...current,
+      vivideoProfiles: profiles,
+      vivideoStateMeta: { ...(current.vivideoStateMeta || {}), updatedAt: Date.now() }
+    });
   }
 
   static async saveTheme(theme) {
-    return await this.setStorage({ vivideoTheme: theme });
+    const current = await this.getStorage(this.getStateKeys());
+    return await this.saveStateSnapshot({
+      ...current,
+      vivideoTheme: theme,
+      vivideoStateMeta: { ...(current.vivideoStateMeta || {}), updatedAt: Date.now() }
+    });
   }
 
   static async saveThemeColors(themeColors) {
-    return await this.setStorage({ vivideoThemeColors: themeColors });
+    const current = await this.getStorage(this.getStateKeys());
+    return await this.saveStateSnapshot({
+      ...current,
+      vivideoThemeColors: themeColors,
+      vivideoStateMeta: { ...(current.vivideoStateMeta || {}), updatedAt: Date.now() }
+    });
   }
 
   static async saveAppState(appState) {
-    return await this.setStorage({ vivideoAppState: appState });
+    const current = await this.getStorage(this.getStateKeys());
+    return await this.saveStateSnapshot({
+      ...current,
+      vivideoAppState: appState,
+      vivideoStateMeta: { ...(current.vivideoStateMeta || {}), updatedAt: Date.now() }
+    });
   }
 }
 
